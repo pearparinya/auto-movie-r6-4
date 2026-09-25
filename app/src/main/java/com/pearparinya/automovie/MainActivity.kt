@@ -41,9 +41,9 @@ class MainActivity : AppCompatActivity() {
             setBackgroundColor(navy)
         }
 
-        // =========================
+        // ============================================================
         // HEADER
-        // =========================
+        // ============================================================
 
         root.addView(TextView(this).apply {
             text = "🎬  AUTO-MOVIE ENGINE 2.0"
@@ -54,16 +54,16 @@ class MainActivity : AppCompatActivity() {
         })
 
         root.addView(TextView(this).apply {
-            text = "R6.5 • PROFESSIONAL PRODUCTION CONSOLE"
+            text = "R6.6 • AUTO-CONTEXT PRODUCTION CONSOLE"
             textSize = 12f
             setTextColor(Color.LTGRAY)
             gravity = Gravity.CENTER
             setPadding(0, dp(6), 0, dp(20))
         })
 
-        // =========================
+        // ============================================================
         // SCENE STATUS
-        // =========================
+        // ============================================================
 
         sceneLabel = TextView(this).apply {
             text = "EP 01  •  SCENE 01 / 20  •  8s"
@@ -71,7 +71,12 @@ class MainActivity : AppCompatActivity() {
             setTextColor(ice)
             setTypeface(typeface, Typeface.BOLD)
             gravity = Gravity.CENTER
-            setPadding(dp(12), dp(14), dp(12), dp(8))
+            setPadding(
+                dp(12),
+                dp(14),
+                dp(12),
+                dp(8)
+            )
             setBackgroundColor(panel)
         }
 
@@ -86,11 +91,14 @@ class MainActivity : AppCompatActivity() {
             progress = 1
         }
 
-        root.addView(progress, full(dp(10)))
+        root.addView(
+            progress,
+            full(dp(10))
+        )
 
-        // =========================
+        // ============================================================
         // DIRECTOR COMMAND
-        // =========================
+        // ============================================================
 
         input = EditText(this).apply {
             hint = "ชื่อเรื่อง / Director Command"
@@ -98,12 +106,14 @@ class MainActivity : AppCompatActivity() {
             setTextColor(Color.WHITE)
             minLines = 3
             gravity = Gravity.TOP
+
             setPadding(
                 dp(16),
                 dp(14),
                 dp(16),
                 dp(14)
             )
+
             setBackgroundColor(panel)
         }
 
@@ -116,13 +126,18 @@ class MainActivity : AppCompatActivity() {
             dp(16)
         )
 
-        root.addView(input, inputParams)
+        root.addView(
+            input,
+            inputParams
+        )
 
-        root.addView(section("PRODUCTION WORKFLOW"))
+        root.addView(
+            section("PRODUCTION WORKFLOW")
+        )
 
-        // =========================
+        // ============================================================
         // CREATE EP
-        // =========================
+        // ============================================================
 
         root.addView(
             action(
@@ -134,51 +149,55 @@ class MainActivity : AppCompatActivity() {
             full()
         )
 
-        // =========================
-        // GENERATE
-        // =========================
+        // ============================================================
+        // GENERATE SCENE
+        // ============================================================
 
         root.addView(
             action(
                 "🖼️  GENERATE SCENE",
-                "สร้างภาพ Scene ปัจจุบัน"
+                "Auto-Context • สร้าง Scene ปัจจุบัน"
             ) {
-                share(buildSceneCommand())
+                share(
+                    buildSceneCommand()
+                )
             },
             full()
         )
 
-        // =========================
-        // QC
-        // =========================
+        // ============================================================
+        // QC CHECK
+        // ============================================================
 
         root.addView(
             action(
                 "🔍  QC CHECK",
-                "วิเคราะห์ภาพแบบ Fail-Closed"
+                "ตรวจภาพจริงแบบ Fail-Closed"
             ) {
-                share(buildQcCommand())
+                share(
+                    buildQcCommand()
+                )
             },
             full()
         )
 
-        // =========================
+        // ============================================================
         // REPAIR
-        // =========================
+        // ============================================================
 
         root.addView(
             action(
                 "🛠️  REPAIR",
-                "แก้เฉพาะจุดที่ไม่ผ่าน • สูงสุด 3 ครั้ง"
+                "Delta-Only • สูงสุด 3 ครั้ง"
             ) {
                 repair()
             },
             full()
         )
 
-        // =========================
+        // ============================================================
         // PASS & LOCK
-        // =========================
+        // ============================================================
 
         root.addView(
             action(
@@ -190,31 +209,41 @@ class MainActivity : AppCompatActivity() {
             full()
         )
 
-        // =========================
+        // ============================================================
         // NEXT SCENE
-        // =========================
+        // ============================================================
 
         nextButton = action(
             "▶  NEXT SCENE",
-            "ไปฉากถัดไปหลัง PASS & LOCK"
+            "Auto-Context • ไป Scene ถัดไป"
         ) {
             nextScene()
         }.apply {
+
             isEnabled = false
             alpha = 0.45f
         }
 
-        root.addView(nextButton, full())
+        root.addView(
+            nextButton,
+            full()
+        )
 
-        // =========================
+        // ============================================================
         // STATUS
-        // =========================
+        // ============================================================
 
         status = TextView(this).apply {
-            text = "● READY — พร้อมทำงาน"
+
+            text =
+                "● READY — AUTO-CONTEXT พร้อมทำงาน"
+
             textSize = 15f
+
             setTextColor(gold)
+
             gravity = Gravity.CENTER
+
             setPadding(
                 0,
                 dp(22),
@@ -225,13 +254,15 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(status)
 
-        // =========================
+        // ============================================================
         // HELP
-        // =========================
+        // ============================================================
 
         root.addView(
             Button(this).apply {
-                text = "❔ วิธีใช้งาน"
+
+                text =
+                    "❔ วิธีใช้งาน R6.6"
 
                 setOnClickListener {
                     showHelp()
@@ -240,27 +271,32 @@ class MainActivity : AppCompatActivity() {
             full()
         )
 
-        // =========================
+        // ============================================================
         // FOOTER
-        // =========================
+        // ============================================================
 
-        root.addView(TextView(this).apply {
+        root.addView(
+            TextView(this).apply {
 
-            text =
-                "8s • 9:16 • Locked-off • One Scene / One Image • Flow/Veo 3.1\n" +
-                "พัฒนาโดย ปริญญา"
+                text =
+                    "AUTO-CONTEXT • 8s • 9:16 • Locked-off\n" +
+                    "One Scene / One Image • Flow/Veo 3.1\n" +
+                    "พัฒนาโดย ปริญญา"
 
-            textSize = 11f
-            setTextColor(Color.GRAY)
-            gravity = Gravity.CENTER
+                textSize = 11f
 
-            setPadding(
-                0,
-                dp(20),
-                0,
-                0
-            )
-        })
+                setTextColor(Color.GRAY)
+
+                gravity = Gravity.CENTER
+
+                setPadding(
+                    0,
+                    dp(20),
+                    0,
+                    0
+                )
+            }
+        )
 
         scroll.addView(root)
 
@@ -273,7 +309,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun createEp() {
 
-        val story = input.text.toString().trim()
+        val story =
+            input.text.toString().trim()
 
         if (story.isEmpty()) {
 
@@ -288,6 +325,9 @@ class MainActivity : AppCompatActivity() {
         sceneLocked = false
 
         updateUi()
+
+        status.text =
+            "🎬 กำลังเริ่ม EP • AUTO-CONTEXT"
 
         share(
             buildMasterPrompt(story)
@@ -319,7 +359,7 @@ class MainActivity : AppCompatActivity() {
         repairCount++
 
         status.text =
-            "🛠 REPAIR $repairCount / 3"
+            "🛠 REPAIR $repairCount / 3 • SCENE ${fmt(currentScene)}"
 
         share(
             buildRepairCommand()
@@ -338,8 +378,11 @@ class MainActivity : AppCompatActivity() {
             currentScene < 20
 
         nextButton.alpha =
-            if (currentScene < 20) 1f
-            else 0.45f
+            if (currentScene < 20) {
+                1f
+            } else {
+                0.45f
+            }
 
         status.text =
             if (currentScene == 20) {
@@ -385,6 +428,9 @@ class MainActivity : AppCompatActivity() {
 
         updateUi()
 
+        status.text =
+            "▶ AUTO-CONTEXT — SCENE ${fmt(currentScene)}"
+
         share(
             buildNextSceneCommand()
         )
@@ -409,14 +455,16 @@ class MainActivity : AppCompatActivity() {
             0.45f
 
         status.text =
-            "● READY — SCENE ${fmt(currentScene)}"
+            "● READY — SCENE ${fmt(currentScene)} • AUTO-CONTEXT"
     }
 
     // ============================================================
     // SHARE TO CHATGPT
     // ============================================================
 
-    private fun share(text: String) {
+    private fun share(
+        text: String
+    ) {
 
         hideKeyboard()
 
@@ -455,10 +503,13 @@ class MainActivity : AppCompatActivity() {
 
         return """
 AUTO-MOVIE ENGINE 2.0
-R6.5 ANDROID PROFESSIONAL
+R6.6 ANDROID PROFESSIONAL AUTO-CONTEXT
 
 CHANNEL:
 สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย
+
+SYSTEM MODE:
+AUTO-CONTEXT = ON
 
 PRODUCTION RULES:
 
@@ -530,7 +581,7 @@ DIRECTOR
 
 เพื่อให้เข้ากับเสื้อผ้า
 
-VOICE:
+VOICE RULES:
 
 ถ้าเป็นบทพูด:
 
@@ -556,15 +607,52 @@ FAIL-CLOSED
 
 ถ้าไม่แน่ใจ = FAIL
 
-REPAIR:
+REPAIR RULE:
 
 DELTA-ONLY
 
 แก้เฉพาะจุดที่ไม่ผ่าน
 
-รักษาส่วนที่ผ่านแล้ว
+รักษาทุกส่วนที่ผ่านแล้ว
 
 REPAIR สูงสุด 3 ครั้งต่อ Scene
+
+AUTO-CONTEXT RULE:
+
+เมื่อ CREATE EP
+ได้สร้างบท 20 Scene
+ไว้ก่อนหน้านี้แล้ว
+
+คำสั่ง GENERATE SCENE
+และ NEXT SCENE
+
+ต้องค้นหาและใช้
+EP ล่าสุดที่สร้างไว้
+ในบทสนทนาเดียวกัน
+
+ต้องดึงบท
+CURRENT SCENE
+จาก EP เดิมโดยอัตโนมัติ
+
+ห้ามถาม Director
+ให้ส่งบท Scene ซ้ำ
+ถ้าบทนั้นมีอยู่แล้ว
+ในบทสนทนา
+
+ห้ามสร้าง Scene ใหม่
+แทน Scene ที่มีอยู่แล้ว
+
+ห้ามเปลี่ยนเหตุการณ์เดิม
+โดยไม่มีคำสั่ง Director
+
+ถ้าข้อมูล Identity Master
+ไม่ครบ
+
+ให้ถามเฉพาะ
+Identity Master
+ของตัวละครที่ขาด
+
+ห้ามถามหาบท Scene ซ้ำ
 
 SCENE 20:
 
@@ -594,7 +682,7 @@ $story
 
 สร้างให้ครบ 20 Scene
 
-แต่ละ Scene ต้องระบุ:
+ทุก Scene ต้องมีข้อมูลครบ:
 
 1. SCENE NUMBER
 2. DURATION = 8 SECONDS
@@ -606,50 +694,188 @@ $story
 8. CAMERA
 9. FLOW / VEO 3.1 PROMPT
 
+AUTO-CONTEXT MEMORY:
+
+บททั้ง 20 Scene
+ที่สร้างจากคำสั่งนี้
+คือ EP MASTER
+สำหรับ Workflow นี้
+
+เมื่อได้รับคำสั่ง
+GENERATE SCENE
+QC
+REPAIR
+PASS & LOCK
+หรือ NEXT SCENE
+
+ให้ใช้ EP MASTER
+จากบทสนทนานี้
+เป็น Story Context
+
+ห้ามขอให้ Director
+คัดลอกบท Scene
+กลับมาให้อีกครั้ง
+
 ใช้ภาษาไทยธรรมชาติ
 อ่านง่าย
-ดำเนินเรื่องต่อเนื่อง
 
-เริ่มสร้าง EP ตอนนี้
+เนื้อเรื่องต้องต่อเนื่อง
+ตลอดทั้ง EP
+
+เมื่อสร้างบทครบ 20 Scene:
+
+หยุด
+
+รอ Director
+สั่ง GENERATE SCENE
+
+ห้ามสร้างภาพเอง
+จนกว่าจะได้รับ
+GENERATE SCENE
         """.trimIndent()
     }
 
     // ============================================================
-    // GENERATE SCENE
+    // GENERATE SCENE — AUTO CONTEXT
     // ============================================================
 
     private fun buildSceneCommand(): String {
 
         return rules() + """
 
+AUTO-CONTEXT MODE:
+ON
+
+COMMAND:
+GENERATE CURRENT SCENE
+
 CURRENT SCENE:
 ${fmt(currentScene)}
 
-สร้าง / เตรียมภาพ
-สำหรับ SCENE ${fmt(currentScene)}
-เท่านั้น
+ขั้นตอนบังคับ:
 
-ยึดบท Scene ปัจจุบัน
+1. ค้นหา EP MASTER ล่าสุด
+   ที่ CREATE EP สร้างไว้ก่อนหน้านี้
+   ในบทสนทนาเดียวกันนี้
 
-ใช้ ORIGINAL IDENTITY MASTER
-ของตัวละครทุกคนที่ปรากฏ
+2. ค้นหาและดึงบท:
 
-ห้ามข้าม Scene
+   SCENE ${fmt(currentScene)}
+
+   จาก EP MASTER
+   โดยอัตโนมัติ
+
+3. ห้ามถาม Director
+   ให้ส่งบท
+   SCENE ${fmt(currentScene)}
+   ซ้ำ
+
+4. ห้ามแต่ง Scene ใหม่
+   แทน Scene เดิม
+
+5. ต้องยึดข้อมูลจาก Scene เดิม:
+
+   - LOCATION
+   - CHARACTERS
+   - VISUAL / ACTION
+   - EMOTION
+   - DIALOGUE / NARRATION
+   - CAMERA
+   - FLOW / VEO 3.1 PROMPT
+   - STORY CONTINUITY
+
+6. ตรวจว่า Scene นี้
+   ต้องใช้ตัวละครใครบ้าง
+
+7. ตรวจ ORIGINAL IDENTITY MASTER
+   ของตัวละครเหล่านั้น
+
+8. ถ้า ORIGINAL IDENTITY MASTER
+   ครบทั้งหมด:
+
+   สร้างภาพ
+   SCENE ${fmt(currentScene)}
+   ทันที
+
+   ห้ามถามคำถามเพิ่มเติม
+
+9. ถ้า ORIGINAL IDENTITY MASTER
+   ไม่ครบ:
+
+   แจ้งเฉพาะชื่อ
+   ตัวละครที่ยังขาด
+   ORIGINAL IDENTITY MASTER
+
+   ห้ามถามหาบท Scene
+
+10. Identity Master
+    ใช้สำหรับ:
+
+    - Face
+    - Skin
+    - Natural Body
+    - Hair
+    - Approximate Age
+    - Identity
+
+    เท่านั้น
+
+11. Wardrobe
+    ต้องมาจาก:
+
+    STORY CONTEXT
+    +
+    CONTINUITY
+    +
+    DIRECTOR
+
+12. ห้ามใช้ Output
+    จาก Scene ก่อนหน้า
+    เป็น Identity Master
+
+13. One Scene / One Image
+
+14. หลังสร้างภาพเสร็จ:
+
+    STOP
+
+    รอ QC CHECK
+
+ห้ามดำเนินการ
+SCENE ${fmt(currentScene + 1)}
+อัตโนมัติ
         """.trimIndent()
     }
 
     // ============================================================
-    // QC
+    // QC CHECK
     // ============================================================
 
     private fun buildQcCommand(): String {
 
         return rules() + """
 
-QC CURRENT SCENE:
+AUTO-CONTEXT MODE:
+ON
+
+COMMAND:
+QC CURRENT SCENE
+
+CURRENT SCENE:
 ${fmt(currentScene)}
 
-ตรวจภาพที่แนบจริงแบบ FAIL-CLOSED
+ค้นหา EP MASTER
+และบท SCENE ${fmt(currentScene)}
+จากบทสนทนาเดิม
+โดยอัตโนมัติ
+
+ห้ามถาม Director
+ให้ส่งบท Scene ซ้ำ
+
+ตรวจภาพ Output
+ที่แนบจริง
+
+ใช้ FAIL-CLOSED
 
 ตรวจ:
 
@@ -658,15 +884,24 @@ ${fmt(currentScene)}
 - Natural Body
 - Skin
 - Hair
+- Approximate Age
+- Character Consistency
 - Wardrobe Continuity
+- Location Continuity
+- Story Continuity
 - Action
 - Emotion
 - Composition
-- Mouth / Lip Sync
+- Mouth
+- Lip Sync
+- Speaker Assignment
+- Narration Rule
 - Camera Compatibility
-- Story Continuity
+- Locked-off Compatibility
+- 9:16 Compatibility
+- One Scene / One Image
 
-สรุปผล:
+ผลการตรวจต้องเป็น:
 
 PASS
 
@@ -674,8 +909,27 @@ PASS
 
 FAIL
 
-ถ้า FAIL
-ระบุเฉพาะจุดที่ต้องแก้
+ถ้า PASS:
+
+ระบุว่า
+
+SCENE ${fmt(currentScene)}
+QC = PASS
+
+พร้อมสำหรับ
+PASS & LOCK
+
+ถ้า FAIL:
+
+ระบุเฉพาะ
+จุดที่ไม่ผ่าน
+
+สร้าง
+DELTA REPAIR LIST
+
+ห้ามแก้ส่วนที่ผ่านแล้ว
+
+ห้ามสร้าง Scene ถัดไป
         """.trimIndent()
     }
 
@@ -687,77 +941,233 @@ FAIL
 
         return rules() + """
 
-REPAIR CURRENT SCENE:
+AUTO-CONTEXT MODE:
+ON
+
+COMMAND:
+REPAIR CURRENT SCENE
+
+CURRENT SCENE:
 ${fmt(currentScene)}
 
 REPAIR ATTEMPT:
 $repairCount / 3
 
-แก้เฉพาะจุดที่ QC ไม่ผ่าน
+ค้นหาโดยอัตโนมัติ:
+
+1. EP MASTER
+2. บท SCENE ${fmt(currentScene)}
+3. ภาพ Output ล่าสุด
+4. QC RESULT ล่าสุด
+5. DELTA REPAIR LIST ล่าสุด
+
+จากบทสนทนาเดียวกัน
+
+ห้ามถาม Director
+ให้ส่งข้อมูลเดิมซ้ำ
+ถ้าข้อมูลมีอยู่แล้ว
+
+REPAIR MODE:
 
 DELTA-ONLY
 
-รักษาทุกส่วนที่ผ่านแล้ว
+แก้เฉพาะ
+จุดที่ QC ไม่ผ่าน
+
+รักษาทุกส่วน
+ที่ผ่านแล้ว
 
 ห้ามเปลี่ยนโดยไม่จำเป็น:
 
 - Identity
-- Natural Body
 - Face
+- Natural Body
+- Skin
 - Hair
 - Wardrobe Continuity
+- Location
 - Composition
+- Action
+- Story Continuity
+
+ใช้ ORIGINAL IDENTITY MASTER
+เท่านั้น
+
+ห้ามใช้ Output
+จาก Scene ก่อนหน้า
+เป็น Identity Master
+
+หลัง Repair:
+
+STOP
+
+รอ QC CHECK ใหม่
+
+ห้าม PASS อัตโนมัติ
+
+ห้ามไป Scene ถัดไป
         """.trimIndent()
     }
 
     // ============================================================
-    // LOCK
+    // PASS & LOCK
     // ============================================================
 
     private fun buildLockCommand(): String {
 
         return rules() + """
 
+AUTO-CONTEXT MODE:
+ON
+
+COMMAND:
 PASS & LOCK
 
-SCENE:
+CURRENT SCENE:
 ${fmt(currentScene)}
 
-ล็อก Scene นี้
-เป็น Scene ที่ผ่าน QC แล้ว
+ค้นหา:
+
+- EP MASTER
+- SCENE ${fmt(currentScene)}
+- ภาพ Output ล่าสุด
+- QC RESULT ล่าสุด
+
+จากบทสนทนาเดียวกัน
+
+ห้ามถาม Director
+ให้ส่งข้อมูลเดิมซ้ำ
+
+ล็อกภาพ Output ล่าสุด
+ของ SCENE ${fmt(currentScene)}
+เป็นภาพที่ผ่าน QC
+
+สถานะ:
+
+SCENE ${fmt(currentScene)}
+=
+PASS & LOCK
+
+ห้ามแก้ไข Scene นี้
+โดยไม่มีคำสั่ง Director
 
 ${
-            if (currentScene == 20)
-                "SAVE_EP\nHANDOFF\nSTOP"
-            else
-                "ห้ามเปลี่ยน Scene ที่ล็อกแล้ว โดยไม่มีคำสั่ง Director"
+            if (currentScene == 20) {
+
+                """
+SCENE 20 COMPLETE
+
+SAVE_EP
+HANDOFF
+STOP
+
+ห้ามเริ่ม EP ถัดไป
+                """.trimIndent()
+
+            } else {
+
+                """
+STOP
+
+รอคำสั่ง
+NEXT SCENE
+
+ห้ามเริ่ม Scene ถัดไป
+อัตโนมัติ
+                """.trimIndent()
+            }
         }
         """.trimIndent()
     }
 
     // ============================================================
-    // NEXT
+    // NEXT SCENE — AUTO CONTEXT
     // ============================================================
 
     private fun buildNextSceneCommand(): String {
 
         return rules() + """
 
+AUTO-CONTEXT MODE:
+ON
+
+COMMAND:
+NEXT SCENE
+
+PREVIOUS SCENE:
+
 SCENE ${fmt(currentScene - 1)}
 =
 PASS & LOCK
 
-ดำเนินการ:
+CURRENT SCENE:
 
 SCENE ${fmt(currentScene)}
 
-เท่านั้น
+ขั้นตอนบังคับ:
 
-ใช้ ORIGINAL IDENTITY MASTER
-ของตัวละครทุกคนที่ปรากฏ
+1. ค้นหา EP MASTER ล่าสุด
+   ในบทสนทนาเดียวกัน
 
-รักษา Story Continuity
-และ Wardrobe Continuity
+2. ดึงบท
+   SCENE ${fmt(currentScene)}
+   จาก EP MASTER
+   โดยอัตโนมัติ
+
+3. ห้ามถาม Director
+   ให้ส่งบท Scene ซ้ำ
+
+4. ห้ามสร้างเนื้อเรื่องใหม่
+   แทนบทเดิม
+
+5. รักษา:
+
+   - Story Continuity
+   - Character Continuity
+   - Wardrobe Continuity
+   - Location Continuity
+   - Emotional Continuity
+   - Timeline Continuity
+
+6. ตรวจ ORIGINAL IDENTITY MASTER
+   ของตัวละครที่ต้องปรากฏ
+   ใน SCENE ${fmt(currentScene)}
+
+7. ถ้า Identity Master ครบ:
+
+   เตรียมดำเนินการ
+   SCENE ${fmt(currentScene)}
+   ตามบทเดิมทันที
+
+8. ถ้า Identity Master ไม่ครบ:
+
+   แจ้งเฉพาะ
+   ชื่อตัวละครที่ขาด
+
+   ห้ามถามหาบท Scene
+
+9. ห้ามใช้ภาพ Output
+   จาก SCENE ${fmt(currentScene - 1)}
+   เป็น Identity Master
+
+10. ห้ามเปลี่ยน
+    Natural Body
+
+11. One Scene / One Image
+
+12. ดำเนินการเฉพาะ:
+
+    SCENE ${fmt(currentScene)}
+
+13. หลังดำเนินการ:
+
+    STOP
+
+    รอ QC CHECK
+
+ห้ามข้ามไป
+SCENE ${fmt(currentScene + 1)}
+อัตโนมัติ
         """.trimIndent()
     }
 
@@ -770,33 +1180,63 @@ SCENE ${fmt(currentScene)}
         AlertDialog.Builder(this)
 
             .setTitle(
-                "วิธีใช้งาน AUTO-MOVIE R6.5"
+                "วิธีใช้งาน AUTO-MOVIE R6.6 AUTO-CONTEXT"
             )
 
             .setMessage(
                 """
-1. ใส่ชื่อเรื่อง / Director Command
+R6.6 AUTO-CONTEXT WORKFLOW
+
+1. ใส่ชื่อเรื่อง
+   หรือ Director Command
 
 2. กด CREATE EP
 
-3. กด GENERATE SCENE
+ระบบจะสร้าง
+EP MASTER จำนวน 20 Scene
 
-4. กด QC CHECK
+3. แนบ ORIGINAL
+   IDENTITY MASTER
+   ของตัวละคร
 
-5. ถ้า FAIL
+4. กลับมาที่แอป
+   กด GENERATE SCENE
+
+AUTO-CONTEXT
+จะดึงบท Scene
+จาก EP MASTER เดิม
+โดยอัตโนมัติ
+
+ไม่ต้องคัดลอกบท
+Scene มาวางใหม่
+
+5. เมื่อได้ภาพ
+   กด QC CHECK
+
+6. ถ้า FAIL
    กด REPAIR
-   สูงสุด 3 ครั้ง
 
-6. เมื่อผ่าน
+สูงสุด:
+3 ครั้ง / Scene
+
+7. เมื่อ QC PASS
    กด PASS & LOCK
 
-7. NEXT SCENE
+8. NEXT SCENE
    จะเปิดให้กด
 
-8. ทำซ้ำจนถึง
-   SCENE 20
+9. กด NEXT SCENE
+
+ระบบจะดึง
+Scene ถัดไป
+จาก EP MASTER เดิม
+โดยอัตโนมัติ
+
+10. ทำซ้ำจนถึง
+    SCENE 20
 
 SCENE 20:
+
 SAVE_EP
 HANDOFF
 STOP
@@ -852,9 +1292,11 @@ STOP
 
         return TextView(this).apply {
 
-            text = textValue
+            text =
+                textValue
 
-            textSize = 12f
+            textSize =
+                12f
 
             setTextColor(gold)
 
@@ -909,8 +1351,8 @@ STOP
 
         return (
             value *
-            resources.displayMetrics.density
-        ).toInt()
+                resources.displayMetrics.density
+            ).toInt()
     }
 
     private fun hideKeyboard() {

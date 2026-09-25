@@ -20,34 +20,126 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle
+      - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+
+      # ============================================================
+      # RESTORE PERMANENT RELEASE KEYSTORE
+      # ============================================================
 
       - name: Restore release keystore
         shell: bash
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          printf '%s' "$KEYSTORE_BASE64" \
-            | sed '/-----BEGIN CERTIFICATE-----/d;/-----END CERTIFICATE-----/d' \
-            | tr -d '\r\n' \
-            | base64 --decode > "$RUNNER_TEMP/auto-movie-release.jks"
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "ANDROID_KEYSTORE_BASE64 is empty."
+            exit 1
+          fi
 
-      - name: Verify keystore
+          printf '%s' "$KEYSTORE_BASE64" \
+            | base64 --decode \
+            > "$RUNNER_TEMP/auto-movie-release.jks"
+
+          if [ ! -s "$RUNNER_TEMP/auto-movie-release.jks" ]; then
+            echo "Failed to restore release keystore."
+            exit 1
+          fi
+
+          echo "Release keystore restored."
+
+      # ============================================================
+      # VERIFY KEYSTORE + ALIAS
+      # ============================================================
+
+      - name: Verify release keystore
         shell: bash
         env:
           STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
           keytool -list \
             -keystore "$RUNNER_TEMP/auto-movie-release.jks" \
-            -storepass "$STORE_PASSWORD" > /dev/null
+            -storepass "$STORE_PASSWORD" \
+            -alias "$KEY_ALIAS" \
+            > /dev/null
 
           echo "Release keystore verified."
 
+      # ============================================================
+      # CHECK ANDROID PROJECT STRUCTURE
+      # ============================================================
+
+      - name: Check Android project files
+        shell: bash
+        run: |
+          echo "Checking Android project structure..."
+
+          test -f "settings.gradle.kts" || {
+            echo "Missing: settings.gradle.kts"
+            exit 1
+          }
+
+          test -f "app/build.gradle.kts" || {
+            echo "Missing: app/build.gradle.kts"
+            exit 1
+          }
+
+          test -f "app/src/main/AndroidManifest.xml" || {
+            echo "Missing: app/src/main/AndroidManifest.xml"
+            echo "Current app structure:"
+            find app -maxdepth 4 -type f | sort
+            exit 1
+          }
+
+          test -f "app/src/main/java/com/pearparinya/automovie/MainActivity.kt" || {
+            echo "Missing: app/src/main/java/com/pearparinya/automovie/MainActivity.kt"
+            echo "Current source files:"
+            find app/src/main -type f | sort
+            exit 1
+          }
+
+          echo "Android project files verified."
+
+      # ============================================================
+      # BUILD UNSIGNED RELEASE APK
+      # ============================================================
+
       - name: Build release APK
-        run: gradle assembleRelease
+        shell: bash
+        run: |
+          gradle :app:assembleRelease
+
+      # ============================================================
+      # FIND RELEASE APK
+      # ============================================================
+
+      - name: Locate unsigned release APK
+        id: locate_apk
+        shell: bash
+        run: |
+          echo "Searching for unsigned release APK..."
+
+          UNSIGNED_APK="$(find app/build/outputs/apk/release \
+            -type f \
+            -name '*unsigned*.apk' \
+            | head -n 1)"
+
+          if [ -z "$UNSIGNED_APK" ]; then
+            echo "Unsigned release APK not found."
+            echo "Available APK files:"
+            find app/build/outputs -type f -name '*.apk' -print || true
+            exit 1
+          fi
+
+          echo "Found: $UNSIGNED_APK"
+          echo "unsigned_apk=$UNSIGNED_APK" >> "$GITHUB_OUTPUT"
+
+      # ============================================================
+      # SIGN RELEASE APK
+      # ============================================================
 
       - name: Sign release APK
         shell: bash
@@ -55,12 +147,23 @@ jobs:
           STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          UNSIGNED_APK: ${{ steps.locate_apk.outputs.unsigned_apk }}
         run: |
-          BUILD_TOOLS="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"
+          BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" \
+            -mindepth 1 \
+            -maxdepth 1 \
+            -type d \
+            | sort -V \
+            | tail -n 1)"
+
           APKSIGNER="$BUILD_TOOLS/apksigner"
 
-          UNSIGNED_APK="app/build/outputs/apk/release/app-release-unsigned.apk"
-          SIGNED_APK="app/build/outputs/apk/release/AUTO-MOVIE-R6.6-release.apk"
+          if [ ! -x "$APKSIGNER" ]; then
+            echo "apksigner not found."
+            exit 1
+          fi
+
+          SIGNED_APK="$RUNNER_TEMP/AUTO-MOVIE-R6.6-release.apk"
 
           "$APKSIGNER" sign \
             --ks "$RUNNER_TEMP/auto-movie-release.jks" \
@@ -70,18 +173,41 @@ jobs:
             --out "$SIGNED_APK" \
             "$UNSIGNED_APK"
 
+          test -s "$SIGNED_APK" || {
+            echo "Signed APK was not created."
+            exit 1
+          }
+
+          echo "Release APK signed."
+
+      # ============================================================
+      # VERIFY APK SIGNATURE
+      # ============================================================
+
       - name: Verify signed APK
         shell: bash
         run: |
-          BUILD_TOOLS="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"
+          BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" \
+            -mindepth 1 \
+            -maxdepth 1 \
+            -type d \
+            | sort -V \
+            | tail -n 1)"
+
           "$BUILD_TOOLS/apksigner" verify \
             --verbose \
-            --print-certs \
-            "app/build/outputs/apk/release/AUTO-MOVIE-R6.6-release.apk"
+            "$RUNNER_TEMP/AUTO-MOVIE-R6.6-release.apk"
+
+          echo "Signed APK verified."
+
+      # ============================================================
+      # UPLOAD APK
+      # ============================================================
 
       - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
           name: AUTO-MOVIE-R6.6-SIGNED-APK
-          path: app/build/outputs/apk/release/AUTO-MOVIE-R6.6-release.apk
+          path: ${{ runner.temp }}/AUTO-MOVIE-R6.6-release.apk
           if-no-files-found: error
+          retention-days: 30

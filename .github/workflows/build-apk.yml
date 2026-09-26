@@ -1,4 +1,4 @@
-name: R6.6 Release Signed APK
+name: R6.7 Release Signed APK
 
 on:
   workflow_dispatch:
@@ -51,7 +51,7 @@ jobs:
           echo "Release keystore restored."
 
       # ============================================================
-      # VERIFY KEYSTORE + ALIAS
+      # VERIFY KEYSTORE
       # ============================================================
 
       - name: Verify release keystore
@@ -69,13 +69,13 @@ jobs:
           echo "Release keystore verified."
 
       # ============================================================
-      # CHECK ANDROID PROJECT STRUCTURE
+      # CHECK PROJECT
       # ============================================================
 
       - name: Check Android project files
         shell: bash
         run: |
-          echo "Checking Android project structure..."
+          echo "Checking AUTO-MOVIE R6.7 project..."
 
           test -f "settings.gradle.kts" || {
             echo "Missing: settings.gradle.kts"
@@ -89,39 +89,35 @@ jobs:
 
           test -f "app/src/main/AndroidManifest.xml" || {
             echo "Missing: app/src/main/AndroidManifest.xml"
-            echo "Current app structure:"
             find app -maxdepth 4 -type f | sort
             exit 1
           }
 
           test -f "app/src/main/java/com/pearparinya/automovie/MainActivity.kt" || {
-            echo "Missing: app/src/main/java/com/pearparinya/automovie/MainActivity.kt"
-            echo "Current source files:"
+            echo "Missing: MainActivity.kt"
             find app/src/main -type f | sort
             exit 1
           }
 
-          echo "Android project files verified."
+          echo "AUTO-MOVIE R6.7 project files verified."
 
       # ============================================================
-      # BUILD UNSIGNED RELEASE APK
+      # BUILD RELEASE
       # ============================================================
 
-      - name: Build release APK
+      - name: Build R6.7 release APK
         shell: bash
         run: |
           gradle :app:assembleRelease
 
       # ============================================================
-      # FIND RELEASE APK
+      # LOCATE UNSIGNED APK
       # ============================================================
 
       - name: Locate unsigned release APK
         id: locate_apk
         shell: bash
         run: |
-          echo "Searching for unsigned release APK..."
-
           UNSIGNED_APK="$(find app/build/outputs/apk/release \
             -type f \
             -name '*unsigned*.apk' \
@@ -129,7 +125,6 @@ jobs:
 
           if [ -z "$UNSIGNED_APK" ]; then
             echo "Unsigned release APK not found."
-            echo "Available APK files:"
             find app/build/outputs -type f -name '*.apk' -print || true
             exit 1
           fi
@@ -138,10 +133,10 @@ jobs:
           echo "unsigned_apk=$UNSIGNED_APK" >> "$GITHUB_OUTPUT"
 
       # ============================================================
-      # SIGN RELEASE APK
+      # SIGN WITH PERMANENT KEY
       # ============================================================
 
-      - name: Sign release APK
+      - name: Sign R6.7 release APK
         shell: bash
         env:
           STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -163,7 +158,7 @@ jobs:
             exit 1
           fi
 
-          SIGNED_APK="$RUNNER_TEMP/AUTO-MOVIE-R6.6-release.apk"
+          SIGNED_APK="$RUNNER_TEMP/AUTO-MOVIE-R6.7-release.apk"
 
           "$APKSIGNER" sign \
             --ks "$RUNNER_TEMP/auto-movie-release.jks" \
@@ -178,13 +173,13 @@ jobs:
             exit 1
           }
 
-          echo "Release APK signed."
+          echo "AUTO-MOVIE R6.7 APK signed."
 
       # ============================================================
-      # VERIFY APK SIGNATURE
+      # VERIFY SIGNATURE
       # ============================================================
 
-      - name: Verify signed APK
+      - name: Verify R6.7 signed APK
         shell: bash
         run: |
           BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" \
@@ -196,18 +191,18 @@ jobs:
 
           "$BUILD_TOOLS/apksigner" verify \
             --verbose \
-            "$RUNNER_TEMP/AUTO-MOVIE-R6.6-release.apk"
+            "$RUNNER_TEMP/AUTO-MOVIE-R6.7-release.apk"
 
-          echo "Signed APK verified."
+          echo "AUTO-MOVIE R6.7 signature verified."
 
       # ============================================================
-      # UPLOAD APK
+      # UPLOAD
       # ============================================================
 
-      - name: Upload signed APK
+      - name: Upload R6.7 signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: AUTO-MOVIE-R6.6-SIGNED-APK
-          path: ${{ runner.temp }}/AUTO-MOVIE-R6.6-release.apk
+          name: AUTO-MOVIE-R6.7-SIGNED-APK
+          path: ${{ runner.temp }}/AUTO-MOVIE-R6.7-release.apk
           if-no-files-found: error
           retention-days: 30

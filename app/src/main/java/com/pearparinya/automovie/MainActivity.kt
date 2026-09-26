@@ -677,6 +677,7 @@ class MainActivity : AppCompatActivity() {
             }
 
         // เปิด ChatGPT โดยตรงก่อน เพื่อตัด Android Share Sheet ออก
+        // ไม่ใช้ resolveActivity() เพราะ Android 11+ จำกัด package visibility
         val chatGptPackages = listOf(
             "com.openai.chatgpt",
             "com.openai.chatgpt.beta"
@@ -687,13 +688,12 @@ class MainActivity : AppCompatActivity() {
                 val directIntent = Intent(sendIntent).apply {
                     setPackage(packageName)
                 }
-
-                if (directIntent.resolveActivity(packageManager) != null) {
-                    startActivity(directIntent)
-                    status.text = "↗ เปิด ChatGPT พร้อมคำสั่งแล้ว"
-                    return
-                }
-            } catch (_: Exception) {
+                startActivity(directIntent)
+                status.text = "↗ เปิด ChatGPT พร้อมคำสั่งแล้ว"
+                return
+            } catch (_: android.content.ActivityNotFoundException) {
+                // ลอง package ถัดไป
+            } catch (_: SecurityException) {
                 // ลอง package ถัดไป
             }
         }

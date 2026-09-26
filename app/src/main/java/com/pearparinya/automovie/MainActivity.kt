@@ -26,6 +26,8 @@ class MainActivity : AppCompatActivity() {
     private var repairCount = 0
     private var sceneLocked = false
     private var selectedCategory: String? = null
+    private var activeStep = 1
+    private val stepButtons = mutableMapOf<Int, Button>()
 
     private lateinit var sceneLabel: TextView
     private lateinit var status: TextView
@@ -193,10 +195,11 @@ class MainActivity : AppCompatActivity() {
         )
 
         root.addView(
-            action(
+            stepAction(1,
                 "❶ ✨ สร้างชื่อเรื่อง 5 ชื่อ • TITLES",
                 "สร้างชื่อเรื่อง 5 ชื่อ"
             ) {
+                setActiveStep(1)
                 generateTitles()
             },
             full()
@@ -221,10 +224,11 @@ class MainActivity : AppCompatActivity() {
         // ============================================================
 
         root.addView(
-            action(
+            stepAction(2,
                 "❷ 🎬 สร้างเรื่อง 20 ฉาก • CREATE EP",
                 "เริ่มสร้างเรื่อง"
             ) {
+                setActiveStep(2)
                 createEp()
             },
             full()
@@ -235,13 +239,12 @@ class MainActivity : AppCompatActivity() {
         // ============================================================
 
         root.addView(
-            action(
+            stepAction(3,
                 "❸ 🖼️ สร้างภาพฉากปัจจุบัน • SCENE",
                 "สร้างฉากปัจจุบัน"
             ) {
-                share(
-                    buildSceneCommand()
-                )
+                setActiveStep(3)
+                share(buildSceneCommand())
             },
             full()
         )
@@ -251,13 +254,12 @@ class MainActivity : AppCompatActivity() {
         // ============================================================
 
         root.addView(
-            action(
+            stepAction(4,
                 "❹ 🔍 ตรวจภาพฉาก • QC",
                 "QC ฉากปัจจุบัน"
             ) {
-                share(
-                    buildQcCommand()
-                )
+                setActiveStep(4)
+                share(buildQcCommand())
             },
             full()
         )
@@ -267,10 +269,11 @@ class MainActivity : AppCompatActivity() {
         // ============================================================
 
         root.addView(
-            action(
+            stepAction(5,
                 "❺ 🛠️ แก้ไขภาพไม่ผ่าน • REPAIR",
                 "เฉพาะจุด • สูงสุด 3 ครั้ง"
             ) {
+                setActiveStep(5)
                 repair()
             },
             full()
@@ -281,10 +284,11 @@ class MainActivity : AppCompatActivity() {
         // ============================================================
 
         root.addView(
-            action(
+            stepAction(6,
                 "❻ 🔒 ยืนยันและล็อกฉาก • LOCK",
                 "ยืนยันฉากนี้"
             ) {
+                setActiveStep(6)
                 lockScene()
             },
             full()
@@ -294,10 +298,11 @@ class MainActivity : AppCompatActivity() {
         // NEXT SCENE
         // ============================================================
 
-        nextButton = action(
+        nextButton = stepAction(7,
             "➡️ ฉากถัดไป • NEXT SCENE",
             "ไปยังฉากต่อไป"
         ) {
+            setActiveStep(7)
             nextScene()
         }.apply {
 
@@ -436,6 +441,7 @@ class MainActivity : AppCompatActivity() {
         scroll.addView(root)
 
         restoreWorkState()
+        refreshStepIndicator()
         setContentView(scroll)
     }
 
@@ -529,6 +535,7 @@ class MainActivity : AppCompatActivity() {
             .putInt("repair", repairCount)
             .putBoolean("locked", sceneLocked)
             .putInt("categoryIndex", categoryIndex)
+            .putInt("activeStep", activeStep)
             .apply()
     }
 
@@ -539,6 +546,7 @@ class MainActivity : AppCompatActivity() {
         repairCount = statePrefs.getInt("repair", 0).coerceIn(0, 3)
         sceneLocked = statePrefs.getBoolean("locked", false)
         categoryIndex = statePrefs.getInt("categoryIndex", 0).coerceIn(0, storyCategories.lastIndex)
+        activeStep = statePrefs.getInt("activeStep", 1).coerceIn(1, 7)
 
         val savedStory = statePrefs.getString("story", "").orEmpty()
         if (savedStory.isNotBlank()) {
@@ -587,6 +595,7 @@ class MainActivity : AppCompatActivity() {
                     input.setText(title)
                     input.setSelection(input.text.length)
                     titlePanel.visibility = android.view.View.GONE
+                    setActiveStep(2)
                     saveWorkState()
                     status.text = "✓ เลือกชื่อเรื่องแล้ว • $title • $category"
                 }
@@ -653,6 +662,7 @@ class MainActivity : AppCompatActivity() {
         // ล็อก CATEGORY ตลอด STORY ปัจจุบัน (EP 01–05)
         // categoryIndex ถูกเลื่อนไว้ล่วงหน้าสำหรับ "เรื่องใหม่" ครั้งถัดไปเท่านั้น
         selectedCategory = categoryForThisEp
+        setActiveStep(3)
         saveWorkState()
     }
 
@@ -679,6 +689,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         repairCount++
+        setActiveStep(5)
 
         status.text =
             "🛠 REPAIR $repairCount / 3 • SCENE ${fmt(currentScene)}"
@@ -695,6 +706,7 @@ class MainActivity : AppCompatActivity() {
     private fun lockScene() {
 
         sceneLocked = true
+        setActiveStep(7)
 
         nextButton.isEnabled = true
         nextButton.alpha = 1f
@@ -739,6 +751,7 @@ class MainActivity : AppCompatActivity() {
 
         repairCount = 0
         sceneLocked = false
+        setActiveStep(3)
         updateUi()
         saveWorkState()
 
@@ -1776,6 +1789,44 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
     // ============================================================
     // UI HELPERS
     // ============================================================
+
+    private fun stepAction(
+        step: Int,
+        title: String,
+        subtitle: String,
+        function: () -> Unit
+    ): Button {
+        return action(title, subtitle, function).also { button ->
+            stepButtons[step] = button
+        }
+    }
+
+    private fun setActiveStep(step: Int) {
+        activeStep = step.coerceIn(1, 7)
+        refreshStepIndicator()
+        if (::input.isInitialized) saveWorkState()
+    }
+
+    private fun refreshStepIndicator() {
+        stepButtons.forEach { (step, button) ->
+            val active = step == activeStep
+            button.backgroundTintList =
+                android.content.res.ColorStateList.valueOf(
+                    if (active) gold else panel
+                )
+            button.setTextColor(
+                if (active) Color.rgb(12, 15, 38) else ice
+            )
+            button.elevation =
+                dp(if (active) 8 else 2).toFloat()
+            button.alpha =
+                if (button.isEnabled) {
+                    if (active) 1f else 0.88f
+                } else {
+                    0.45f
+                }
+        }
+    }
 
     private fun action(
         title: String,

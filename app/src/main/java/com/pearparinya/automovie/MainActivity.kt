@@ -434,6 +434,7 @@ class MainActivity : AppCompatActivity() {
 
         scroll.addView(root)
 
+        restoreWorkState()
         setContentView(scroll)
     }
 
@@ -514,6 +515,44 @@ class MainActivity : AppCompatActivity() {
         )
     )
 
+    private val statePrefs by lazy {
+        getSharedPreferences("auto_movie_state", Context.MODE_PRIVATE)
+    }
+
+    private fun saveWorkState() {
+        statePrefs.edit()
+            .putString("story", if (::input.isInitialized) input.text.toString() else "")
+            .putString("category", selectedCategory)
+            .putInt("scene", currentScene)
+            .putInt("repair", repairCount)
+            .putBoolean("locked", sceneLocked)
+            .putInt("categoryIndex", categoryIndex)
+            .apply()
+    }
+
+    private fun restoreWorkState() {
+        selectedCategory = statePrefs.getString("category", null)
+        currentScene = statePrefs.getInt("scene", 1).coerceIn(1, 20)
+        repairCount = statePrefs.getInt("repair", 0).coerceIn(0, 3)
+        sceneLocked = statePrefs.getBoolean("locked", false)
+        categoryIndex = statePrefs.getInt("categoryIndex", 0).coerceIn(0, storyCategories.lastIndex)
+
+        val savedStory = statePrefs.getString("story", "").orEmpty()
+        if (savedStory.isNotBlank()) {
+            input.setText(savedStory)
+            input.setSelection(input.text.length)
+        }
+
+        sceneLabel.text = "EP 01   •   SCENE ${fmt(currentScene)} / 20   •   8 SEC"
+        progress.progress = currentScene
+        nextButton.isEnabled = sceneLocked && currentScene < 20
+        nextButton.alpha = if (nextButton.isEnabled) 1f else 0.45f
+
+        if (savedStory.isNotBlank()) {
+            status.text = "✓ กู้คืนงานเดิมแล้ว • SCENE ${fmt(currentScene)}"
+        }
+    }
+
     private fun generateTitles() {
         val category = storyCategories[categoryIndex]
         selectedCategory = category
@@ -545,6 +584,7 @@ class MainActivity : AppCompatActivity() {
                     input.setText(title)
                     input.setSelection(input.text.length)
                     titlePanel.visibility = android.view.View.GONE
+                    saveWorkState()
                     status.text = "✓ เลือกชื่อเรื่องแล้ว • $title • $category"
                 }
             }, full())
@@ -583,6 +623,7 @@ class MainActivity : AppCompatActivity() {
         sceneLocked = false
 
         updateUi()
+        saveWorkState()
 
         status.text =
             "🎬 กำลังเริ่ม EP • AUTO-CONTEXT"
@@ -642,6 +683,8 @@ class MainActivity : AppCompatActivity() {
                 0.45f
             }
 
+        saveWorkState()
+
         status.text =
             if (currentScene == 20) {
 
@@ -685,6 +728,7 @@ class MainActivity : AppCompatActivity() {
         sceneLocked = false
 
         updateUi()
+        saveWorkState()
 
         status.text =
             "▶ AUTO-CONTEXT — SCENE ${fmt(currentScene)}"
@@ -1041,14 +1085,16 @@ PASS & LOCK
 
 เมื่อสร้างบทครบ 20 Scene:
 
-หยุด
+ให้แสดงสถานะ:
+SCENES 01–20 = PLANNED & LOCKED
+NEXT = GENERATE SCENE 01
 
-รอ Director
-สั่ง GENERATE SCENE
+จากนั้น STOP และรอ Director สั่ง GENERATE SCENE
 
-ห้ามสร้างภาพเอง
-จนกว่าจะได้รับ
-GENERATE SCENE
+ห้ามแสดง SAVE_EP / HANDOFF / EP COMPLETE ในขั้น CREATE EP
+เพราะคำเหล่านี้ใช้ได้เฉพาะหลัง SCENE 20 ผ่าน QC และ PASS & LOCK แล้วเท่านั้น
+
+ห้ามสร้างภาพเองจนกว่าจะได้รับ GENERATE SCENE
         """.trimIndent()
     }
 

@@ -645,7 +645,9 @@ class MainActivity : AppCompatActivity() {
                 (categoryIndex + 1) % storyCategories.size
             }
 
-        selectedCategory = null
+        // ล็อก CATEGORY ของ EP ปัจจุบันไว้ให้ทุกคำสั่งในแอปตรงกับ ChatGPT
+        // categoryIndex ถูกเลื่อนไปแล้วเพื่อเตรียมหมวดสำหรับ EP ถัดไป
+        selectedCategory = categoryForThisEp
         saveWorkState()
     }
 
@@ -861,6 +863,15 @@ CHANNEL:
 
 SYSTEM MODE:
 AUTO-CONTEXT = ON
+
+APP ↔ CHATGPT WORKFLOW SYNC:
+- คำสั่งจากปุ่ม AUTO-MOVIE คือสถานะงานปัจจุบันของ Director
+- ChatGPT ต้องทำเฉพาะขั้นตอนที่ COMMAND ระบุ
+- ห้ามข้ามขั้นตอน ห้ามเปลี่ยน TITLE / CATEGORY / CURRENT SCENE เอง
+- CREATE EP → GENERATE SCENE → QC → (REPAIR ถ้าจำเป็น) → PASS & LOCK → NEXT SCENE
+- CATEGORY ของ EP ปัจจุบันต้องล็อกคงเดิมจนจบ Scene 20
+- การหมุน CATEGORY เกิดเฉพาะตอน CREATE EP ของเรื่องใหม่
+- หากข้อมูลในแชทขัดกับ ACTIVE WORK STATE ให้ตอบ SYNC MISMATCH และหยุด ห้ามเดาหรือดำเนินการต่อผิดงาน
 
 PRODUCTION RULES:
 
@@ -1141,12 +1152,19 @@ ON
 COMMAND:
 GENERATE CURRENT SCENE
 
-ACTIVE WORK STATE:
+ACTIVE WORK STATE — SOURCE OF TRUTH:
 TITLE: ${input.text.toString().trim()}
-CATEGORY: ${selectedCategory ?: "ใช้ CATEGORY จาก EP MASTER"}
+CATEGORY: ${selectedCategory ?: storyCategories[categoryIndex]}
 CURRENT SCENE: ${fmt(currentScene)} / 20
 DURATION: 8 SEC
 FORMAT: 9:16
+
+APP ↔ CHATGPT SYNC RULE:
+- ค่าจาก ACTIVE WORK STATE คือค่าที่แอปกำลังใช้งานจริง
+- TITLE / CATEGORY / CURRENT SCENE ต้องตรงกับ EP MASTER ในแชท
+- ห้าม ChatGPT เปลี่ยน CATEGORY, TITLE หรือเลข Scene เอง
+- ถ้า EP MASTER ในแชทไม่ตรงกับ ACTIVE WORK STATE ให้หยุดและรายงาน SYNC MISMATCH ห้ามสร้างภาพผิดเรื่อง
+- CATEGORY ต้องคงเดิมตลอด EP นี้ และจะหมุนเฉพาะเมื่อ Director กด CREATE EP สำหรับ EP ใหม่เท่านั้น
 
 ขั้นตอนบังคับ:
 

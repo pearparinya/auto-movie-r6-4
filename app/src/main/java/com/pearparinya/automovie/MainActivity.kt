@@ -322,26 +322,73 @@ class MainActivity : AppCompatActivity() {
         root.addView(status)
 
         // ============================================================
-        // HELP
+        // HELP + UPDATE — ONE ROW / 50:50
         // ============================================================
 
-        root.addView(
-            Button(this).apply {
+        val utilityRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
 
-                text = "❓  วิธีใช้งาน R${appVersion()}"
-                textSize = 16f
-                setTextColor(Color.rgb(35, 35, 45))
+        utilityRow.addView(
+            Button(this).apply {
+                text = "❓ วิธีใช้งาน R${appVersion()}"
+                textSize = 14f
+                maxLines = 1
+                isSingleLine = true
+                setAutoSizeTextTypeUniformWithConfiguration(
+                    10, 14, 1,
+                    android.util.TypedValue.COMPLEX_UNIT_SP
+                )
+                setTextColor(Color.BLACK)
                 setTypeface(typeface, Typeface.BOLD)
+                gravity = Gravity.CENTER
                 backgroundTintList = android.content.res.ColorStateList.valueOf(
                     Color.rgb(255, 190, 74)
                 )
-
                 setOnClickListener {
                     showHelp()
                 }
             },
-            full()
+            LinearLayout.LayoutParams(
+                0,
+                dp(46),
+                1f
+            ).apply {
+                marginEnd = dp(3)
+            }
         )
+
+        utilityRow.addView(
+            Button(this).apply {
+                text = "🔄 อัปเดตแอป"
+                textSize = 14f
+                maxLines = 1
+                isSingleLine = true
+                setAutoSizeTextTypeUniformWithConfiguration(
+                    10, 14, 1,
+                    android.util.TypedValue.COMPLEX_UNIT_SP
+                )
+                setTextColor(Color.WHITE)
+                setTypeface(typeface, Typeface.BOLD)
+                gravity = Gravity.CENTER
+                backgroundTintList = android.content.res.ColorStateList.valueOf(
+                    Color.rgb(35, 105, 210)
+                )
+                setOnClickListener {
+                    status.text = "🔄 เมนูอัปเดตแอปพร้อมใช้งาน"
+                }
+            },
+            LinearLayout.LayoutParams(
+                0,
+                dp(46),
+                1f
+            ).apply {
+                marginStart = dp(3)
+            }
+        )
+
+        root.addView(utilityRow, full())
 
         // ============================================================
         // FOOTER

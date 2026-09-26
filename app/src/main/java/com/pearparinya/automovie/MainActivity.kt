@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(22), dp(28), dp(22), dp(28))
+            setPadding(dp(22), dp(38), dp(22), dp(28))
             setBackgroundColor(navy)
         }
 
@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         val headerRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.TOP
-            setPadding(0, 0, 0, dp(12))
+            setPadding(0, 0, 0, dp(8))
         }
 
         headerRow.addView(ImageView(this).apply {
@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
         val headerText = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.START
-            setPadding(dp(4), dp(2), 0, 0)
+            setPadding(dp(4), 0, 0, 0)
         }
 
         headerText.addView(TextView(this).apply {
@@ -86,7 +86,7 @@ class MainActivity : AppCompatActivity() {
             setTextColor(muted)
             gravity = Gravity.START
             maxLines = 1
-            setPadding(0, dp(5), 0, dp(3))
+            setPadding(0, dp(1), 0, 0)
         }, full())
 
         headerText.addView(TextView(this).apply {
@@ -342,12 +342,14 @@ class MainActivity : AppCompatActivity() {
         root.addView(
             TextView(this).apply {
 
-                text =
-                    "AUTO-CONTEXT • 8s • 9:16 • Locked-off\n" +
-                    "One Scene / One Image • Flow/Veo 3.1\n" +
-                    "พัฒนาโดย ปริญญา"
+                text = "AUTO-CONTEXT • 8s • 9:16 • Flow/Veo 3.1 • พัฒนาโดย ปริญญา"
 
-                textSize = 11f
+                textSize = 10f
+                maxLines = 1
+                setAutoSizeTextTypeUniformWithConfiguration(
+                    8, 10, 1,
+                    android.util.TypedValue.COMPLEX_UNIT_SP
+                )
 
                 setTextColor(Color.GRAY)
 
@@ -1517,10 +1519,16 @@ STOP
 
         return Button(this).apply {
 
-            text =
-                "$title\n$subtitle"
+            text = title
+            contentDescription = "$title — $subtitle"
 
             textSize = 15f
+
+            maxLines = 1
+            setAutoSizeTextTypeUniformWithConfiguration(
+                12, 15, 1,
+                android.util.TypedValue.COMPLEX_UNIT_SP
+            )
 
             isAllCaps = false
 
@@ -1534,7 +1542,7 @@ STOP
                 dp(12)
             )
 
-            minHeight = dp(58)
+            minHeight = dp(52)
 
             setTextColor(ice)
             setTypeface(typeface, Typeface.BOLD)

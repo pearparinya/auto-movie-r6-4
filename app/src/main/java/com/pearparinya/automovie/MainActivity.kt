@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -34,6 +36,8 @@ class MainActivity : AppCompatActivity() {
     private var activeStep = 1
     private var storyStartTimeMs = 0L
     private var storyEndTimeMs = 0L
+    private var soundEnabled = true
+    private var lastSoundStep = 0
     private lateinit var timeLabel: TextView
     private val clockHandler = Handler(Looper.getMainLooper())
     private val stepButtons = mutableMapOf<Int, Button>()
@@ -139,7 +143,31 @@ class MainActivity : AppCompatActivity() {
             isSingleLine = true
             setPadding(dp(8), dp(2), dp(8), dp(4))
         }
-        root.addView(timeLabel, full())
+        val timeRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        timeRow.addView(timeLabel, LinearLayout.LayoutParams(
+            0,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            1f
+        ))
+        val soundButton = TextView(this).apply {
+            textSize = 16f
+            gravity = Gravity.CENTER
+            setPadding(dp(8), dp(2), dp(8), dp(2))
+            setTextColor(gold)
+            contentDescription = "เปิดหรือปิดเสียงแจ้งเตือน"
+            setOnClickListener {
+                soundEnabled = !soundEnabled
+                text = if (soundEnabled) "🔊" else "🔇"
+                statePrefs.edit().putBoolean("soundEnabled", soundEnabled).apply()
+                if (soundEnabled) playTone(ToneGenerator.TONE_PROP_BEEP, 70)
+            }
+        }
+        soundButton.text = if (statePrefs.getBoolean("soundEnabled", true)) "🔊" else "🔇"
+        timeRow.addView(soundButton, LinearLayout.LayoutParams(dp(42), dp(32)))
+        root.addView(timeRow, full())
         startClock()
 
         // ============================================================
@@ -562,6 +590,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun restoreWorkState() {
+        soundEnabled = statePrefs.getBoolean("soundEnabled", true)
         selectedCategory = statePrefs.getString("category", null)
         currentEp = statePrefs.getInt("ep", 1).coerceIn(1, 5)
         currentScene = statePrefs.getInt("scene", 1).coerceIn(1, 20)
@@ -702,6 +731,7 @@ class MainActivity : AppCompatActivity() {
 
         if (sceneLocked) {
 
+            playTone(ToneGenerator.TONE_PROP_NACK, 120)
             status.text =
                 "🔒 Scene นี้ถูกล็อกแล้ว"
 
@@ -710,6 +740,7 @@ class MainActivity : AppCompatActivity() {
 
         if (repairCount >= 3) {
 
+            playTone(ToneGenerator.TONE_PROP_NACK, 120)
             status.text =
                 "⛔ REPAIR ครบ 3 ครั้ง — ต้อง QC/ตัดสินใจใหม่"
 
@@ -734,6 +765,7 @@ class MainActivity : AppCompatActivity() {
     private fun lockScene() {
 
         sceneLocked = true
+        playTone(ToneGenerator.TONE_PROP_ACK, 100)
         if (currentEp == 5 && currentScene == 20 && storyStartTimeMs > 0L && storyEndTimeMs == 0L) {
             storyEndTimeMs = System.currentTimeMillis()
             updateTimeLabel()
@@ -766,6 +798,7 @@ class MainActivity : AppCompatActivity() {
     private fun nextScene() {
 
         if (!sceneLocked) {
+            playTone(ToneGenerator.TONE_PROP_NACK, 120)
             status.text = "⛔ ต้อง PASS & LOCK ก่อน"
             return
         }
@@ -1822,6 +1855,20 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
     // UI HELPERS
     // ============================================================
 
+    private fun playTone(tone: Int, durationMs: Int) {
+        if (!soundEnabled) return
+        try {
+            ToneGenerator(AudioManager.STREAM_NOTIFICATION, 35).apply {
+                startTone(tone, durationMs)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    try { release() } catch (_: Exception) {}
+                }, durationMs.toLong() + 80L)
+            }
+        } catch (_: Exception) {
+            // เสียงเป็น feedback เสริมเท่านั้น ต้องไม่รบกวน workflow หากอุปกรณ์เล่นเสียงไม่ได้
+        }
+    }
+
     private val clockTick = object : Runnable {
         override fun run() {
             updateTimeLabel()
@@ -1878,8 +1925,14 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
     }
 
     private fun setActiveStep(step: Int) {
-        activeStep = step.coerceIn(1, 7)
+        val nextStep = step.coerceIn(1, 7)
+        val changed = nextStep != activeStep
+        activeStep = nextStep
         refreshStepIndicator()
+        if (changed && lastSoundStep != activeStep) {
+            playTone(ToneGenerator.TONE_PROP_BEEP, 65)
+            lastSoundStep = activeStep
+        }
         if (::input.isInitialized) saveWorkState()
     }
 

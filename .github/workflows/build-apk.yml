@@ -7,7 +7,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
   actions: write
 
 jobs:
@@ -240,3 +240,25 @@ jobs:
           path: ${{ runner.temp }}/AUTO-MOVIE-R${{ steps.app_version.outputs.version }}-release.apk
           if-no-files-found: error
           retention-days: 7
+
+
+      # ============================================================
+      # PUBLISH LATEST RELEASE FOR IN-APP UPDATE
+      # ============================================================
+
+      - name: Publish APK to GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="R${{ steps.app_version.outputs.version }}"
+          APK="$RUNNER_TEMP/AUTO-MOVIE-R${{ steps.app_version.outputs.version }}-release.apk"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; replacing APK asset."
+          else
+            gh release create "$TAG"               --title "AUTO-MOVIE $TAG"               --notes "AUTO-MOVIE signed Android release $TAG"
+          fi
+
+          gh release upload "$TAG" "$APK" --clobber
+          echo "Published $APK to release $TAG."

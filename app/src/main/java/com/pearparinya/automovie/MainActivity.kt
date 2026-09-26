@@ -27,6 +27,8 @@ class MainActivity : AppCompatActivity() {
     private val panel = Color.rgb(17, 31, 55)
     private val gold = Color.rgb(218, 177, 83)
     private val ice = Color.rgb(235, 242, 255)
+    private val muted = Color.rgb(151, 166, 190)
+    private val success = Color.rgb(84, 196, 132)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,19 +48,29 @@ class MainActivity : AppCompatActivity() {
         // ============================================================
 
         root.addView(TextView(this).apply {
-            text = "🎬  AUTO-MOVIE ENGINE 2.0"
-            textSize = 25f
+            text = "AUTO-MOVIE"
+            textSize = 30f
+            letterSpacing = 0.08f
             setTextColor(gold)
             setTypeface(typeface, Typeface.BOLD)
             gravity = Gravity.CENTER
         })
 
         root.addView(TextView(this).apply {
-            text = "R${appVersion()} • AI PRODUCTION STUDIO"
+            text = "AI PRODUCTION STUDIO  •  R${appVersion()}"
             textSize = 12f
-            setTextColor(Color.LTGRAY)
+            letterSpacing = 0.04f
+            setTextColor(muted)
             gravity = Gravity.CENTER
-            setPadding(0, dp(6), 0, dp(20))
+            setPadding(0, dp(6), 0, dp(4))
+        })
+
+        root.addView(TextView(this).apply {
+            text = "STORY → SCENE → QC → LOCK"
+            textSize = 11f
+            setTextColor(ice)
+            gravity = Gravity.CENTER
+            setPadding(0, dp(4), 0, dp(20))
         })
 
         // ============================================================
@@ -66,7 +78,7 @@ class MainActivity : AppCompatActivity() {
         // ============================================================
 
         sceneLabel = TextView(this).apply {
-            text = "EP 01  •  SCENE 01 / 20  •  8s"
+            text = "EP 01   •   SCENE 01 / 20   •   8 SEC"
             textSize = 18f
             setTextColor(ice)
             setTypeface(typeface, Typeface.BOLD)
@@ -101,7 +113,7 @@ class MainActivity : AppCompatActivity() {
         // ============================================================
 
         input = EditText(this).apply {
-            hint = "ชื่อเรื่อง / Director Command"
+            hint = "ชื่อเรื่อง หรือ Director Command…"
             setHintTextColor(Color.GRAY)
             setTextColor(Color.WHITE)
             minLines = 3
@@ -246,11 +258,11 @@ class MainActivity : AppCompatActivity() {
         status = TextView(this).apply {
 
             text =
-                "● READY — AUTO-CONTEXT พร้อมทำงาน"
+                "● SYSTEM READY  •  AUTO-CONTEXT ON"
 
-            textSize = 15f
+            textSize = 14f
 
-            setTextColor(gold)
+            setTextColor(success)
 
             gravity = Gravity.CENTER
 
@@ -510,7 +522,7 @@ $category
     private fun updateUi() {
 
         sceneLabel.text =
-            "EP 01  •  SCENE ${fmt(currentScene)} / 20  •  8s"
+            "EP 01   •   SCENE ${fmt(currentScene)} / 20   •   8 SEC"
 
         progress.progress =
             currentScene
@@ -522,7 +534,7 @@ $category
             0.45f
 
         status.text =
-            "● READY — SCENE ${fmt(currentScene)} • AUTO-CONTEXT"
+            "● SYSTEM READY  •  SCENE ${fmt(currentScene)}  •  AUTO-CONTEXT ON"
     }
 
     // ============================================================
@@ -1406,14 +1418,16 @@ STOP
             isAllCaps = false
 
             gravity =
-                Gravity.CENTER_VERTICAL
+                Gravity.CENTER
 
             setPadding(
                 dp(18),
-                dp(14),
+                dp(16),
                 dp(18),
-                dp(14)
+                dp(16)
             )
+
+            minHeight = dp(68)
 
             setTextColor(ice)
             setTypeface(typeface, Typeface.BOLD)

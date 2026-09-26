@@ -1,15 +1,23 @@
 package com.pearparinya.automovie
 
+import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.view.Gravity
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
+import org.json.JSONObject
+import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 
 class MainActivity : AppCompatActivity() {
 
@@ -376,7 +384,7 @@ class MainActivity : AppCompatActivity() {
                     Color.rgb(35, 105, 210)
                 )
                 setOnClickListener {
-                    status.text = "🔄 เมนูอัปเดตแอปพร้อมใช้งาน"
+                    checkForAppUpdate()
                 }
             },
             LinearLayout.LayoutParams(
@@ -1508,6 +1516,166 @@ SCENE ${fmt(currentScene)}
 SCENE ${fmt(currentScene + 1)}
 อัตโนมัติ
         """.trimIndent()
+    }
+
+    // ============================================================
+    // APP UPDATE
+    // ============================================================
+
+    private fun checkForAppUpdate() {
+        status.text = "🔄 กำลังตรวจสอบเวอร์ชันล่าสุด…"
+
+        Thread {
+            try {
+                val connection = (URL(
+                    "https://api.github.com/repos/pearparinya/auto-movie-r6-4/releases/latest"
+                ).openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 15000
+                    readTimeout = 15000
+                    requestMethod = "GET"
+                    setRequestProperty("Accept", "application/vnd.github+json")
+                    setRequestProperty("User-Agent", "AUTO-MOVIE-Android")
+                }
+
+                val responseCode = connection.responseCode
+                if (responseCode !in 200..299) {
+                    throw IllegalStateException("GitHub HTTP $responseCode")
+                }
+
+                val json = connection.inputStream.bufferedReader().use { it.readText() }
+                connection.disconnect()
+
+                val release = JSONObject(json)
+                val tag = release.optString("tag_name").removePrefix("R").removePrefix("v")
+                val assets = release.optJSONArray("assets")
+                    ?: throw IllegalStateException("ไม่พบไฟล์ APK")
+
+                var apkUrl: String? = null
+                for (i in 0 until assets.length()) {
+                    val asset = assets.getJSONObject(i)
+                    val name = asset.optString("name")
+                    if (name.endsWith(".apk", ignoreCase = true)) {
+                        apkUrl = asset.optString("browser_download_url")
+                        break
+                    }
+                }
+
+                if (apkUrl.isNullOrBlank()) {
+                    throw IllegalStateException("ไม่พบไฟล์ APK ในรุ่นล่าสุด")
+                }
+
+                runOnUiThread {
+                    if (!isNewerVersion(tag, appVersion())) {
+                        status.text = "✓ AUTO-MOVIE R${appVersion()} เป็นเวอร์ชันล่าสุดแล้ว"
+                    } else {
+                        showUpdateDialog(tag, apkUrl)
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    status.text = "⚠ ตรวจสอบอัปเดตไม่สำเร็จ"
+                    AlertDialog.Builder(this)
+                        .setTitle("ตรวจสอบอัปเดตไม่สำเร็จ")
+                        .setMessage("กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง\n\n${e.message ?: ""}")
+                        .setPositiveButton("ตกลง", null)
+                        .show()
+                }
+            }
+        }.start()
+    }
+
+    private fun isNewerVersion(remote: String, local: String): Boolean {
+        val r = remote.split(".").map { it.toIntOrNull() ?: 0 }
+        val l = local.split(".").map { it.toIntOrNull() ?: 0 }
+        val size = maxOf(r.size, l.size)
+        for (i in 0 until size) {
+            val rv = r.getOrElse(i) { 0 }
+            val lv = l.getOrElse(i) { 0 }
+            if (rv != lv) return rv > lv
+        }
+        return false
+    }
+
+    private fun showUpdateDialog(version: String, apkUrl: String) {
+        AlertDialog.Builder(this)
+            .setTitle("พบ AUTO-MOVIE R$version")
+            .setMessage("มีเวอร์ชันใหม่พร้อมใช้งาน\n\nกด “ดาวน์โหลดและติดตั้ง” เพื่อเริ่มอัปเดต")
+            .setNegativeButton("ไว้ภายหลัง", null)
+            .setPositiveButton("ดาวน์โหลดและติดตั้ง") { _, _ ->
+                downloadAndInstallUpdate(version, apkUrl)
+            }
+            .show()
+    }
+
+    private fun downloadAndInstallUpdate(version: String, apkUrl: String) {
+        try {
+            val fileName = "AUTO-MOVIE-R$version-release.apk"
+            val targetFile = File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName)
+            if (targetFile.exists()) targetFile.delete()
+
+            val request = DownloadManager.Request(Uri.parse(apkUrl))
+                .setTitle("AUTO-MOVIE R$version")
+                .setDescription("กำลังดาวน์โหลดอัปเดต…")
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setDestinationUri(Uri.fromFile(targetFile))
+
+            val manager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            val downloadId = manager.enqueue(request)
+            status.text = "⬇ กำลังดาวน์โหลด AUTO-MOVIE R$version…"
+
+            Thread {
+                var finished = false
+                while (!finished) {
+                    val cursor = manager.query(DownloadManager.Query().setFilterById(downloadId))
+                    cursor.use {
+                        if (it != null && it.moveToFirst()) {
+                            val state = it.getInt(it.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+                            when (state) {
+                                DownloadManager.STATUS_SUCCESSFUL -> {
+                                    finished = true
+                                    runOnUiThread {
+                                        status.text = "✓ ดาวน์โหลดเสร็จแล้ว • เปิดหน้าติดตั้ง"
+                                        installDownloadedApk(targetFile)
+                                    }
+                                }
+                                DownloadManager.STATUS_FAILED -> {
+                                    finished = true
+                                    runOnUiThread {
+                                        status.text = "⛔ ดาวน์โหลดอัปเดตไม่สำเร็จ"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (!finished) Thread.sleep(750)
+                }
+            }.start()
+        } catch (e: Exception) {
+            status.text = "⛔ เริ่มดาวน์โหลดอัปเดตไม่สำเร็จ"
+        }
+    }
+
+    private fun installDownloadedApk(apkFile: File) {
+        try {
+            val apkUri = FileProvider.getUriForFile(
+                this,
+                "${packageName}.fileprovider",
+                apkFile
+            )
+
+            startActivity(Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(apkUri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
+        } catch (e: Exception) {
+            status.text = "⚠ เปิดตัวติดตั้งไม่สำเร็จ"
+            AlertDialog.Builder(this)
+                .setTitle("เปิดตัวติดตั้งไม่สำเร็จ")
+                .setMessage("Android อาจต้องอนุญาตให้ AUTO-MOVIE ติดตั้งแอปจากแหล่งนี้ก่อน")
+                .setPositiveButton("ตกลง", null)
+                .show()
+        }
     }
 
     // ============================================================

@@ -105,7 +105,19 @@ jobs:
       # BUILD RELEASE
       # ============================================================
 
-      - name: Read app version\n        id: app_version\n        shell: bash\n        run: |\n          VERSION_NAME="$(grep -oP 'versionName\\s*=\\s*"\\K[^"]+' app/build.gradle.kts | head -n 1)"\n          if [ -z "$VERSION_NAME" ]; then\n            echo "Unable to read versionName."\n            exit 1\n          fi\n          echo "version=$VERSION_NAME" >> "$GITHUB_OUTPUT"\n          echo "Building AUTO-MOVIE R$VERSION_NAME"\n\n      - name: Build release APK
+      - name: Read app version
+        id: app_version
+        shell: bash
+        run: |
+          VERSION_NAME="$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -n 1)"
+          if [ -z "$VERSION_NAME" ]; then
+            echo "Unable to read versionName."
+            exit 1
+          fi
+          echo "version=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "Building AUTO-MOVIE R$VERSION_NAME"
+
+      - name: Build release APK
         shell: bash
         run: |
           gradle :app:assembleRelease

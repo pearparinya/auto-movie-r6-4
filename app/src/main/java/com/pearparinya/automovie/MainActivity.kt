@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
             contentDescription = "AUTO-MOVIE ENGINE 2.0"
             scaleType = ImageView.ScaleType.FIT_CENTER
             adjustViewBounds = true
-        }, LinearLayout.LayoutParams(dp(92), dp(92)).apply {
+        }, LinearLayout.LayoutParams(dp(80), dp(80)).apply {
             marginEnd = dp(14)
         })
 
@@ -70,8 +70,8 @@ class MainActivity : AppCompatActivity() {
 
         headerText.addView(TextView(this).apply {
             text = "AUTO-MOVIE"
-            textSize = 26f
-            letterSpacing = 0.05f
+            textSize = 23f
+            letterSpacing = 0.03f
             setTextColor(gold)
             setTypeface(typeface, Typeface.BOLD)
             gravity = Gravity.START
@@ -79,8 +79,8 @@ class MainActivity : AppCompatActivity() {
 
         headerText.addView(TextView(this).apply {
             text = "AI PRODUCTION STUDIO  •  R${appVersion()}"
-            textSize = 11f
-            letterSpacing = 0.02f
+            textSize = 10f
+            letterSpacing = 0.01f
             setTextColor(muted)
             gravity = Gravity.START
             setPadding(0, dp(3), 0, dp(2))
@@ -88,7 +88,7 @@ class MainActivity : AppCompatActivity() {
 
         headerText.addView(TextView(this).apply {
             text = "STORY → SCENE → QC → LOCK"
-            textSize = 10f
+            textSize = 9f
             setTextColor(ice)
             gravity = Gravity.START
             setPadding(0, dp(2), 0, 0)

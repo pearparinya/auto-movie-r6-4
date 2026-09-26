@@ -97,7 +97,7 @@ class MainActivity : AppCompatActivity() {
             maxLines = 1
             isSingleLine = true
             setAutoSizeTextTypeUniformWithConfiguration(
-                12, 16, 1,
+                10, 16, 1,
                 android.util.TypedValue.COMPLEX_UNIT_SP
             )
             setPadding(0, 0, 0, 0)

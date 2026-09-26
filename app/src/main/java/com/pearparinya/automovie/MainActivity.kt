@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(22), dp(46), dp(22), dp(18))
+            setPadding(dp(18), dp(52), dp(18), dp(8))
             setBackgroundColor(navy)
         }
 
@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         val headerRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.TOP
-            setPadding(0, 0, 0, dp(8))
+            setPadding(0, 0, 0, dp(3))
         }
 
         headerRow.addView(ImageView(this).apply {
@@ -81,8 +81,8 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "สตูดิโอผลิตสื่อ AI  •  R${appVersion()}"
-            textSize = 10f
+            text = "สตูดิโอผลิตสื่อ AI • R${appVersion()}"
+            textSize = 12f
             setTextColor(muted)
             gravity = Gravity.START
             maxLines = 1
@@ -90,8 +90,8 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "STORY → SCENE → QC → LOCK"
-            textSize = 9f
+            text = "เรื่อง → ฉาก → ตรวจ → ล็อก"
+            textSize = 10f
             setTextColor(ice)
             gravity = Gravity.START
             maxLines = 1
@@ -118,10 +118,10 @@ class MainActivity : AppCompatActivity() {
             maxLines = 1
             setAutoSizeTextTypeUniformWithConfiguration(12, 17, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             setPadding(
-                dp(12),
                 dp(10),
-                dp(12),
-                dp(7)
+                dp(6),
+                dp(10),
+                dp(5)
             )
             setBackgroundColor(panel)
         }
@@ -150,14 +150,14 @@ class MainActivity : AppCompatActivity() {
             hint = "ชื่อเรื่อง / คำสั่งผู้กำกับ…"
             setHintTextColor(Color.GRAY)
             setTextColor(Color.WHITE)
-            minLines = 3
+            minLines = 2
             gravity = Gravity.TOP
 
             setPadding(
-                dp(16),
                 dp(14),
-                dp(16),
-                dp(14)
+                dp(9),
+                dp(14),
+                dp(9)
             )
 
             setBackgroundColor(panel)
@@ -167,9 +167,9 @@ class MainActivity : AppCompatActivity() {
 
         inputParams.setMargins(
             0,
-            dp(10),
+            dp(5),
             0,
-            dp(10)
+            dp(5)
         )
 
         root.addView(
@@ -179,7 +179,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "✦  สร้างชื่อเรื่อง • TITLES",
+                "✦  ชื่อเรื่อง • TITLES",
                 "สร้างชื่อเรื่อง 5 ชื่อ"
             ) {
                 generateTitles()
@@ -207,7 +207,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🎬  สร้าง EP • CREATE",
+                "🎬  สร้างเรื่อง • CREATE",
                 "เริ่มสร้างเรื่อง"
             ) {
                 createEp()
@@ -253,7 +253,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🛠️  แก้ไขภาพ • REPAIR",
+                "🛠️  แก้ภาพ • REPAIR",
                 "เฉพาะจุด • สูงสุด 3 ครั้ง"
             ) {
                 repair()
@@ -267,7 +267,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🔒  ผ่านและล็อก • LOCK",
+                "🔒  ผ่าน/ล็อก • LOCK",
                 "ยืนยันฉากนี้"
             ) {
                 lockScene()
@@ -304,7 +304,7 @@ class MainActivity : AppCompatActivity() {
             text =
                 "● SYSTEM READY  •  AUTO-CONTEXT ON"
 
-            textSize = 14f
+            textSize = 11f
 
             setTextColor(success)
 
@@ -312,9 +312,9 @@ class MainActivity : AppCompatActivity() {
 
             setPadding(
                 0,
-                dp(22),
+                dp(6),
                 0,
-                dp(10)
+                dp(3)
             )
         }
 
@@ -359,7 +359,7 @@ class MainActivity : AppCompatActivity() {
 
                 setPadding(
                     0,
-                    dp(20),
+                    dp(5),
                     0,
                     0
                 )
@@ -1524,11 +1524,11 @@ STOP
             text = title
             contentDescription = "$title — $subtitle"
 
-            textSize = 15f
+            textSize = 14f
 
             maxLines = 1
             setAutoSizeTextTypeUniformWithConfiguration(
-                12, 15, 1,
+                11, 14, 1,
                 android.util.TypedValue.COMPLEX_UNIT_SP
             )
 
@@ -1538,13 +1538,13 @@ STOP
                 Gravity.CENTER
 
             setPadding(
-                dp(16),
-                dp(9),
-                dp(16),
-                dp(9)
+                dp(12),
+                dp(5),
+                dp(12),
+                dp(5)
             )
 
-            minHeight = dp(46)
+            minHeight = dp(40)
 
             setTextColor(ice)
             setTypeface(typeface, Typeface.BOLD)
@@ -1567,7 +1567,7 @@ STOP
                 textValue
 
             textSize =
-                11f
+                10f
 
             setTextColor(gold)
 
@@ -1578,9 +1578,9 @@ STOP
 
             setPadding(
                 0,
-                dp(8),
+                dp(4),
                 0,
-                dp(8)
+                dp(4)
             )
         }
     }
@@ -1597,9 +1597,9 @@ STOP
 
             setMargins(
                 0,
-                dp(3),
+                dp(1),
                 0,
-                dp(3)
+                dp(1)
             )
         }
     }

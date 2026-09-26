@@ -21,6 +21,7 @@ import java.net.URL
 
 class MainActivity : AppCompatActivity() {
 
+    private var currentEp = 1
     private var currentScene = 1
     private var repairCount = 0
     private var sceneLocked = false
@@ -523,6 +524,7 @@ class MainActivity : AppCompatActivity() {
         statePrefs.edit()
             .putString("story", if (::input.isInitialized) input.text.toString() else "")
             .putString("category", selectedCategory)
+            .putInt("ep", currentEp)
             .putInt("scene", currentScene)
             .putInt("repair", repairCount)
             .putBoolean("locked", sceneLocked)
@@ -532,6 +534,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun restoreWorkState() {
         selectedCategory = statePrefs.getString("category", null)
+        currentEp = statePrefs.getInt("ep", 1).coerceIn(1, 5)
         currentScene = statePrefs.getInt("scene", 1).coerceIn(1, 20)
         repairCount = statePrefs.getInt("repair", 0).coerceIn(0, 3)
         sceneLocked = statePrefs.getBoolean("locked", false)
@@ -543,7 +546,7 @@ class MainActivity : AppCompatActivity() {
             input.setSelection(input.text.length)
         }
 
-        sceneLabel.text = "EP 01   •   SCENE ${fmt(currentScene)} / 20   •   8 SEC"
+        sceneLabel.text = "EP ${fmt(currentEp)}   •   SCENE ${fmt(currentScene)} / 20   •   8 SEC"
         progress.progress = currentScene
         nextButton.isEnabled = sceneLocked && currentScene < 20
         nextButton.alpha = if (nextButton.isEnabled) 1f else 0.45f
@@ -618,6 +621,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        currentEp = 1
         currentScene = 1
         repairCount = 0
         sceneLocked = false
@@ -636,7 +640,8 @@ class MainActivity : AppCompatActivity() {
         )
 
         // ROTATING CATEGORY:
-        // ทุกครั้งที่สร้าง EP ให้เลื่อนไปหมวดถัดไปสำหรับงานครั้งหน้า
+        // หมุน CATEGORY ครั้งเดียวเมื่อเริ่ม "เรื่องใหม่"
+        // EP 01–05 ของเรื่องเดียวกันใช้ CATEGORY เดิมทั้งหมด
         val usedIndex = storyCategories.indexOf(categoryForThisEp)
         categoryIndex =
             if (usedIndex >= 0) {
@@ -645,8 +650,8 @@ class MainActivity : AppCompatActivity() {
                 (categoryIndex + 1) % storyCategories.size
             }
 
-        // ล็อก CATEGORY ของ EP ปัจจุบันไว้ให้ทุกคำสั่งในแอปตรงกับ ChatGPT
-        // categoryIndex ถูกเลื่อนไปแล้วเพื่อเตรียมหมวดสำหรับ EP ถัดไป
+        // ล็อก CATEGORY ตลอด STORY ปัจจุบัน (EP 01–05)
+        // categoryIndex ถูกเลื่อนไว้ล่วงหน้าสำหรับ "เรื่องใหม่" ครั้งถัดไปเท่านั้น
         selectedCategory = categoryForThisEp
         saveWorkState()
     }
@@ -691,31 +696,23 @@ class MainActivity : AppCompatActivity() {
 
         sceneLocked = true
 
-        nextButton.isEnabled =
-            currentScene < 20
-
-        nextButton.alpha =
-            if (currentScene < 20) {
-                1f
-            } else {
-                0.45f
-            }
+        nextButton.isEnabled = true
+        nextButton.alpha = 1f
 
         saveWorkState()
 
         status.text =
             if (currentScene == 20) {
-
-                "✅ SCENE 20 LOCKED • SAVE_EP • HANDOFF • STOP"
-
+                if (currentEp < 5) {
+                    "✅ EP ${fmt(currentEp)} COMPLETE • HANDOFF → EP ${fmt(currentEp + 1)}"
+                } else {
+                    "🏁 EP 05 COMPLETE • STORY COMPLETE"
+                }
             } else {
-
-                "✅ PASS & LOCK — SCENE ${fmt(currentScene)}"
+                "✅ PASS & LOCK — EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)}"
             }
 
-        share(
-            buildLockCommand()
-        )
+        share(buildLockCommand())
     }
 
     // ============================================================
@@ -725,35 +722,28 @@ class MainActivity : AppCompatActivity() {
     private fun nextScene() {
 
         if (!sceneLocked) {
-
-            status.text =
-                "⛔ ต้อง PASS & LOCK ก่อน"
-
+            status.text = "⛔ ต้อง PASS & LOCK ก่อน"
             return
         }
 
-        if (currentScene >= 20) {
-
-            status.text =
-                "🏁 EP COMPLETE — STOP"
-
+        if (currentScene < 20) {
+            currentScene++
+        } else if (currentEp < 5) {
+            // Scene 20 ของ EP เดิมผ่านแล้ว: ส่งต่อด้วย HANDOFF ไป EP ถัดไป
+            currentEp++
+            currentScene = 1
+        } else {
+            status.text = "🏁 STORY COMPLETE — EP 01–05 COMPLETE"
             return
         }
-
-        currentScene++
 
         repairCount = 0
         sceneLocked = false
-
         updateUi()
         saveWorkState()
 
-        status.text =
-            "▶ AUTO-CONTEXT — SCENE ${fmt(currentScene)}"
-
-        share(
-            buildNextSceneCommand()
-        )
+        status.text = "▶ EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)} • AUTO-CONTEXT"
+        share(buildNextSceneCommand())
     }
 
     // ============================================================
@@ -763,7 +753,7 @@ class MainActivity : AppCompatActivity() {
     private fun updateUi() {
 
         sceneLabel.text =
-            "EP 01   •   SCENE ${fmt(currentScene)} / 20   •   8 SEC"
+            "EP ${fmt(currentEp)}   •   SCENE ${fmt(currentScene)} / 20   •   8 SEC"
 
         progress.progress =
             currentScene
@@ -875,8 +865,12 @@ APP ↔ CHATGPT WORKFLOW SYNC:
 
 PRODUCTION RULES:
 
-- สร้างจำนวน 1 EP
-- EP ต้องมี 20 ฉาก
+- 1 STORY มี 5 EP
+- EP 01–05 ต้องเป็นเรื่องเดียวกันและ CATEGORY เดียวกัน
+- แต่ละ EP ต้องมี 20 ฉาก
+- รวมทั้งเรื่อง 100 ฉาก
+- CATEGORY หมุนเฉพาะเมื่อเริ่ม STORY ใหม่ หลัง EP 05 จบแล้ว
+- จบแต่ละ EP ต้องมี EP HANDOFF FILE เฉพาะเพื่อส่งต่อ EP ถัดไป
 - ทุกฉากยาว 8 วินาทีเท่ากัน
 - วิดีโอแนวตั้ง 9:16
 - สำหรับ Flow / Veo 3.1
@@ -1064,17 +1058,28 @@ STOP
 
         return rules() + """
 
-EP MASTER METADATA:
+STORY MASTER + EP 01 MASTER:
 
+TITLE: $story
 CATEGORY: $category
+TOTAL EP: 5
+SCENES PER EP: 20
+TOTAL STORY SCENES: 100
+
+กฎ STORY:
+- เรื่องนี้ต้องดำเนินต่อเนื่องตั้งแต่ EP 01 ถึง EP 05
+- CATEGORY และ TITLE ต้องคงเดิมตลอดทั้ง 5 EP
+- ห้ามหมุน CATEGORY ระหว่าง EP
+- แต่ละ EP มี 20 Scene
+- เมื่อจบ Scene 20 ของแต่ละ EP ต้องสร้าง EP HANDOFF FILE เฉพาะ EP เพื่อส่งต่อ EP ถัดไป
 
 DIRECTOR COMMAND:
 
 $story
 
-ดำเนินการสร้าง EP ทันที
+ดำเนินการสร้าง EP 01 ทันที
 
-สร้างให้ครบ 20 Scene
+สร้าง EP 01 ให้ครบ 20 Scene
 
 ทุก Scene ต้องมีข้อมูลครบ:
 
@@ -1155,6 +1160,7 @@ GENERATE CURRENT SCENE
 ACTIVE WORK STATE — SOURCE OF TRUTH:
 TITLE: ${input.text.toString().trim()}
 CATEGORY: ${selectedCategory ?: storyCategories[categoryIndex]}
+CURRENT EP: ${fmt(currentEp)} / 05
 CURRENT SCENE: ${fmt(currentScene)} / 20
 DURATION: 8 SEC
 FORMAT: 9:16
@@ -1460,66 +1466,55 @@ ON
 COMMAND:
 PASS & LOCK
 
-CURRENT SCENE:
-${fmt(currentScene)}
+ACTIVE WORK STATE:
+TITLE: ${input.text.toString().trim()}
+CATEGORY: ${selectedCategory ?: storyCategories[categoryIndex]}
+EP: ${fmt(currentEp)} / 05
+SCENE: ${fmt(currentScene)} / 20
 
-ค้นหา:
+ก่อนล็อก ต้องยืนยันว่า QC RESULT ล่าสุดของ EP ${fmt(currentEp)} SCENE ${fmt(currentScene)} = PASS อย่างชัดเจน
+ถ้า QC = FAIL, มี WLF-01 หรือ POST-REPAIR VALIDATION ยังไม่ CLEARED ให้หยุด ห้าม LOCK
 
-- EP MASTER
-- SCENE ${fmt(currentScene)}
-- ภาพ Output ล่าสุด
-- QC RESULT ล่าสุด
+เมื่อ QC = PASS:
+ล็อก Output ล่าสุดเป็นภาพที่ผ่าน QC ของ EP ${fmt(currentEp)} SCENE ${fmt(currentScene)}
 
-จากบทสนทนาเดียวกัน
+${if (currentScene == 20 && currentEp < 5) """
+EP ${fmt(currentEp)} COMPLETE
 
-ห้ามถาม Director
-ให้ส่งข้อมูลเดิมซ้ำ
+สร้างไฟล์เฉพาะ:
+EP${fmt(currentEp)}_HANDOFF
 
-ก่อนล็อก ต้องยืนยันว่า QC RESULT ล่าสุดของ SCENE ${fmt(currentScene)} ระบุ PASS อย่างชัดเจน
+HANDOFF FILE ต้องบันทึก:
+- STORY TITLE และ CATEGORY
+- EP ที่จบ และ EP ถัดไป
+- สรุปเหตุการณ์สำคัญของ EP นี้
+- สถานะตัวละครและความสัมพันธ์ล่าสุด
+- จุดค้าง/ปมที่ต้องส่งต่อ
+- Timeline / วัน / เวลา / สถานที่ล่าสุด
+- Wardrobe Continuity ที่ต้องส่งต่อ
+- Identity Master ที่ต้องใช้ต่อ
+- ข้อเท็จจริงที่ห้ามเปลี่ยน
+- OPEN LOOPS สำหรับ EP ถัดไป
 
-ถ้า QC ล่าสุดเป็น FAIL, มี WLF-01, หรือ POST-REPAIR VALIDATION ยังไม่ CLEARED:
-ห้ามล็อก และให้แจ้งว่าต้อง QC/REPAIR ก่อน
-
-เมื่อตรวจพบ QC = PASS เท่านั้น:
-ล็อกภาพ Output ล่าสุด
-ของ SCENE ${fmt(currentScene)}
-เป็นภาพที่ผ่าน QC
-
-สถานะ:
-
-SCENE ${fmt(currentScene)}
-=
-PASS & LOCK
-
-ห้ามแก้ไข Scene นี้
-โดยไม่มีคำสั่ง Director
-
-${
-            if (currentScene == 20) {
-
-                """
-SCENE 20 COMPLETE
-
-SAVE_EP
-HANDOFF
+HANDOFF TO: EP ${fmt(currentEp + 1)}
+NEXT = CREATE EP ${fmt(currentEp + 1)} FROM HANDOFF
 STOP
-
-ห้ามเริ่ม EP ถัดไป
-                """.trimIndent()
-
-            } else {
-
-                """
+ห้ามเปลี่ยน TITLE หรือ CATEGORY
+ห้ามเริ่ม EP ถัดไปเอง
+""".trimIndent()
+else if (currentScene == 20 && currentEp == 5) """
+EP 05 COMPLETE
+สร้างไฟล์เฉพาะ: EP05_HANDOFF_FINAL
+SAVE STORY MASTER
+STORY COMPLETE — 5 EP / 100 SCENES
 STOP
-
-รอคำสั่ง
-NEXT SCENE
-
-ห้ามเริ่ม Scene ถัดไป
-อัตโนมัติ
-                """.trimIndent()
-            }
-        }
+ห้ามเริ่มเรื่องใหม่เอง
+""".trimIndent()
+else """
+STOP
+NEXT = NEXT SCENE
+ห้ามเริ่ม Scene ถัดไปอัตโนมัติ
+""".trimIndent()}
         """.trimIndent()
     }
 
@@ -1529,88 +1524,42 @@ NEXT SCENE
 
     private fun buildNextSceneCommand(): String {
 
+        val isNewEp = currentScene == 1 && currentEp > 1
         return rules() + """
 
 AUTO-CONTEXT MODE:
 ON
 
 COMMAND:
-NEXT SCENE
+${if (isNewEp) "CREATE NEXT EP FROM HANDOFF" else "NEXT SCENE"}
 
-PREVIOUS SCENE:
+ACTIVE WORK STATE:
+TITLE: ${input.text.toString().trim()}
+CATEGORY: ${selectedCategory ?: storyCategories[categoryIndex]}
+CURRENT EP: ${fmt(currentEp)} / 05
+CURRENT SCENE: ${fmt(currentScene)} / 20
 
-SCENE ${fmt(currentScene - 1)}
-=
-PASS & LOCK
-
-CURRENT SCENE:
-
-SCENE ${fmt(currentScene)}
-
-ขั้นตอนบังคับ:
-
-1. ค้นหา EP MASTER ล่าสุด
-   ในบทสนทนาเดียวกัน
-
-2. ดึงบท
-   SCENE ${fmt(currentScene)}
-   จาก EP MASTER
-   โดยอัตโนมัติ
-
-3. ห้ามถาม Director
-   ให้ส่งบท Scene ซ้ำ
-
-4. ห้ามสร้างเนื้อเรื่องใหม่
-   แทนบทเดิม
-
-5. รักษา:
-
-   - Story Continuity
-   - Character Continuity
-   - Wardrobe Continuity
-   - Location Continuity
-   - Emotional Continuity
-   - Timeline Continuity
-
-6. ตรวจ ORIGINAL IDENTITY MASTER
-   ของตัวละครที่ต้องปรากฏ
-   ใน SCENE ${fmt(currentScene)}
-
-7. ถ้า Identity Master ครบ:
-
-   เตรียมดำเนินการ
-   SCENE ${fmt(currentScene)}
-   ตามบทเดิมทันที
-
-8. ถ้า Identity Master ไม่ครบ:
-
-   แจ้งเฉพาะ
-   ชื่อตัวละครที่ขาด
-
-   ห้ามถามหาบท Scene
-
-9. ห้ามใช้ภาพ Output
-   จาก SCENE ${fmt(currentScene - 1)}
-   เป็น Identity Master
-
-10. ห้ามเปลี่ยน
-    Natural Body
-
-11. One Scene / One Image
-
-12. ดำเนินการเฉพาะ:
-
-    SCENE ${fmt(currentScene)}
-
-13. หลังดำเนินการ:
-
-    STOP
-
-    รอ QC CHECK
-
-ห้ามข้ามไป
-SCENE ${fmt(currentScene + 1)}
-อัตโนมัติ
+${if (isNewEp) """
+EP TRANSITION:
+- ค้นหา EP${fmt(currentEp - 1)}_HANDOFF จากบทสนทนาเดียวกัน
+- ใช้ HANDOFF นั้นสร้าง EP ${fmt(currentEp)} MASTER จำนวน 20 Scene
+- ต้องต่อจากเหตุการณ์/ความสัมพันธ์/Timeline/Wardrobe/Open Loops เดิม
+- TITLE และ CATEGORY ต้องเหมือน STORY MASTER เดิม 100%
+- ห้ามหมุน CATEGORY
+- ห้ามสร้างเรื่องใหม่
+- เมื่อสร้าง EP ${fmt(currentEp)} MASTER ครบ ให้ STOP
+- NEXT = GENERATE SCENE 01
+""".trimIndent()
+else """
+PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
+- ใช้ EP ${fmt(currentEp)} MASTER เดิม
+- ดึง SCENE ${fmt(currentScene)} โดยอัตโนมัติ
+- รักษา Story / Character / Wardrobe / Location / Emotion / Timeline Continuity
+- ตรวจ ORIGINAL IDENTITY MASTER ของตัวละครที่ต้องปรากฏ
+- One Scene / One Image
+- หลังดำเนินการ STOP และรอ QC CHECK
+- ห้ามข้ามไป Scene ถัดไป
+""".trimIndent()}
         """.trimIndent()
     }
 

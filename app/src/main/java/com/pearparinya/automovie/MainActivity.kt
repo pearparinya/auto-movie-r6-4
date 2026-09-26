@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var input: EditText
     private lateinit var titlePanel: LinearLayout
     private lateinit var nextHint: TextView
+    private lateinit var confirmOutputButton: Button
 
     private val navy = Color.rgb(12, 15, 38)
     private val panel = Color.rgb(37, 32, 78)
@@ -303,10 +304,34 @@ class MainActivity : AppCompatActivity() {
             ) {
                 if (!requireStep(3)) return@stepAction
                 share(buildSceneCommand())
-                setActiveStep(4)
+                status.text = "⏳ ส่ง GENERATE SCENE แล้ว • รอยืนยันว่ามีภาพ Output จริง"
+                refreshStepIndicator()
             },
             full()
         )
+
+        confirmOutputButton = action(
+            "✓ ยืนยันผลลัพธ์ • CONFIRM",
+            "ยืนยัน EP MASTER หรือภาพ Output ก่อนเข้าสู่ขั้นถัดไป"
+        ) {
+            when (activeStep) {
+                2 -> {
+                    status.text = "✓ ยืนยัน EP MASTER แล้ว • ไปขั้นตอน ③"
+                    setActiveStep(3)
+                }
+                3 -> {
+                    status.text = "✓ ยืนยันว่ามีภาพ Output จริงแล้ว • ไปขั้นตอน ④ QC"
+                    setActiveStep(4)
+                }
+                else -> {
+                    playTone(ToneGenerator.TONE_PROP_NACK, 120)
+                    status.text = "⛔ ขั้นตอนนี้ไม่ต้องยืนยันผลลัพธ์"
+                }
+            }
+        }.apply {
+            backgroundTintList = android.content.res.ColorStateList.valueOf(panel)
+        }
+        root.addView(confirmOutputButton, full())
 
         // ============================================================
         // QC CHECK
@@ -749,7 +774,8 @@ class MainActivity : AppCompatActivity() {
         // ล็อก CATEGORY ตลอด STORY ปัจจุบัน (EP 01–05)
         // categoryIndex ถูกเลื่อนไว้ล่วงหน้าสำหรับ "เรื่องใหม่" ครั้งถัดไปเท่านั้น
         selectedCategory = categoryForThisEp
-        setActiveStep(3)
+        status.text = "⏳ ส่ง CREATE EP แล้ว • รอยืนยัน EP MASTER"
+        refreshStepIndicator()
         saveWorkState()
     }
 
@@ -1246,7 +1272,10 @@ PASS & LOCK
 SCENES 01–20 = PLANNED & LOCKED
 NEXT = GENERATE SCENE 01
 
-จากนั้น STOP และรอ Director สั่ง GENERATE SCENE
+จากนั้น STOP
+เมื่อ EP MASTER ถูกสร้างสำเร็จ ให้ตอบท้ายสุดว่า:
+EP MASTER READY — RETURN TO AUTO-MOVIE AND PRESS CONFIRM
+ห้ามถือว่าเข้าสู่ GENERATE SCENE จน Director ยืนยันใน AUTO-MOVIE
 
 ห้ามแสดง SAVE_EP / HANDOFF / EP COMPLETE ในขั้น CREATE EP
 เพราะคำเหล่านี้ใช้ได้เฉพาะหลัง SCENE 20 ผ่าน QC และ PASS & LOCK แล้วเท่านั้น
@@ -1290,7 +1319,11 @@ APP ↔ CHATGPT SYNC RULE:
 
 2. ถ้าบทสนทนานี้มี EP MASTER ของ TITLE เดียวกัน ให้ดึง SCENE ${fmt(currentScene)} จาก EP MASTER เดิมโดยอัตโนมัติ
 
-3. ถ้าไม่พบ EP MASTER ในบทสนทนานี้ ห้ามเดาหรือสร้าง Scene ใหม่ และห้ามสลับไปใช้เรื่องอื่น ให้ตอบสั้น ๆ ว่า:
+3. เมื่อสร้างภาพ SCENE ${fmt(currentScene)} สำเร็จจริงแล้ว ให้ตอบท้ายสุดว่า:
+   SCENE OUTPUT READY — RETURN TO AUTO-MOVIE AND PRESS CONFIRM
+   ห้ามถือว่าเข้าสู่ QC จน Director ยืนยันใน AUTO-MOVIE
+
+4. ถ้าไม่พบ EP MASTER ในบทสนทนานี้ ห้ามเดาหรือสร้าง Scene ใหม่ และห้ามสลับไปใช้เรื่องอื่น ให้ตอบสั้น ๆ ว่า:
    EP MASTER NOT FOUND — TITLE: ${input.text.toString().trim()}
    กรุณากลับไปยังบทสนทนาที่สร้าง EP MASTER เรื่องนี้ แล้วสั่ง GENERATE SCENE ${fmt(currentScene)}
 
@@ -2078,11 +2111,16 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
             }
         }
 
+        if (::confirmOutputButton.isInitialized) {
+            confirmOutputButton.isEnabled = activeStep == 2 || activeStep == 3
+            confirmOutputButton.alpha = if (confirmOutputButton.isEnabled) 0.95f else 0.38f
+        }
+
         if (::nextHint.isInitialized) {
             nextHint.text = when (activeStep) {
                 1 -> "NEXT • ① สร้างและเลือกชื่อเรื่อง"
-                2 -> "NEXT • ② สร้าง STORY / EP 01"
-                3 -> "NEXT • ③ สร้างภาพ Scene ปัจจุบัน"
+                2 -> "② CREATE EP → ได้ EP MASTER แล้วกด CONFIRM"
+                3 -> "③ SCENE → มีภาพ Output จริงแล้วกด CONFIRM"
                 4 -> "QC RESULT • FAIL → ⑤ REPAIR   |   PASS → ⑥ LOCK"
                 7 -> if (currentScene == 20 && currentEp < 5) {
                     "NEXT • HANDOFF → EP ${fmt(currentEp + 1)}"

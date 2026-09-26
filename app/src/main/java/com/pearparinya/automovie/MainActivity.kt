@@ -428,7 +428,7 @@ class MainActivity : AppCompatActivity() {
         root.addView(status)
 
         // ============================================================
-        // HELP + UPDATE — ONE ROW / 50:50
+        // HELP + NEW STORY + UPDATE — ONE ROW / 3 MENUS
         // ============================================================
 
         val utilityRow = LinearLayout(this).apply {
@@ -461,6 +461,36 @@ class MainActivity : AppCompatActivity() {
                 dp(46),
                 1f
             ).apply {
+                marginEnd = dp(3)
+            }
+        )
+
+        utilityRow.addView(
+            Button(this).apply {
+                text = "เริ่มเรื่องใหม่"
+                textSize = 13f
+                maxLines = 1
+                isSingleLine = true
+                setAutoSizeTextTypeUniformWithConfiguration(
+                    9, 13, 1,
+                    android.util.TypedValue.COMPLEX_UNIT_SP
+                )
+                setTextColor(Color.BLACK)
+                setTypeface(typeface, Typeface.BOLD)
+                gravity = Gravity.CENTER
+                backgroundTintList = android.content.res.ColorStateList.valueOf(
+                    Color.rgb(230, 65, 65)
+                )
+                setOnClickListener {
+                    confirmNewStory()
+                }
+            },
+            LinearLayout.LayoutParams(
+                0,
+                dp(46),
+                1f
+            ).apply {
+                marginStart = dp(3)
                 marginEnd = dp(3)
             }
         )
@@ -616,6 +646,55 @@ class MainActivity : AppCompatActivity() {
 
     private val statePrefs by lazy {
         getSharedPreferences("auto_movie_state", Context.MODE_PRIVATE)
+    }
+
+    private fun confirmNewStory() {
+        val currentTitle = if (::input.isInitialized) input.text.toString().trim() else ""
+        val label = if (currentTitle.isNotBlank()) "“$currentTitle”" else "งานปัจจุบัน"
+
+        android.app.AlertDialog.Builder(this)
+            .setTitle("เริ่มเรื่องใหม่?")
+            .setMessage("$label จะถูกยกเลิก และ AUTO-MOVIE จะกลับไปเริ่มขั้นตอน ①\n\nแชทใน ChatGPT จะไม่ถูกลบ")
+            .setNegativeButton("ยกเลิก", null)
+            .setPositiveButton("เริ่มเรื่องใหม่") { _, _ ->
+                startNewStory()
+            }
+            .show()
+    }
+
+    private fun startNewStory() {
+        // ยกเลิกเฉพาะสถานะงานใน AUTO-MOVIE ไม่แตะต้องแชท ChatGPT
+        input.setText("")
+        titlePanel.removeAllViews()
+        titlePanel.visibility = android.view.View.GONE
+        selectedCategory = null
+        currentEp = 1
+        currentScene = 1
+        repairCount = 0
+        sceneLocked = false
+        activeStep = 1
+        storyStartTimeMs = 0L
+        storyEndTimeMs = 0L
+
+        statePrefs.edit()
+            .remove("story")
+            .remove("category")
+            .putInt("ep", 1)
+            .putInt("scene", 1)
+            .putInt("repair", 0)
+            .putBoolean("locked", false)
+            .putInt("activeStep", 1)
+            .putLong("storyStartTimeMs", 0L)
+            .putLong("storyEndTimeMs", 0L)
+            .apply()
+
+        sceneLabel.text = "EP 01   •   SCENE 01 / 20   •   8 SEC"
+        progress.progress = 1
+        updateTimeLabel()
+        updateNextButton()
+        refreshStepIndicator()
+        status.text = "● พร้อมเริ่มเรื่องใหม่ • เริ่มที่ ① TITLES"
+        playTone(ToneGenerator.TONE_PROP_ACK, 100)
     }
 
     private fun saveWorkState() {

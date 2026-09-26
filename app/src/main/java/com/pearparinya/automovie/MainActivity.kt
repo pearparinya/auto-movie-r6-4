@@ -456,7 +456,7 @@ class MainActivity : AppCompatActivity() {
                     Color.rgb(35, 105, 210)
                 )
                 setOnClickListener {
-                    checkForAppUpdate()
+                    checkForAppUpdate(silent = false)
                 }
             },
             LinearLayout.LayoutParams(
@@ -504,6 +504,10 @@ class MainActivity : AppCompatActivity() {
         restoreWorkState()
         refreshStepIndicator()
         setContentView(scroll)
+
+        // ตรวจอัปเดตอัตโนมัติ 1 ครั้งเมื่อเปิดแอป
+        // ถ้าไม่มีรุ่นใหม่จะไม่รบกวนผู้ใช้
+        checkForAppUpdate(silent = true)
     }
 
     // ============================================================
@@ -1674,8 +1678,10 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
     // APP UPDATE
     // ============================================================
 
-    private fun checkForAppUpdate() {
-        status.text = "🔄 กำลังตรวจสอบเวอร์ชันล่าสุด…"
+    private fun checkForAppUpdate(silent: Boolean = false) {
+        if (!silent) {
+            status.text = "🔄 กำลังตรวจสอบเวอร์ชันล่าสุด…"
+        }
 
         Thread {
             try {
@@ -1718,19 +1724,23 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
 
                 runOnUiThread {
                     if (!isNewerVersion(tag, appVersion())) {
-                        status.text = "✓ AUTO-MOVIE R${appVersion()} เป็นเวอร์ชันล่าสุดแล้ว"
+                        if (!silent) {
+                            status.text = "✓ AUTO-MOVIE R${appVersion()} เป็นเวอร์ชันล่าสุดแล้ว"
+                        }
                     } else {
                         showUpdateDialog(tag, apkUrl)
                     }
                 }
             } catch (e: Exception) {
                 runOnUiThread {
-                    status.text = "⚠ ตรวจสอบอัปเดตไม่สำเร็จ"
-                    AlertDialog.Builder(this)
-                        .setTitle("ตรวจสอบอัปเดตไม่สำเร็จ")
-                        .setMessage("กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง\n\n${e.message ?: ""}")
-                        .setPositiveButton("ตกลง", null)
-                        .show()
+                    if (!silent) {
+                        status.text = "⚠ ตรวจสอบอัปเดตไม่สำเร็จ"
+                        AlertDialog.Builder(this)
+                            .setTitle("ตรวจสอบอัปเดตไม่สำเร็จ")
+                            .setMessage("กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง\n\n${e.message ?: ""}")
+                            .setPositiveButton("ตกลง", null)
+                            .show()
+                    }
                 }
             }
         }.start()

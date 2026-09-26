@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(52), dp(18), dp(8))
+            setPadding(dp(14), dp(24), dp(14), dp(4))
             setBackgroundColor(navy)
         }
 
@@ -87,8 +87,8 @@ class MainActivity : AppCompatActivity() {
             contentDescription = "AUTO-MOVIE ENGINE 2.0"
             scaleType = ImageView.ScaleType.FIT_CENTER
             adjustViewBounds = true
-        }, LinearLayout.LayoutParams(dp(94), dp(94)).apply {
-            marginEnd = dp(12)
+        }, LinearLayout.LayoutParams(dp(78), dp(78)).apply {
+            marginEnd = dp(8)
         })
 
         val headerText = LinearLayout(this).apply {
@@ -99,18 +99,18 @@ class MainActivity : AppCompatActivity() {
 
         headerText.addView(TextView(this).apply {
             text = "AUTO-MOVIE 2.0"
-            textSize = 21f
+            textSize = 19f
             letterSpacing = 0.02f
             setTextColor(gold)
             setTypeface(typeface, Typeface.BOLD)
             gravity = Gravity.START
             maxLines = 1
-            setAutoSizeTextTypeUniformWithConfiguration(15, 21, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
+            setAutoSizeTextTypeUniformWithConfiguration(14, 19, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
         }, full())
 
         headerText.addView(TextView(this).apply {
             text = "ระบบสร้างหนังอัตโนมัติ R${appVersion()}"
-            textSize = 16f
+            textSize = 14f
             setTextColor(muted)
             gravity = Gravity.START
             maxLines = 1
@@ -179,7 +179,7 @@ class MainActivity : AppCompatActivity() {
 
         sceneLabel = TextView(this).apply {
             text = "EP 01   •   SCENE 01 / 20   •   8 SEC"
-            textSize = 17f
+            textSize = 16f
             setTextColor(ice)
             setTypeface(typeface, Typeface.BOLD)
             gravity = Gravity.CENTER
@@ -187,9 +187,9 @@ class MainActivity : AppCompatActivity() {
             setAutoSizeTextTypeUniformWithConfiguration(12, 17, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             setPadding(
                 dp(10),
-                dp(6),
+                dp(4),
                 dp(10),
-                dp(5)
+                dp(4)
             )
             setBackgroundColor(panel)
         }
@@ -207,7 +207,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             progress,
-            full(dp(10))
+            full(dp(7))
         )
 
         // ============================================================
@@ -218,14 +218,15 @@ class MainActivity : AppCompatActivity() {
             hint = "ชื่อเรื่อง / คำสั่งผู้กำกับ…"
             setHintTextColor(Color.GRAY)
             setTextColor(Color.WHITE)
-            minLines = 2
+            minLines = 1
+            maxLines = 2
             gravity = Gravity.TOP
 
             setPadding(
                 dp(14),
-                dp(9),
+                dp(6),
                 dp(14),
-                dp(9)
+                dp(6)
             )
 
             setBackgroundColor(panel)
@@ -2164,12 +2165,12 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
 
             setPadding(
                 dp(12),
-                dp(5),
+                dp(3),
                 dp(12),
-                dp(5)
+                dp(3)
             )
 
-            minHeight = dp(40)
+            minHeight = dp(34)
 
             setTextColor(ice)
             setTypeface(typeface, Typeface.BOLD)
@@ -2196,7 +2197,7 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
                 textValue
 
             textSize =
-                13f
+                12f
 
             setTextColor(gold)
 
@@ -2207,9 +2208,9 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
 
             setPadding(
                 0,
-                dp(4),
+                dp(2),
                 0,
-                dp(4)
+                dp(2)
             )
         }
     }

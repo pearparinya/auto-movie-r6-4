@@ -1112,31 +1112,28 @@ ON
 COMMAND:
 GENERATE CURRENT SCENE
 
-CURRENT SCENE:
-${fmt(currentScene)}
+ACTIVE WORK STATE:
+TITLE: ${input.text.toString().trim()}
+CATEGORY: ${selectedCategory ?: "ใช้ CATEGORY จาก EP MASTER"}
+CURRENT SCENE: ${fmt(currentScene)} / 20
+DURATION: 8 SEC
+FORMAT: 9:16
 
 ขั้นตอนบังคับ:
 
-1. ค้นหา EP MASTER ล่าสุด
-   ที่ CREATE EP สร้างไว้ก่อนหน้านี้
-   ในบทสนทนาเดียวกันนี้
+1. ใช้ ACTIVE WORK STATE ด้านบนเป็นตัวระบุงานปัจจุบันเสมอ
 
-2. ค้นหาและดึงบท:
+2. ถ้าบทสนทนานี้มี EP MASTER ของ TITLE เดียวกัน ให้ดึง SCENE ${fmt(currentScene)} จาก EP MASTER เดิมโดยอัตโนมัติ
 
-   SCENE ${fmt(currentScene)}
+3. ถ้าไม่พบ EP MASTER ในบทสนทนานี้ ห้ามเดาหรือสร้าง Scene ใหม่ และห้ามสลับไปใช้เรื่องอื่น ให้ตอบสั้น ๆ ว่า:
+   EP MASTER NOT FOUND — TITLE: ${input.text.toString().trim()}
+   กรุณากลับไปยังบทสนทนาที่สร้าง EP MASTER เรื่องนี้ แล้วสั่ง GENERATE SCENE ${fmt(currentScene)}
 
-   จาก EP MASTER
-   โดยอัตโนมัติ
+4. ห้ามถาม Director ให้ส่งบท SCENE ${fmt(currentScene)} ซ้ำ ถ้า EP MASTER ของเรื่องนี้มีอยู่แล้วในบทสนทนา
 
-3. ห้ามถาม Director
-   ให้ส่งบท
-   SCENE ${fmt(currentScene)}
-   ซ้ำ
+6. ห้ามแต่ง Scene ใหม่แทน Scene เดิม
 
-4. ห้ามแต่ง Scene ใหม่
-   แทน Scene เดิม
-
-5. ต้องยึดข้อมูลจาก Scene เดิม:
+6. ต้องยึดข้อมูลจาก Scene เดิม:
 
    - LOCATION
    - CHARACTERS
@@ -1147,13 +1144,13 @@ ${fmt(currentScene)}
    - FLOW / VEO 3.1 PROMPT
    - STORY CONTINUITY
 
-6. ตรวจว่า Scene นี้
+7. ตรวจว่า Scene นี้
    ต้องใช้ตัวละครใครบ้าง
 
-7. ตรวจ ORIGINAL IDENTITY MASTER
+8. ตรวจ ORIGINAL IDENTITY MASTER
    ของตัวละครเหล่านั้น
 
-8. ถ้า ORIGINAL IDENTITY MASTER
+9. ถ้า ORIGINAL IDENTITY MASTER
    ครบทั้งหมด:
 
    สร้างภาพ
@@ -1162,7 +1159,7 @@ ${fmt(currentScene)}
 
    ห้ามถามคำถามเพิ่มเติม
 
-9. ถ้า ORIGINAL IDENTITY MASTER
+10. ถ้า ORIGINAL IDENTITY MASTER
    ไม่ครบ:
 
    แจ้งเฉพาะชื่อ
@@ -1171,7 +1168,7 @@ ${fmt(currentScene)}
 
    ห้ามถามหาบท Scene
 
-10. Identity Master
+11. Identity Master
     ใช้สำหรับ:
 
     - Face
@@ -1183,7 +1180,7 @@ ${fmt(currentScene)}
 
     เท่านั้น
 
-11. WARDROBE FIREWALL
+12. WARDROBE FIREWALL
 
     ก่อนสร้างภาพ ต้องแยก IDENTITY ออกจาก WARDROBE อย่างเด็ดขาด
     ORIGINAL IDENTITY MASTER ห้ามเป็นแหล่งข้อมูลเสื้อผ้า สีชุด รูปแบบชุด รองเท้า หรือความโป๊/ความปิดของชุด
@@ -1197,13 +1194,13 @@ ${fmt(currentScene)}
     ถ้าชุดในภาพที่จะสร้างเหมือนชุดจาก ORIGINAL IDENTITY MASTER
     โดยไม่มีแหล่งข้อมูลข้างต้นรองรับ ต้องเปลี่ยนเป็นชุดที่ถูกต้องก่อนสร้าง Output
 
-12. ห้ามใช้ Output
+13. ห้ามใช้ Output
     จาก Scene ก่อนหน้า
     เป็น Identity Master
 
-13. One Scene / One Image
+14. One Scene / One Image
 
-14. หลังสร้างภาพเสร็จ:
+15. หลังสร้างภาพเสร็จ:
 
     STOP
 

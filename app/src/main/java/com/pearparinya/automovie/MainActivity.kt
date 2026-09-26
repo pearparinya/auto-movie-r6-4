@@ -90,14 +90,14 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "ระบบสร้างหนังอัตโนมัติ • R${appVersion()}"
+            text = "ระบบสร้างหนังอัตโนมัติ R${appVersion()}"
             textSize = 16f
             setTextColor(muted)
             gravity = Gravity.START
             maxLines = 1
             isSingleLine = true
             setAutoSizeTextTypeUniformWithConfiguration(
-                10, 16, 1,
+                9, 15, 1,
                 android.util.TypedValue.COMPLEX_UNIT_SP
             )
             setPadding(0, 0, 0, 0)
@@ -1668,11 +1668,28 @@ SCENE ${fmt(currentScene + 1)}
                 apkFile
             )
 
-            startActivity(Intent(Intent.ACTION_VIEW).apply {
+            val installIntent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(apkUri, "application/vnd.android.package-archive")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            })
+            }
+
+            // Prefer Android's system package installer directly so the
+            // "Open with" chooser is skipped when multiple APK handlers exist.
+            val handlers = packageManager.queryIntentActivities(installIntent, 0)
+            val systemInstaller = handlers.firstOrNull { info ->
+                (info.activityInfo.applicationInfo.flags and
+                    android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
+            }
+
+            if (systemInstaller != null) {
+                installIntent.setClassName(
+                    systemInstaller.activityInfo.packageName,
+                    systemInstaller.activityInfo.name
+                )
+            }
+
+            startActivity(installIntent)
         } catch (e: Exception) {
             status.text = "⚠ เปิดตัวติดตั้งไม่สำเร็จ"
             AlertDialog.Builder(this)

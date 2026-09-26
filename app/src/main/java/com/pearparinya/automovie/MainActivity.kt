@@ -24,12 +24,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var input: EditText
     private lateinit var titlePanel: LinearLayout
 
-    private val navy = Color.rgb(8, 17, 35)
-    private val panel = Color.rgb(17, 31, 55)
-    private val gold = Color.rgb(218, 177, 83)
-    private val ice = Color.rgb(235, 242, 255)
-    private val muted = Color.rgb(151, 166, 190)
-    private val success = Color.rgb(84, 196, 132)
+    private val navy = Color.rgb(5, 14, 30)
+    private val panel = Color.rgb(15, 38, 67)
+    private val gold = Color.rgb(241, 190, 72)
+    private val ice = Color.rgb(242, 247, 255)
+    private val muted = Color.rgb(164, 181, 205)
+    private val success = Color.rgb(45, 212, 191)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -111,10 +111,12 @@ class MainActivity : AppCompatActivity() {
 
         sceneLabel = TextView(this).apply {
             text = "EP 01   •   SCENE 01 / 20   •   8 SEC"
-            textSize = 18f
+            textSize = 17f
             setTextColor(ice)
             setTypeface(typeface, Typeface.BOLD)
             gravity = Gravity.CENTER
+            maxLines = 1
+            setAutoSizeTextTypeUniformWithConfiguration(12, 17, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             setPadding(
                 dp(12),
                 dp(14),
@@ -145,7 +147,7 @@ class MainActivity : AppCompatActivity() {
         // ============================================================
 
         input = EditText(this).apply {
-            hint = "ชื่อเรื่อง หรือ Director Command…"
+            hint = "ชื่อเรื่อง / คำสั่งผู้กำกับ…"
             setHintTextColor(Color.GRAY)
             setTextColor(Color.WHITE)
             minLines = 3
@@ -177,8 +179,8 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "✦  GEN 5 ชื่อเรื่อง",
-                "สร้างชื่อในแอป • แตะชื่อเพื่อเลือก"
+                "✦  สร้างชื่อเรื่อง 5 ชื่อ",
+                "แตะเพื่อเลือกชื่อ"
             ) {
                 generateTitles()
             },
@@ -194,7 +196,7 @@ class MainActivity : AppCompatActivity() {
         root.addView(titlePanel, full())
 
         root.addView(
-            section("PRODUCTION FLOW • GUIDED WORKFLOW")
+            section("ขั้นตอนการสร้าง • PRODUCTION FLOW")
         )
 
         // ============================================================
@@ -203,8 +205,8 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🎬  CREATE EP",
-                "เริ่มสร้าง EP"
+                "🎬  สร้าง EP",
+                "เริ่มสร้างเรื่อง"
             ) {
                 createEp()
             },
@@ -217,8 +219,8 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🖼️  GENERATE SCENE",
-                "Auto-Context • สร้าง Scene ปัจจุบัน"
+                "🖼️  สร้างฉาก",
+                "สร้างฉากปัจจุบัน"
             ) {
                 share(
                     buildSceneCommand()
@@ -233,8 +235,8 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🔍  QC CHECK",
-                "ตรวจภาพจริงแบบ Fail-Closed"
+                "🔍  ตรวจสอบภาพ",
+                "QC ฉากปัจจุบัน"
             ) {
                 share(
                     buildQcCommand()
@@ -249,8 +251,8 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🛠️  REPAIR",
-                "Delta-Only • สูงสุด 3 ครั้ง"
+                "🛠️  แก้ไขภาพ",
+                "เฉพาะจุด • สูงสุด 3 ครั้ง"
             ) {
                 repair()
             },
@@ -263,8 +265,8 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🔒  PASS & LOCK",
-                "ยืนยันและล็อก Scene"
+                "🔒  ผ่านและล็อก",
+                "ยืนยันฉากนี้"
             ) {
                 lockScene()
             },
@@ -276,8 +278,8 @@ class MainActivity : AppCompatActivity() {
         // ============================================================
 
         nextButton = action(
-            "▶  NEXT SCENE",
-            "Auto-Context • ไป Scene ถัดไป"
+            "▶  ฉากถัดไป",
+            "ไปยังฉากต่อไป"
         ) {
             nextScene()
         }.apply {
@@ -464,7 +466,7 @@ class MainActivity : AppCompatActivity() {
                 text = "${index + 1}.  $title"
                 isAllCaps = false
                 gravity = Gravity.START or Gravity.CENTER_VERTICAL
-                textSize = 15f
+                textSize = 14f
                 setTextColor(ice)
                 backgroundTintList = android.content.res.ColorStateList.valueOf(navy)
                 setPadding(dp(14), dp(10), dp(14), dp(10))
@@ -1526,13 +1528,13 @@ STOP
                 Gravity.CENTER
 
             setPadding(
-                dp(18),
                 dp(16),
-                dp(18),
-                dp(16)
+                dp(12),
+                dp(16),
+                dp(12)
             )
 
-            minHeight = dp(68)
+            minHeight = dp(58)
 
             setTextColor(ice)
             setTypeface(typeface, Typeface.BOLD)
@@ -1555,7 +1557,7 @@ STOP
                 textValue
 
             textSize =
-                12f
+                11f
 
             setTextColor(gold)
 

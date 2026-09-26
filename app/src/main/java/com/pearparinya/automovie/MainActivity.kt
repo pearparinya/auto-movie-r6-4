@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         root.addView(TextView(this).apply {
-            text = "R6.7 • WARDROBE FIREWALL + AUTO-CONTEXT"
+            text = "R${appVersion()} • AI PRODUCTION STUDIO"
             textSize = 12f
             setTextColor(Color.LTGRAY)
             gravity = Gravity.CENTER
@@ -132,7 +132,17 @@ class MainActivity : AppCompatActivity() {
         )
 
         root.addView(
-            section("PRODUCTION WORKFLOW")
+            action(
+                "✦  GEN 5 ชื่อเรื่อง",
+                "AI Title Generator • หมุนหมวดอัตโนมัติ"
+            ) {
+                generateTitles()
+            },
+            full()
+        )
+
+        root.addView(
+            section("PRODUCTION FLOW • GUIDED WORKFLOW")
         )
 
         // ============================================================
@@ -262,7 +272,7 @@ class MainActivity : AppCompatActivity() {
             Button(this).apply {
 
                 text =
-                    "❔ วิธีใช้งาน R6.7"
+                    "❔ วิธีใช้งาน R${appVersion()}"
 
                 setOnClickListener {
                     showHelp()
@@ -301,6 +311,63 @@ class MainActivity : AppCompatActivity() {
         scroll.addView(root)
 
         setContentView(scroll)
+    }
+
+    // ============================================================
+    // AI TITLE GENERATOR
+    // ============================================================
+
+    private var categoryIndex = 0
+
+    private val storyCategories = listOf(
+        "บันทึกรอยร้าวชีวิตคู่",
+        "เกมรักซ่อนลวง",
+        "ความลับใต้ชายคา",
+        "ซ่อมรักหลังบ้าน",
+        "หักมุมระทึกขวัญจิตวิทยา"
+    )
+
+    private fun generateTitles() {
+        val category = storyCategories[categoryIndex]
+        categoryIndex = (categoryIndex + 1) % storyCategories.size
+
+        status.text = "✦ GEN TITLE • $category"
+
+        share(
+            """
+AUTO-MOVIE ENGINE 2.0
+AI TITLE GENERATOR
+
+CHANNEL:
+สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย
+
+CATEGORY:
+$category
+
+สร้างชื่อเรื่องใหม่จำนวน 5 ชื่อ
+สำหรับซีรีส์สั้นดราม่าผัวเมีย
+
+กติกา:
+- ชื่อกระชับ จำง่าย และชวนติดตาม
+- ทั้ง 5 ชื่อต้องแตกต่างกันชัดเจน
+- ห้ามชื่อซ้ำหรือใกล้เคียงกัน
+- ต้องสอดคล้องกับ CATEGORY
+- ไม่ต้องสร้าง EP
+- ไม่ต้องเขียนเรื่องย่อ
+- แสดงเฉพาะหมายเลข 1-5 และชื่อเรื่อง
+
+หลังแสดง 5 ชื่อ ให้ STOP
+รอ Director เลือกชื่อ
+            """.trimIndent()
+        )
+    }
+
+    private fun appVersion(): String {
+        return try {
+            packageManager.getPackageInfo(packageName, 0).versionName ?: "6.8"
+        } catch (_: Exception) {
+            "6.8"
+        }
     }
 
     // ============================================================
@@ -503,7 +570,7 @@ class MainActivity : AppCompatActivity() {
 
         return """
 AUTO-MOVIE ENGINE 2.0
-R6.7 ANDROID PROFESSIONAL AUTO-CONTEXT + WARDROBE FIREWALL
+R${appVersion()} ANDROID PROFESSIONAL AUTO-CONTEXT + WARDROBE FIREWALL
 
 CHANNEL:
 สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย
@@ -1243,12 +1310,12 @@ SCENE ${fmt(currentScene + 1)}
         AlertDialog.Builder(this)
 
             .setTitle(
-                "วิธีใช้งาน AUTO-MOVIE R6.7"
+                "วิธีใช้งาน AUTO-MOVIE R${appVersion()}"
             )
 
             .setMessage(
                 """
-R6.7 AUTO-CONTEXT + WARDROBE FIREWALL WORKFLOW
+AUTO-CONTEXT + WARDROBE FIREWALL WORKFLOW
 
 1. ใส่ชื่อเรื่อง
    หรือ Director Command
@@ -1343,10 +1410,15 @@ STOP
 
             setPadding(
                 dp(18),
-                dp(10),
+                dp(14),
                 dp(18),
-                dp(10)
+                dp(14)
             )
+
+            setTextColor(ice)
+            setTypeface(typeface, Typeface.BOLD)
+            backgroundTintList = android.content.res.ColorStateList.valueOf(panel)
+            elevation = dp(2).toFloat()
 
             setOnClickListener {
                 function()

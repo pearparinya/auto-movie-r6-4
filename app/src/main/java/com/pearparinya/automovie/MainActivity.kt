@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "สตูดิโอผลิตสื่อ AI • R${appVersion()}"
+            text = "ระบบสร้างหนังอัตโนมัติ • R${appVersion()}"
             textSize = 16f
             setTextColor(muted)
             gravity = Gravity.START

@@ -502,6 +502,7 @@ class MainActivity : AppCompatActivity() {
         scroll.addView(root)
 
         restoreWorkState()
+        migrateWorkflowStateIfNeeded()
         refreshStepIndicator()
         setContentView(scroll)
 
@@ -1688,8 +1689,8 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
                 val connection = (URL(
                     "https://api.github.com/repos/pearparinya/auto-movie-r6-4/releases/latest"
                 ).openConnection() as HttpURLConnection).apply {
-                    connectTimeout = 15000
-                    readTimeout = 15000
+                    connectTimeout = 6000
+                    readTimeout = 6000
                     requestMethod = "GET"
                     setRequestProperty("Accept", "application/vnd.github+json")
                     setRequestProperty("User-Agent", "AUTO-MOVIE-Android")
@@ -1792,6 +1793,14 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
                     cursor.use {
                         if (it != null && it.moveToFirst()) {
                             val state = it.getInt(it.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+                            val downloaded = it.getLong(it.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                            val total = it.getLong(it.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                            if (state == DownloadManager.STATUS_RUNNING && total > 0L) {
+                                val percent = ((downloaded * 100L) / total).coerceIn(0L, 100L)
+                                runOnUiThread {
+                                    status.text = "↓ AUTO-MOVIE R$version • $percent%"
+                                }
+                            }
                             when (state) {
                                 DownloadManager.STATUS_SUCCESSFUL -> {
                                     finished = true
@@ -1809,7 +1818,7 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
                             }
                         }
                     }
-                    if (!finished) Thread.sleep(750)
+                    if (!finished) Thread.sleep(1000)
                 }
             }.start()
         } catch (e: Exception) {
@@ -1869,19 +1878,21 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
                 """
 ขั้นตอนการใช้งาน • WORKFLOW
 
-1. ใส่ชื่อเรื่องหรือคำสั่งผู้กำกับ (Director Command) แล้วกด “สร้างเรื่อง 20 ฉาก • CREATE EP” ระบบจะสร้างโครงเรื่องหลัก (EP MASTER) จำนวน 20 ฉาก
+1. กด “สร้างชื่อเรื่อง 5 ชื่อ • TITLES” แล้วเลือกชื่อเรื่อง 1 ชื่อ จากนั้นระบบจึงปลดล็อกขั้นตอน ② CREATE EP
 
-2. แนบรูปต้นฉบับของตัวละคร (ORIGINAL IDENTITY MASTER) สำหรับตัวละครที่ต้องปรากฏในเรื่อง เพื่อใช้รักษาใบหน้าและอัตลักษณ์ให้ต่อเนื่อง
+2. กด “สร้างเรื่อง 20 ฉาก • CREATE EP” เพื่อเริ่ม STORY และสร้าง EP 01 โดยระบบจะล็อก TITLE / CATEGORY เดิมต่อเนื่องถึง EP 05
 
-3. กด “สร้างภาพฉากปัจจุบัน • SCENE” ระบบ AUTO-CONTEXT จะดึงข้อมูลของฉากจาก EP MASTER เดิมให้อัตโนมัติ ไม่ต้องคัดลอกบทมาวางใหม่
+3. แนบรูปต้นฉบับของตัวละคร (ORIGINAL IDENTITY MASTER) สำหรับตัวละครที่ต้องปรากฏในเรื่อง เพื่อใช้รักษาใบหน้าและอัตลักษณ์ให้ต่อเนื่อง
 
-4. เมื่อได้ภาพแล้ว กด “ตรวจภาพฉาก • QC” เพื่อตรวจใบหน้า ตัวละคร ความต่อเนื่องของเรื่อง และเสื้อผ้า (WARDROBE FIREWALL)
+4. กด “สร้างภาพฉากปัจจุบัน • SCENE” ระบบ AUTO-CONTEXT จะดึงข้อมูลของฉากจาก EP MASTER เดิมให้อัตโนมัติ ไม่ต้องคัดลอกบทมาวางใหม่
 
-5. ถ้าผลตรวจเป็น FAIL ให้กด “แก้ไขภาพไม่ผ่าน • REPAIR” ระบบจะแก้เฉพาะจุดที่ผิด โดยแก้ได้สูงสุด 3 ครั้งต่อฉาก
+5. เมื่อได้ภาพแล้ว กด “ตรวจภาพฉาก • QC” เพื่อตรวจใบหน้า ตัวละคร ความต่อเนื่องของเรื่อง และเสื้อผ้า (WARDROBE FIREWALL)
 
-6. ถ้าผลตรวจเป็น PASS ให้กด “ยืนยันและล็อกฉาก • LOCK” เพื่อยืนยันว่าฉากนี้เสร็จสมบูรณ์
+6. ถ้าผลตรวจเป็น FAIL ให้กด “แก้ไขภาพไม่ผ่าน • REPAIR” ระบบจะแก้เฉพาะจุดที่ผิด โดยแก้ได้สูงสุด 3 ครั้งต่อฉาก
 
-7. จากนั้นปุ่ม “ฉากถัดไป • NEXT SCENE” จะเปิดใช้งาน กดเพื่อทำฉากต่อไป ระบบจะดึงข้อมูลจาก EP MASTER เดิมให้อัตโนมัติ
+7. ถ้าผลตรวจเป็น PASS ให้กด “ยืนยันและล็อกฉาก • LOCK” เพื่อยืนยันว่าฉากนี้เสร็จสมบูรณ์
+
+8. จากนั้นปุ่ม “ฉากถัดไป • NEXT SCENE” จะเปิดใช้งาน กดเพื่อทำฉากต่อไป ระบบจะดึงข้อมูลจาก EP MASTER เดิมให้อัตโนมัติ
 
 8. ทำขั้นตอนเดิมจนครบ SCENE 20 เมื่อจบเรื่อง ระบบจะบันทึกงาน (SAVE EP) ส่งต่องาน (HANDOFF) และหยุด (STOP)
                 """.trimIndent()
@@ -1961,6 +1972,34 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
         return action(title, subtitle, function).also { button ->
             stepButtons[step] = button
         }
+    }
+
+    private fun migrateWorkflowStateIfNeeded() {
+        val migrationKey = "workflow_gate_v618"
+        if (statePrefs.getBoolean(migrationKey, false)) return
+
+        // R6.17 และเก่ากว่าเคยบันทึก activeStep ที่กระโดดข้ามได้
+        // รีเซ็ตเฉพาะ workflow งานเก่า 1 ครั้ง เพื่อให้ R6.18 เริ่มทดสอบตามลำดับจริง
+        currentEp = 1
+        currentScene = 1
+        repairCount = 0
+        sceneLocked = false
+        selectedCategory = null
+        activeStep = 1
+        storyStartTimeMs = 0L
+        storyEndTimeMs = 0L
+        input.setText("")
+        titlePanel.visibility = android.view.View.GONE
+
+        statePrefs.edit()
+            .clear()
+            .putBoolean(migrationKey, true)
+            .putBoolean("soundEnabled", soundEnabled)
+            .apply()
+
+        updateTimeLabel()
+        updateUi()
+        status.text = "✓ R6.18 พร้อมใช้งาน • เริ่มตามลำดับจากขั้นตอน ①"
     }
 
     private fun storyInProgress(): Boolean {
@@ -2105,6 +2144,10 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
             elevation = dp(2).toFloat()
 
             setOnClickListener {
+                if (!isEnabled) {
+                    playTone(ToneGenerator.TONE_PROP_NACK, 120)
+                    return@setOnClickListener
+                }
                 function()
             }
         }

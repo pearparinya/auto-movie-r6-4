@@ -468,11 +468,11 @@ class MainActivity : AppCompatActivity() {
         utilityRow.addView(
             Button(this).apply {
                 text = "เริ่มเรื่องใหม่"
-                textSize = 13f
+                textSize = 14f
                 maxLines = 1
                 isSingleLine = true
                 setAutoSizeTextTypeUniformWithConfiguration(
-                    9, 13, 1,
+                    10, 14, 1,
                     android.util.TypedValue.COMPLEX_UNIT_SP
                 )
                 setTextColor(Color.BLACK)

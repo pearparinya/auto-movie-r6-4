@@ -179,7 +179,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "✦  สร้างชื่อเรื่อง 5 ชื่อ • TITLES",
+                "① ✨ สร้างชื่อเรื่อง 5 ชื่อ • TITLES",
                 "สร้างชื่อเรื่อง 5 ชื่อ"
             ) {
                 generateTitles()
@@ -207,7 +207,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🎬  สร้างเรื่อง 20 ฉาก • CREATE EP",
+                "② 🎬 สร้างเรื่อง 20 ฉาก • CREATE EP",
                 "เริ่มสร้างเรื่อง"
             ) {
                 createEp()
@@ -221,7 +221,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🖼️  สร้างภาพฉากปัจจุบัน • SCENE",
+                "③ 🖼️ สร้างภาพฉากปัจจุบัน • SCENE",
                 "สร้างฉากปัจจุบัน"
             ) {
                 share(
@@ -237,7 +237,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🔍  ตรวจภาพฉาก • QC",
+                "④ 🔍 ตรวจภาพฉาก • QC",
                 "QC ฉากปัจจุบัน"
             ) {
                 share(
@@ -253,7 +253,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🛠️  แก้ไขภาพไม่ผ่าน • REPAIR",
+                "⑤ 🛠️ แก้ไขภาพไม่ผ่าน • REPAIR",
                 "เฉพาะจุด • สูงสุด 3 ครั้ง"
             ) {
                 repair()
@@ -267,7 +267,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🔒  ยืนยันและล็อกฉาก • LOCK",
+                "⑥ 🔒 ยืนยันและล็อกฉาก • LOCK",
                 "ยืนยันฉากนี้"
             ) {
                 lockScene()
@@ -280,7 +280,7 @@ class MainActivity : AppCompatActivity() {
         // ============================================================
 
         nextButton = action(
-            "▶  ฉากถัดไป • NEXT SCENE",
+            "➡️ ฉากถัดไป • NEXT SCENE",
             "ไปยังฉากต่อไป"
         ) {
             nextScene()

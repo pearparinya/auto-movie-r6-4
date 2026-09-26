@@ -8,6 +8,8 @@ import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
@@ -18,6 +20,9 @@ import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,6 +32,10 @@ class MainActivity : AppCompatActivity() {
     private var sceneLocked = false
     private var selectedCategory: String? = null
     private var activeStep = 1
+    private var storyStartTimeMs = 0L
+    private var storyEndTimeMs = 0L
+    private lateinit var timeLabel: TextView
+    private val clockHandler = Handler(Looper.getMainLooper())
     private val stepButtons = mutableMapOf<Int, Button>()
 
     private lateinit var sceneLabel: TextView
@@ -121,6 +130,17 @@ class MainActivity : AppCompatActivity() {
         ))
 
         root.addView(headerRow, full())
+
+        timeLabel = TextView(this).apply {
+            textSize = 11f
+            setTextColor(muted)
+            gravity = Gravity.CENTER
+            maxLines = 1
+            isSingleLine = true
+            setPadding(dp(8), dp(2), dp(8), dp(4))
+        }
+        root.addView(timeLabel, full())
+        startClock()
 
         // ============================================================
         // SCENE STATUS
@@ -536,6 +556,8 @@ class MainActivity : AppCompatActivity() {
             .putBoolean("locked", sceneLocked)
             .putInt("categoryIndex", categoryIndex)
             .putInt("activeStep", activeStep)
+            .putLong("storyStartTimeMs", storyStartTimeMs)
+            .putLong("storyEndTimeMs", storyEndTimeMs)
             .apply()
     }
 
@@ -547,6 +569,9 @@ class MainActivity : AppCompatActivity() {
         sceneLocked = statePrefs.getBoolean("locked", false)
         categoryIndex = statePrefs.getInt("categoryIndex", 0).coerceIn(0, storyCategories.lastIndex)
         activeStep = statePrefs.getInt("activeStep", 1).coerceIn(1, 7)
+        storyStartTimeMs = statePrefs.getLong("storyStartTimeMs", 0L)
+        storyEndTimeMs = statePrefs.getLong("storyEndTimeMs", 0L)
+        updateTimeLabel()
 
         val savedStory = statePrefs.getString("story", "").orEmpty()
         if (savedStory.isNotBlank()) {
@@ -634,6 +659,9 @@ class MainActivity : AppCompatActivity() {
         currentScene = 1
         repairCount = 0
         sceneLocked = false
+        storyStartTimeMs = System.currentTimeMillis()
+        storyEndTimeMs = 0L
+        updateTimeLabel()
 
         updateUi()
         saveWorkState()
@@ -706,6 +734,10 @@ class MainActivity : AppCompatActivity() {
     private fun lockScene() {
 
         sceneLocked = true
+        if (currentEp == 5 && currentScene == 20 && storyStartTimeMs > 0L && storyEndTimeMs == 0L) {
+            storyEndTimeMs = System.currentTimeMillis()
+            updateTimeLabel()
+        }
         setActiveStep(7)
 
         nextButton.isEnabled = true
@@ -1789,6 +1821,50 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
     // ============================================================
     // UI HELPERS
     // ============================================================
+
+    private val clockTick = object : Runnable {
+        override fun run() {
+            updateTimeLabel()
+            clockHandler.postDelayed(this, 1000L)
+        }
+    }
+
+    private fun startClock() {
+        clockHandler.removeCallbacks(clockTick)
+        clockHandler.post(clockTick)
+    }
+
+    private fun updateTimeLabel() {
+        if (!::timeLabel.isInitialized) return
+
+        val now = System.currentTimeMillis()
+        val dateText = SimpleDateFormat("dd MMM yyyy • HH:mm", Locale("th", "TH"))
+            .format(Date(now))
+
+        val elapsedMs = when {
+            storyStartTimeMs <= 0L -> 0L
+            storyEndTimeMs > 0L -> storyEndTimeMs - storyStartTimeMs
+            else -> now - storyStartTimeMs
+        }.coerceAtLeast(0L)
+
+        val totalSeconds = elapsedMs / 1000L
+        val hours = totalSeconds / 3600L
+        val minutes = (totalSeconds % 3600L) / 60L
+        val seconds = totalSeconds % 60L
+        val storyTime = String.format(Locale.US, "%02d:%02d:%02d", hours, minutes, seconds)
+
+        timeLabel.text =
+            if (storyStartTimeMs > 0L) {
+                "🕐 $dateText   •   ⏱ STORY $storyTime"
+            } else {
+                "🕐 $dateText   •   ⏱ STORY --:--:--"
+            }
+    }
+
+    override fun onDestroy() {
+        clockHandler.removeCallbacks(clockTick)
+        super.onDestroy()
+    }
 
     private fun stepAction(
         step: Int,

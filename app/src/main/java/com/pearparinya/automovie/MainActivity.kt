@@ -95,6 +95,11 @@ class MainActivity : AppCompatActivity() {
             setTextColor(muted)
             gravity = Gravity.START
             maxLines = 1
+            isSingleLine = true
+            setAutoSizeTextTypeUniformWithConfiguration(
+                12, 16, 1,
+                android.util.TypedValue.COMPLEX_UNIT_SP
+            )
             setPadding(0, 0, 0, 0)
         }, full())
 

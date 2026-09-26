@@ -247,7 +247,6 @@ class MainActivity : AppCompatActivity() {
                 "❶ ✨ สร้างชื่อเรื่อง 5 ชื่อ • TITLES",
                 "สร้างชื่อเรื่อง 5 ชื่อ"
             ) {
-                setActiveStep(1)
                 generateTitles()
             },
             full()
@@ -276,7 +275,6 @@ class MainActivity : AppCompatActivity() {
                 "❷ 🎬 สร้างเรื่อง 20 ฉาก • CREATE EP",
                 "เริ่มสร้างเรื่อง"
             ) {
-                setActiveStep(2)
                 createEp()
             },
             full()
@@ -291,8 +289,9 @@ class MainActivity : AppCompatActivity() {
                 "❸ 🖼️ สร้างภาพฉากปัจจุบัน • SCENE",
                 "สร้างฉากปัจจุบัน"
             ) {
-                setActiveStep(3)
+                if (!requireStep(3)) return@stepAction
                 share(buildSceneCommand())
+                setActiveStep(4)
             },
             full()
         )
@@ -306,8 +305,9 @@ class MainActivity : AppCompatActivity() {
                 "❹ 🔍 ตรวจภาพฉาก • QC",
                 "QC ฉากปัจจุบัน"
             ) {
-                setActiveStep(4)
+                if (!requireStep(4)) return@stepAction
                 share(buildQcCommand())
+                // QC อาจไป REPAIR หรือ LOCK จึงคงไฟไว้ที่ QC จน Director เลือกผล
             },
             full()
         )
@@ -321,7 +321,7 @@ class MainActivity : AppCompatActivity() {
                 "❺ 🛠️ แก้ไขภาพไม่ผ่าน • REPAIR",
                 "เฉพาะจุด • สูงสุด 3 ครั้ง"
             ) {
-                setActiveStep(5)
+                if (!requireStep(4) && activeStep != 5) return@stepAction
                 repair()
             },
             full()
@@ -336,7 +336,10 @@ class MainActivity : AppCompatActivity() {
                 "❻ 🔒 ยืนยันและล็อกฉาก • LOCK",
                 "ยืนยันฉากนี้"
             ) {
-                setActiveStep(6)
+                if (activeStep != 4 && activeStep != 5 && activeStep != 6) {
+                    rejectOutOfOrder(6)
+                    return@stepAction
+                }
                 lockScene()
             },
             full()
@@ -350,7 +353,7 @@ class MainActivity : AppCompatActivity() {
             "➡️ ฉากถัดไป • NEXT SCENE",
             "ไปยังฉากต่อไป"
         ) {
-            setActiveStep(7)
+            if (!requireStep(7)) return@stepAction
             nextScene()
         }.apply {
 
@@ -610,7 +613,7 @@ class MainActivity : AppCompatActivity() {
 
         sceneLabel.text = "EP ${fmt(currentEp)}   •   SCENE ${fmt(currentScene)} / 20   •   8 SEC"
         progress.progress = currentScene
-        nextButton.isEnabled = sceneLocked && currentScene < 20
+        nextButton.isEnabled = sceneLocked && (currentScene < 20 || currentEp < 5)
         nextButton.alpha = if (nextButton.isEnabled) 1f else 0.45f
 
         if (savedStory.isNotBlank()) {
@@ -619,6 +622,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun generateTitles() {
+        if (!requireStep(1)) return
         val category = storyCategories[categoryIndex]
         selectedCategory = category
         val bank = titleBanks[categoryIndex]
@@ -673,6 +677,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun createEp() {
 
+        if (!requireStep(2)) return
         val story =
             input.text.toString().trim()
 
@@ -937,7 +942,7 @@ APP ↔ CHATGPT WORKFLOW SYNC:
 - ChatGPT ต้องทำเฉพาะขั้นตอนที่ COMMAND ระบุ
 - ห้ามข้ามขั้นตอน ห้ามเปลี่ยน TITLE / CATEGORY / CURRENT SCENE เอง
 - CREATE EP → GENERATE SCENE → QC → (REPAIR ถ้าจำเป็น) → PASS & LOCK → NEXT SCENE
-- CATEGORY ของ EP ปัจจุบันต้องล็อกคงเดิมจนจบ Scene 20
+- CATEGORY ต้องล็อกคงเดิมตลอด STORY ตั้งแต่ EP 01 ถึง EP 05
 - การหมุน CATEGORY เกิดเฉพาะตอน CREATE EP ของเรื่องใหม่
 - หากข้อมูลในแชทขัดกับ ACTIVE WORK STATE ให้ตอบ SYNC MISMATCH และหยุด ห้ามเดาหรือดำเนินการต่อผิดงาน
 
@@ -1248,7 +1253,7 @@ APP ↔ CHATGPT SYNC RULE:
 - TITLE / CATEGORY / CURRENT SCENE ต้องตรงกับ EP MASTER ในแชท
 - ห้าม ChatGPT เปลี่ยน CATEGORY, TITLE หรือเลข Scene เอง
 - ถ้า EP MASTER ในแชทไม่ตรงกับ ACTIVE WORK STATE ให้หยุดและรายงาน SYNC MISMATCH ห้ามสร้างภาพผิดเรื่อง
-- CATEGORY ต้องคงเดิมตลอด EP นี้ และจะหมุนเฉพาะเมื่อ Director กด CREATE EP สำหรับ EP ใหม่เท่านั้น
+- CATEGORY ต้องคงเดิมตลอด STORY EP 01–05 และจะหมุนเฉพาะเมื่อ STORY COMPLETE แล้ว Director เริ่มเรื่องใหม่เท่านั้น
 
 ขั้นตอนบังคับ:
 
@@ -1922,6 +1927,18 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
         return action(title, subtitle, function).also { button ->
             stepButtons[step] = button
         }
+    }
+
+    private fun requireStep(required: Int): Boolean {
+        if (activeStep == required) return true
+        rejectOutOfOrder(required)
+        return false
+    }
+
+    private fun rejectOutOfOrder(requested: Int) {
+        playTone(ToneGenerator.TONE_PROP_NACK, 120)
+        status.text = "⛔ ทำตามลำดับก่อน • ตอนนี้อยู่ขั้นตอน $activeStep"
+        refreshStepIndicator()
     }
 
     private fun setActiveStep(step: Int) {

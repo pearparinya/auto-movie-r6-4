@@ -544,6 +544,7 @@ class MainActivity : AppCompatActivity() {
                 setOnClickListener {
                     input.setText(title)
                     input.setSelection(input.text.length)
+                    titlePanel.visibility = android.view.View.GONE
                     status.text = "✓ เลือกชื่อเรื่องแล้ว • $title • $category"
                 }
             }, full())

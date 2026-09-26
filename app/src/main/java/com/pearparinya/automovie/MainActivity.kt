@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         headerRow.addView(ImageView(this).apply {
-            setImageResource(R.mipmap.ic_launcher)
+            setImageResource(R.mipmap.ic_launcher_foreground)
             contentDescription = "AUTO-MOVIE ENGINE 2.0"
             scaleType = ImageView.ScaleType.FIT_CENTER
             adjustViewBounds = true

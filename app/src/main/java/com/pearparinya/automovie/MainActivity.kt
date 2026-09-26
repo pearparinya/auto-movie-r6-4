@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var nextButton: Button
     private lateinit var input: EditText
     private lateinit var titlePanel: LinearLayout
+    private lateinit var nextHint: TextView
 
     private val navy = Color.rgb(12, 15, 38)
     private val panel = Color.rgb(37, 32, 78)
@@ -267,6 +268,16 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
+        nextHint = TextView(this).apply {
+            textSize = 11f
+            setTextColor(muted)
+            gravity = Gravity.CENTER
+            maxLines = 1
+            isSingleLine = true
+            setPadding(0, 0, 0, dp(3))
+        }
+        root.addView(nextHint, full())
+
         // ============================================================
         // CREATE EP
         // ============================================================
@@ -308,7 +319,8 @@ class MainActivity : AppCompatActivity() {
             ) {
                 if (!requireStep(4)) return@stepAction
                 share(buildQcCommand())
-                // QC อาจไป REPAIR หรือ LOCK จึงคงไฟไว้ที่ QC จน Director เลือกผล
+                // แอปรับผล QC กลับอัตโนมัติไม่ได้: Director เลือก FAIL→REPAIR หรือ PASS→LOCK
+                refreshStepIndicator()
             },
             full()
         )
@@ -322,7 +334,7 @@ class MainActivity : AppCompatActivity() {
                 "❺ ⚒ แก้ไขภาพไม่ผ่าน • REPAIR",
                 "เฉพาะจุด • สูงสุด 3 ครั้ง"
             ) {
-                if (!requireStep(4) && activeStep != 5) return@stepAction
+                if (!requireStep(4)) return@stepAction
                 repair()
             },
             full()
@@ -334,13 +346,10 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             stepAction(6,
-                "❻ ◆ ยืนยันและล็อกฉาก • LOCK",
-                "ยืนยันฉากนี้"
+                "❻ ◆ QC ผ่าน • ล็อกฉาก • LOCK",
+                "ใช้เมื่อผล QC ผ่านแล้ว"
             ) {
-                if (activeStep != 4 && activeStep != 5 && activeStep != 6) {
-                    rejectOutOfOrder(6)
-                    return@stepAction
-                }
+                if (!requireStep(4)) return@stepAction
                 lockScene()
             },
             full()
@@ -614,15 +623,20 @@ class MainActivity : AppCompatActivity() {
 
         sceneLabel.text = "EP ${fmt(currentEp)}   •   SCENE ${fmt(currentScene)} / 20   •   8 SEC"
         progress.progress = currentScene
-        nextButton.isEnabled = sceneLocked && (currentScene < 20 || currentEp < 5)
-        nextButton.alpha = if (nextButton.isEnabled) 1f else 0.45f
+        updateNextButton()
 
         if (savedStory.isNotBlank()) {
             status.text = "✓ กู้คืนงานเดิมแล้ว • SCENE ${fmt(currentScene)}"
         }
+        refreshStepIndicator()
     }
 
     private fun generateTitles() {
+        if (storyInProgress()) {
+            playTone(ToneGenerator.TONE_PROP_NACK, 120)
+            status.text = "⛔ STORY ปัจจุบันยังไม่จบ • ทำ EP 01–05 ให้ครบก่อน"
+            return
+        }
         if (!requireStep(1)) return
         val category = storyCategories[categoryIndex]
         selectedCategory = category
@@ -678,6 +692,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun createEp() {
 
+        if (storyInProgress()) {
+            playTone(ToneGenerator.TONE_PROP_NACK, 120)
+            status.text = "⛔ มี STORY กำลังทำอยู่ • ไม่สามารถสร้างทับได้"
+            return
+        }
         if (!requireStep(2)) return
         val story =
             input.text.toString().trim()
@@ -754,7 +773,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         repairCount++
-        setActiveStep(5)
 
         status.text =
             "🛠 REPAIR $repairCount / 3 • SCENE ${fmt(currentScene)}"
@@ -762,6 +780,7 @@ class MainActivity : AppCompatActivity() {
         share(
             buildRepairCommand()
         )
+        setActiveStep(4)
     }
 
     // ============================================================
@@ -772,14 +791,20 @@ class MainActivity : AppCompatActivity() {
 
         sceneLocked = true
         playTone(ToneGenerator.TONE_PROP_ACK, 100)
-        if (currentEp == 5 && currentScene == 20 && storyStartTimeMs > 0L && storyEndTimeMs == 0L) {
+        val storyCompleteNow = currentEp == 5 && currentScene == 20
+        if (storyCompleteNow && storyStartTimeMs > 0L && storyEndTimeMs == 0L) {
             storyEndTimeMs = System.currentTimeMillis()
             updateTimeLabel()
         }
-        setActiveStep(7)
 
-        nextButton.isEnabled = true
-        nextButton.alpha = 1f
+        if (storyCompleteNow) {
+            selectedCategory = null
+            setActiveStep(1)
+        } else {
+            setActiveStep(7)
+        }
+
+        updateNextButton()
 
         saveWorkState()
 
@@ -817,6 +842,7 @@ class MainActivity : AppCompatActivity() {
             currentScene = 1
         } else {
             status.text = "🏁 STORY COMPLETE — EP 01–05 COMPLETE"
+            updateNextButton()
             return
         }
 
@@ -842,11 +868,8 @@ class MainActivity : AppCompatActivity() {
         progress.progress =
             currentScene
 
-        nextButton.isEnabled =
-            false
-
-        nextButton.alpha =
-            0.45f
+        updateNextButton()
+        refreshStepIndicator()
 
         status.text =
             "● SYSTEM READY  •  SCENE ${fmt(currentScene)}  •  AUTO-CONTEXT ON"
@@ -1930,6 +1953,32 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
         }
     }
 
+    private fun storyInProgress(): Boolean {
+        return storyStartTimeMs > 0L && storyEndTimeMs == 0L
+    }
+
+    private fun updateNextButton() {
+        if (!::nextButton.isInitialized) return
+
+        when {
+            currentEp == 5 && currentScene == 20 && sceneLocked -> {
+                nextButton.text = "🏁 STORY COMPLETE"
+                nextButton.isEnabled = false
+                nextButton.alpha = 0.38f
+            }
+            currentScene == 20 && currentEp < 5 && sceneLocked -> {
+                nextButton.text = "→ ส่งต่อ EP ${fmt(currentEp + 1)} • HANDOFF"
+                nextButton.isEnabled = activeStep == 7
+                nextButton.alpha = if (nextButton.isEnabled) 1f else 0.38f
+            }
+            else -> {
+                nextButton.text = "→ ฉากถัดไป • NEXT SCENE"
+                nextButton.isEnabled = sceneLocked && activeStep == 7
+                nextButton.alpha = if (nextButton.isEnabled) 1f else 0.38f
+            }
+        }
+    }
+
     private fun requireStep(required: Int): Boolean {
         if (activeStep == required) return true
         rejectOutOfOrder(required)
@@ -1957,22 +2006,44 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
     private fun refreshStepIndicator() {
         stepButtons.forEach { (step, button) ->
             val active = step == activeStep
+            val allowed = when (activeStep) {
+                1 -> step == 1
+                2 -> step == 2
+                3 -> step == 3
+                4 -> step == 4 || step == 5 || step == 6
+                7 -> step == 7
+                else -> false
+            }
+
+            button.isEnabled = allowed
             button.backgroundTintList =
                 android.content.res.ColorStateList.valueOf(
                     if (active) activeGreen else panel
                 )
-            button.setTextColor(
-                if (active) Color.WHITE else ice
-            )
-            button.elevation =
-                dp(if (active) 8 else 2).toFloat()
-            button.alpha =
-                if (button.isEnabled) {
-                    if (active) 1f else 0.88f
-                } else {
-                    0.45f
-                }
+            button.setTextColor(if (active) Color.WHITE else ice)
+            button.elevation = dp(if (active) 8 else 2).toFloat()
+            button.alpha = when {
+                active -> 1f
+                allowed -> 0.90f
+                else -> 0.38f
+            }
         }
+
+        if (::nextHint.isInitialized) {
+            nextHint.text = when (activeStep) {
+                1 -> "NEXT • ① สร้างและเลือกชื่อเรื่อง"
+                2 -> "NEXT • ② สร้าง STORY / EP 01"
+                3 -> "NEXT • ③ สร้างภาพ Scene ปัจจุบัน"
+                4 -> "QC RESULT • FAIL → ⑤ REPAIR   |   PASS → ⑥ LOCK"
+                7 -> if (currentScene == 20 && currentEp < 5) {
+                    "NEXT • HANDOFF → EP ${fmt(currentEp + 1)}"
+                } else {
+                    "NEXT • ไป Scene ถัดไป"
+                }
+                else -> ""
+            }
+        }
+        updateNextButton()
     }
 
     private fun action(

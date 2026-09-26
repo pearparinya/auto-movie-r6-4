@@ -24,12 +24,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var input: EditText
     private lateinit var titlePanel: LinearLayout
 
-    private val navy = Color.rgb(5, 14, 30)
-    private val panel = Color.rgb(15, 38, 67)
-    private val gold = Color.rgb(241, 190, 72)
-    private val ice = Color.rgb(242, 247, 255)
-    private val muted = Color.rgb(164, 181, 205)
-    private val success = Color.rgb(45, 212, 191)
+    private val navy = Color.rgb(12, 15, 38)
+    private val panel = Color.rgb(37, 32, 78)
+    private val gold = Color.rgb(255, 190, 74)
+    private val ice = Color.rgb(248, 247, 255)
+    private val muted = Color.rgb(196, 193, 222)
+    private val success = Color.rgb(83, 224, 210)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity() {
 
         headerText.addView(TextView(this).apply {
             text = "สตูดิโอผลิตสื่อ AI • R${appVersion()}"
-            textSize = 12f
+            textSize = 14f
             setTextColor(muted)
             gravity = Gravity.START
             maxLines = 1
@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "เรื่อง → ฉาก → ตรวจ → ล็อก"
+            text = "เขียนเรื่อง → สร้างฉาก → ตรวจภาพ → ล็อก"
             textSize = 10f
             setTextColor(ice)
             gravity = Gravity.START
@@ -179,7 +179,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "✦  ชื่อเรื่อง • TITLES",
+                "✦  สร้างชื่อเรื่อง 5 ชื่อ • TITLES",
                 "สร้างชื่อเรื่อง 5 ชื่อ"
             ) {
                 generateTitles()
@@ -207,7 +207,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🎬  สร้างเรื่อง • CREATE",
+                "🎬  สร้างเรื่องครบ 20 ฉาก • CREATE",
                 "เริ่มสร้างเรื่อง"
             ) {
                 createEp()
@@ -221,7 +221,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🖼️  สร้างฉาก • SCENE",
+                "🖼️  สร้างภาพฉากปัจจุบัน • SCENE",
                 "สร้างฉากปัจจุบัน"
             ) {
                 share(
@@ -237,7 +237,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🔍  ตรวจภาพ • QC",
+                "🔍  ตรวจสอบภาพฉาก • QC",
                 "QC ฉากปัจจุบัน"
             ) {
                 share(
@@ -253,7 +253,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🛠️  แก้ภาพ • REPAIR",
+                "🛠️  แก้ไขภาพที่ไม่ผ่าน • REPAIR",
                 "เฉพาะจุด • สูงสุด 3 ครั้ง"
             ) {
                 repair()
@@ -267,7 +267,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🔒  ผ่าน/ล็อก • LOCK",
+                "🔒  ยืนยันผ่านและล็อกฉาก • LOCK",
                 "ยืนยันฉากนี้"
             ) {
                 lockScene()
@@ -280,7 +280,7 @@ class MainActivity : AppCompatActivity() {
         // ============================================================
 
         nextButton = action(
-            "▶  ฉากถัดไป • NEXT",
+            "▶  ไปยังฉากถัดไป • NEXT",
             "ไปยังฉากต่อไป"
         ) {
             nextScene()
@@ -302,7 +302,7 @@ class MainActivity : AppCompatActivity() {
         status = TextView(this).apply {
 
             text =
-                "● SYSTEM READY  •  AUTO-CONTEXT ON"
+                "● ระบบพร้อมใช้งาน  •  บริบทอัตโนมัติเปิด"
 
             textSize = 11f
 
@@ -1567,7 +1567,7 @@ STOP
                 textValue
 
             textSize =
-                10f
+                13f
 
             setTextColor(gold)
 

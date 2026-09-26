@@ -1707,81 +1707,29 @@ SCENE ${fmt(currentScene + 1)}
     private fun showHelp() {
 
         AlertDialog.Builder(this)
-
-            .setTitle(
-                "วิธีใช้งาน AUTO-MOVIE R${appVersion()}"
-            )
-
+            .setTitle("วิธีใช้งาน AUTO-MOVIE")
             .setMessage(
                 """
 AUTO-CONTEXT + WARDROBE FIREWALL WORKFLOW
 
-1. ใส่ชื่อเรื่อง
-   หรือ Director Command
+1. ใส่ชื่อเรื่องหรือ Director Command แล้วกด CREATE EP เพื่อสร้าง EP MASTER จำนวน 20 Scene
 
-2. กด CREATE EP
+2. แนบ ORIGINAL IDENTITY MASTER ของตัวละครที่ต้องใช้ในเรื่อง
 
-ระบบจะสร้าง
-EP MASTER จำนวน 20 Scene
+3. กลับมาที่แอปแล้วกด GENERATE SCENE ระบบ AUTO-CONTEXT จะดึงบท Scene จาก EP MASTER เดิมโดยอัตโนมัติ ไม่ต้องคัดลอกบท Scene มาวางใหม่
 
-3. แนบ ORIGINAL
-   IDENTITY MASTER
-   ของตัวละคร
+4. เมื่อได้ภาพแล้ว กด QC CHECK เพื่อตรวจ Identity, ความต่อเนื่อง และ WARDROBE FIREWALL หากชุดรั่วจาก Identity Master ระบบจะแจ้ง WLF-01 = FAIL
 
-4. กลับมาที่แอป
-   กด GENERATE SCENE
+5. ถ้า QC = FAIL ให้กด REPAIR ระบบจะแก้เฉพาะจุดแบบ Delta-Only และตรวจจุดบกพร่องเดิมซ้ำ โดยแก้ได้สูงสุด 3 ครั้งต่อ Scene
 
-AUTO-CONTEXT
-จะดึงบท Scene
-จาก EP MASTER เดิม
-โดยอัตโนมัติ
+6. เมื่อ QC = PASS ให้กด PASS & LOCK เพื่อยืนยันและล็อกฉาก
 
-ไม่ต้องคัดลอกบท
-Scene มาวางใหม่
+7. เมื่อปุ่ม NEXT SCENE เปิดใช้งาน ให้กดเพื่อไปฉากถัดไป ระบบจะดึง Scene ถัดไปจาก EP MASTER เดิมโดยอัตโนมัติ
 
-5. เมื่อได้ภาพ
-   กด QC CHECK
-
-QC จะตรวจ WARDROBE FIREWALL
-ถ้าชุดรั่วจาก Identity Master: WLF-01 = FAIL
-
-6. ถ้า FAIL
-   กด REPAIR
-
-REPAIR จะทำ Delta-Only และตรวจ defect เดิมซ้ำด้วย POST-REPAIR VALIDATION
-
-สูงสุด:
-3 ครั้ง / Scene
-
-7. เมื่อ QC PASS
-   กด PASS & LOCK
-
-8. NEXT SCENE
-   จะเปิดให้กด
-
-9. กด NEXT SCENE
-
-ระบบจะดึง
-Scene ถัดไป
-จาก EP MASTER เดิม
-โดยอัตโนมัติ
-
-10. ทำซ้ำจนถึง
-    SCENE 20
-
-SCENE 20:
-
-SAVE_EP
-HANDOFF
-STOP
+8. ทำขั้นตอนเดิมซ้ำจนถึง SCENE 20 จากนั้นระบบใช้ SAVE_EP → HANDOFF → STOP
                 """.trimIndent()
             )
-
-            .setPositiveButton(
-                "เข้าใจแล้ว",
-                null
-            )
-
+            .setPositiveButton("เข้าใจแล้ว", null)
             .show()
     }
 

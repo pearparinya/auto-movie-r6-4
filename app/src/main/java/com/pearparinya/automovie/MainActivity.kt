@@ -557,8 +557,8 @@ class MainActivity : AppCompatActivity() {
         val category = storyCategories[categoryIndex]
         selectedCategory = category
         val bank = titleBanks[categoryIndex]
-        categoryIndex = (categoryIndex + 1) % storyCategories.size
 
+        // หมวดหมู่จะหมุนเมื่อ CREATE EP สำเร็จ ไม่ใช่ตอนเพียงเปิดรายชื่อ Titles
         val titles = bank.shuffled().take(5)
         titlePanel.removeAllViews()
         titlePanel.visibility = android.view.View.VISIBLE
@@ -625,12 +625,28 @@ class MainActivity : AppCompatActivity() {
         updateUi()
         saveWorkState()
 
+        val categoryForThisEp =
+            selectedCategory ?: storyCategories[categoryIndex]
+
         status.text =
-            "🎬 กำลังเริ่ม EP • AUTO-CONTEXT"
+            "🎬 กำลังเริ่ม EP • $categoryForThisEp"
 
         share(
-            buildMasterPrompt(story, selectedCategory ?: "กำหนดโดยเนื้อเรื่อง")
+            buildMasterPrompt(story, categoryForThisEp)
         )
+
+        // ROTATING CATEGORY:
+        // ทุกครั้งที่สร้าง EP ให้เลื่อนไปหมวดถัดไปสำหรับงานครั้งหน้า
+        val usedIndex = storyCategories.indexOf(categoryForThisEp)
+        categoryIndex =
+            if (usedIndex >= 0) {
+                (usedIndex + 1) % storyCategories.size
+            } else {
+                (categoryIndex + 1) % storyCategories.size
+            }
+
+        selectedCategory = null
+        saveWorkState()
     }
 
     // ============================================================

@@ -16,6 +16,7 @@ class MainActivity : AppCompatActivity() {
     private var currentScene = 1
     private var repairCount = 0
     private var sceneLocked = false
+    private var selectedCategory: String? = null
 
     private lateinit var sceneLabel: TextView
     private lateinit var status: TextView
@@ -455,6 +456,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun generateTitles() {
         val category = storyCategories[categoryIndex]
+        selectedCategory = category
         val bank = titleBanks[categoryIndex]
         categoryIndex = (categoryIndex + 1) % storyCategories.size
 
@@ -482,7 +484,7 @@ class MainActivity : AppCompatActivity() {
                 setOnClickListener {
                     input.setText(title)
                     input.setSelection(input.text.length)
-                    status.text = "✓ เลือกชื่อเรื่องแล้ว • $title"
+                    status.text = "✓ เลือกชื่อเรื่องแล้ว • $title • $category"
                 }
             }, full())
         }
@@ -525,7 +527,7 @@ class MainActivity : AppCompatActivity() {
             "🎬 กำลังเริ่ม EP • AUTO-CONTEXT"
 
         share(
-            buildMasterPrompt(story)
+            buildMasterPrompt(story, selectedCategory ?: "กำหนดโดยเนื้อเรื่อง")
         )
     }
 
@@ -891,10 +893,15 @@ STOP
     // ============================================================
 
     private fun buildMasterPrompt(
-        story: String
+        story: String,
+        category: String
     ): String {
 
         return rules() + """
+
+EP MASTER METADATA:
+
+CATEGORY: $category
 
 DIRECTOR COMMAND:
 
@@ -917,6 +924,13 @@ $story
 9. FLOW / VEO 3.1 PROMPT
 
 AUTO-CONTEXT MEMORY:
+
+CATEGORY ของ EP นี้คือ:
+$category
+
+ต้องแสดง CATEGORY ไว้ในส่วนหัวของ EP MASTER
+และคง CATEGORY เดิมตลอด GENERATE SCENE / QC / REPAIR / PASS & LOCK / NEXT SCENE
+ห้ามเปลี่ยนหมวดหมู่ระหว่าง EP
 
 บททั้ง 20 Scene
 ที่สร้างจากคำสั่งนี้

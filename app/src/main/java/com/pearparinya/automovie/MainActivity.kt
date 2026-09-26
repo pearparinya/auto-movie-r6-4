@@ -48,42 +48,59 @@ class MainActivity : AppCompatActivity() {
         // HEADER
         // ============================================================
 
-        root.addView(ImageView(this).apply {
+        val headerRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, dp(18))
+        }
+
+        headerRow.addView(ImageView(this).apply {
             setImageResource(R.mipmap.ic_launcher)
             contentDescription = "AUTO-MOVIE ENGINE 2.0"
             scaleType = ImageView.ScaleType.FIT_CENTER
             adjustViewBounds = true
-            setPadding(dp(6), dp(2), dp(6), dp(10))
-        }, LinearLayout.LayoutParams(dp(118), dp(118)).apply {
-            gravity = Gravity.CENTER_HORIZONTAL
-            bottomMargin = dp(4)
+        }, LinearLayout.LayoutParams(dp(92), dp(92)).apply {
+            marginEnd = dp(14)
         })
 
-        root.addView(TextView(this).apply {
+        val headerText = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.START
+        }
+
+        headerText.addView(TextView(this).apply {
             text = "AUTO-MOVIE"
-            textSize = 30f
-            letterSpacing = 0.08f
+            textSize = 26f
+            letterSpacing = 0.05f
             setTextColor(gold)
             setTypeface(typeface, Typeface.BOLD)
-            gravity = Gravity.CENTER
-        })
+            gravity = Gravity.START
+        }, full())
 
-        root.addView(TextView(this).apply {
+        headerText.addView(TextView(this).apply {
             text = "AI PRODUCTION STUDIO  •  R${appVersion()}"
-            textSize = 12f
-            letterSpacing = 0.04f
-            setTextColor(muted)
-            gravity = Gravity.CENTER
-            setPadding(0, dp(6), 0, dp(4))
-        })
-
-        root.addView(TextView(this).apply {
-            text = "STORY → SCENE → QC → LOCK"
             textSize = 11f
+            letterSpacing = 0.02f
+            setTextColor(muted)
+            gravity = Gravity.START
+            setPadding(0, dp(3), 0, dp(2))
+        }, full())
+
+        headerText.addView(TextView(this).apply {
+            text = "STORY → SCENE → QC → LOCK"
+            textSize = 10f
             setTextColor(ice)
-            gravity = Gravity.CENTER
-            setPadding(0, dp(4), 0, dp(20))
-        })
+            gravity = Gravity.START
+            setPadding(0, dp(2), 0, 0)
+        }, full())
+
+        headerRow.addView(headerText, LinearLayout.LayoutParams(
+            0,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            1f
+        ))
+
+        root.addView(headerRow, full())
 
         // ============================================================
         // SCENE STATUS

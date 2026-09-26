@@ -676,19 +676,39 @@ class MainActivity : AppCompatActivity() {
                 )
             }
 
-        try {
+        // เปิด ChatGPT โดยตรงก่อน เพื่อตัด Android Share Sheet ออก
+        val chatGptPackages = listOf(
+            "com.openai.chatgpt",
+            "com.openai.chatgpt.beta"
+        )
 
+        for (packageName in chatGptPackages) {
+            try {
+                val directIntent = Intent(sendIntent).apply {
+                    setPackage(packageName)
+                }
+
+                if (directIntent.resolveActivity(packageManager) != null) {
+                    startActivity(directIntent)
+                    status.text = "↗ เปิด ChatGPT พร้อมคำสั่งแล้ว"
+                    return
+                }
+            } catch (_: Exception) {
+                // ลอง package ถัดไป
+            }
+        }
+
+        // ถ้าเครื่องไม่พบ ChatGPT ให้กลับไปใช้ Share Sheet ตามเดิม
+        try {
             startActivity(
                 Intent.createChooser(
                     sendIntent,
                     "ส่งคำสั่งไปยัง ChatGPT"
                 )
             )
-
-        } catch (e: Exception) {
-
-            status.text =
-                "⛔ ไม่สามารถเปิดเมนูแชร์ได้"
+            status.text = "⚠ ไม่พบแอป ChatGPT • เลือกแอปจากเมนูแชร์"
+        } catch (_: Exception) {
+            status.text = "⛔ ไม่สามารถเปิด ChatGPT หรือเมนูแชร์ได้"
         }
     }
 

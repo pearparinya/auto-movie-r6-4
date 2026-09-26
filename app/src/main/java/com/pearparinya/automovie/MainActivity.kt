@@ -327,8 +327,20 @@ class MainActivity : AppCompatActivity() {
         root.addView(
             Button(this).apply {
 
-                text =
+                text = android.text.SpannableString(
                     "❔ วิธีใช้งาน R${appVersion()}"
+                ).apply {
+                    setSpan(
+                        android.text.style.ForegroundColorSpan(gold),
+                        0, 1,
+                        android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                    setSpan(
+                        android.text.style.AbsoluteSizeSpan(22, true),
+                        0, 1,
+                        android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
 
                 setOnClickListener {
                     showHelp()
@@ -1521,7 +1533,17 @@ STOP
 
         return Button(this).apply {
 
-            text = title
+            text = if (title.firstOrNull() in listOf('❶','❷','❸','❹','❺','❻')) {
+                android.text.SpannableString(title).apply {
+                    setSpan(
+                        android.text.style.AbsoluteSizeSpan(22, true),
+                        0, 1,
+                        android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+            } else {
+                title
+            }
             contentDescription = "$title — $subtitle"
 
             textSize = 14f

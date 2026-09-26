@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(22), dp(38), dp(22), dp(28))
+            setPadding(dp(22), dp(46), dp(22), dp(18))
             setBackgroundColor(navy)
         }
 
@@ -59,8 +59,8 @@ class MainActivity : AppCompatActivity() {
             contentDescription = "AUTO-MOVIE ENGINE 2.0"
             scaleType = ImageView.ScaleType.FIT_CENTER
             adjustViewBounds = true
-        }, LinearLayout.LayoutParams(dp(76), dp(76)).apply {
-            marginEnd = dp(14)
+        }, LinearLayout.LayoutParams(dp(94), dp(94)).apply {
+            marginEnd = dp(12)
         })
 
         val headerText = LinearLayout(this).apply {
@@ -70,23 +70,23 @@ class MainActivity : AppCompatActivity() {
         }
 
         headerText.addView(TextView(this).apply {
-            text = "AUTO-MOVIE"
-            textSize = 22f
+            text = "AUTO-MOVIE 2.0"
+            textSize = 21f
             letterSpacing = 0.02f
             setTextColor(gold)
             setTypeface(typeface, Typeface.BOLD)
             gravity = Gravity.START
             maxLines = 1
-            setAutoSizeTextTypeUniformWithConfiguration(16, 22, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
+            setAutoSizeTextTypeUniformWithConfiguration(15, 21, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "AI PRODUCTION STUDIO  •  R${appVersion()}"
+            text = "สตูดิโอผลิตสื่อ AI  •  R${appVersion()}"
             textSize = 10f
             setTextColor(muted)
             gravity = Gravity.START
             maxLines = 1
-            setPadding(0, dp(1), 0, 0)
+            setPadding(0, 0, 0, 0)
         }, full())
 
         headerText.addView(TextView(this).apply {
@@ -119,9 +119,9 @@ class MainActivity : AppCompatActivity() {
             setAutoSizeTextTypeUniformWithConfiguration(12, 17, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             setPadding(
                 dp(12),
-                dp(14),
+                dp(10),
                 dp(12),
-                dp(8)
+                dp(7)
             )
             setBackgroundColor(panel)
         }
@@ -167,9 +167,9 @@ class MainActivity : AppCompatActivity() {
 
         inputParams.setMargins(
             0,
-            dp(18),
+            dp(10),
             0,
-            dp(16)
+            dp(10)
         )
 
         root.addView(
@@ -179,8 +179,8 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "✦  สร้างชื่อเรื่อง 5 ชื่อ",
-                "แตะเพื่อเลือกชื่อ"
+                "✦  สร้างชื่อเรื่อง • TITLES",
+                "สร้างชื่อเรื่อง 5 ชื่อ"
             ) {
                 generateTitles()
             },
@@ -196,7 +196,9 @@ class MainActivity : AppCompatActivity() {
         root.addView(titlePanel, full())
 
         root.addView(
-            section("ขั้นตอนการสร้าง • PRODUCTION FLOW")
+            section("ขั้นตอนการสร้าง • PRODUCTION FLOW").apply {
+                gravity = Gravity.CENTER
+            }
         )
 
         // ============================================================
@@ -205,7 +207,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🎬  สร้าง EP",
+                "🎬  สร้าง EP • CREATE",
                 "เริ่มสร้างเรื่อง"
             ) {
                 createEp()
@@ -219,7 +221,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🖼️  สร้างฉาก",
+                "🖼️  สร้างฉาก • SCENE",
                 "สร้างฉากปัจจุบัน"
             ) {
                 share(
@@ -235,7 +237,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🔍  ตรวจสอบภาพ",
+                "🔍  ตรวจภาพ • QC",
                 "QC ฉากปัจจุบัน"
             ) {
                 share(
@@ -251,7 +253,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🛠️  แก้ไขภาพ",
+                "🛠️  แก้ไขภาพ • REPAIR",
                 "เฉพาะจุด • สูงสุด 3 ครั้ง"
             ) {
                 repair()
@@ -265,7 +267,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🔒  ผ่านและล็อก",
+                "🔒  ผ่านและล็อก • LOCK",
                 "ยืนยันฉากนี้"
             ) {
                 lockScene()
@@ -278,7 +280,7 @@ class MainActivity : AppCompatActivity() {
         // ============================================================
 
         nextButton = action(
-            "▶  ฉากถัดไป",
+            "▶  ฉากถัดไป • NEXT",
             "ไปยังฉากต่อไป"
         ) {
             nextScene()
@@ -1537,12 +1539,12 @@ STOP
 
             setPadding(
                 dp(16),
-                dp(12),
+                dp(9),
                 dp(16),
-                dp(12)
+                dp(9)
             )
 
-            minHeight = dp(52)
+            minHeight = dp(46)
 
             setTextColor(ice)
             setTypeface(typeface, Typeface.BOLD)
@@ -1595,9 +1597,9 @@ STOP
 
             setMargins(
                 0,
-                dp(5),
+                dp(3),
                 0,
-                dp(5)
+                dp(3)
             )
         }
     }

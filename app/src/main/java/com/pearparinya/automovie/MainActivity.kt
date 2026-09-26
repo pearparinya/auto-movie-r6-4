@@ -1935,7 +1935,7 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
         if (!::timeLabel.isInitialized) return
 
         val now = System.currentTimeMillis()
-        val dateText = SimpleDateFormat("dd MMM yyyy • HH:mm", Locale("th", "TH"))
+        val dateText = SimpleDateFormat("dd MMM yyyy • HH:mm:ss", Locale("th", "TH"))
             .format(Date(now))
 
         val elapsedMs = when {

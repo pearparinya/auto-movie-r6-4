@@ -217,4 +217,4 @@ jobs:
           name: AUTO-MOVIE-R${{ steps.app_version.outputs.version }}-SIGNED-APK
           path: ${{ runner.temp }}/AUTO-MOVIE-R${{ steps.app_version.outputs.version }}-release.apk
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 7

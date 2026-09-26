@@ -66,6 +66,7 @@ class MainActivity : AppCompatActivity() {
         val headerText = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.START
+            setPadding(dp(4), dp(2), 0, 0)
         }
 
         headerText.addView(TextView(this).apply {

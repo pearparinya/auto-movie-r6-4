@@ -50,8 +50,8 @@ class MainActivity : AppCompatActivity() {
 
         val headerRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, 0, 0, dp(6))
+            gravity = Gravity.TOP
+            setPadding(0, 0, 0, dp(12))
         }
 
         headerRow.addView(ImageView(this).apply {
@@ -60,43 +60,49 @@ class MainActivity : AppCompatActivity() {
             scaleType = ImageView.ScaleType.FIT_CENTER
             adjustViewBounds = true
         }, LinearLayout.LayoutParams(dp(76), dp(76)).apply {
-            marginEnd = dp(12)
+            marginEnd = dp(14)
         })
 
-        headerRow.addView(TextView(this).apply {
+        val headerText = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.START
+        }
+
+        headerText.addView(TextView(this).apply {
             text = "AUTO-MOVIE"
             textSize = 22f
             letterSpacing = 0.02f
             setTextColor(gold)
             setTypeface(typeface, Typeface.BOLD)
-            gravity = Gravity.START or Gravity.CENTER_VERTICAL
+            gravity = Gravity.START
             maxLines = 1
             setAutoSizeTextTypeUniformWithConfiguration(16, 22, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
-        }, LinearLayout.LayoutParams(
+        }, full())
+
+        headerText.addView(TextView(this).apply {
+            text = "AI PRODUCTION STUDIO  •  R${appVersion()}"
+            textSize = 10f
+            setTextColor(muted)
+            gravity = Gravity.START
+            maxLines = 1
+            setPadding(0, dp(5), 0, dp(3))
+        }, full())
+
+        headerText.addView(TextView(this).apply {
+            text = "STORY → SCENE → QC → LOCK"
+            textSize = 9f
+            setTextColor(ice)
+            gravity = Gravity.START
+            maxLines = 1
+        }, full())
+
+        headerRow.addView(headerText, LinearLayout.LayoutParams(
             0,
             LinearLayout.LayoutParams.WRAP_CONTENT,
             1f
         ))
 
         root.addView(headerRow, full())
-
-        root.addView(TextView(this).apply {
-            text = "AI PRODUCTION STUDIO  •  R${appVersion()}"
-            textSize = 10f
-            setTextColor(muted)
-            gravity = Gravity.START
-            maxLines = 1
-            setPadding(0, dp(2), 0, dp(4))
-        }, full())
-
-        root.addView(TextView(this).apply {
-            text = "STORY → SCENE → QC → LOCK"
-            textSize = 9f
-            setTextColor(ice)
-            gravity = Gravity.START
-            maxLines = 1
-            setPadding(0, 0, 0, dp(18))
-        }, full())
 
         // ============================================================
         // SCENE STATUS

@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity() {
 
         headerText.addView(TextView(this).apply {
             text = "สตูดิโอผลิตสื่อ AI • R${appVersion()}"
-            textSize = 14f
+            textSize = 16f
             setTextColor(muted)
             gravity = Gravity.START
             maxLines = 1
@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "เขียนเรื่อง → สร้างฉาก → ตรวจภาพ → ล็อก"
+            text = "สร้างเรื่อง → สร้างฉาก → ตรวจภาพ → ยืนยัน"
             textSize = 10f
             setTextColor(ice)
             gravity = Gravity.START
@@ -207,7 +207,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🎬  สร้างเรื่องครบ 20 ฉาก • CREATE",
+                "🎬  สร้างเรื่อง 20 ฉาก • CREATE EP",
                 "เริ่มสร้างเรื่อง"
             ) {
                 createEp()
@@ -237,7 +237,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🔍  ตรวจสอบภาพฉาก • QC",
+                "🔍  ตรวจภาพฉาก • QC",
                 "QC ฉากปัจจุบัน"
             ) {
                 share(
@@ -253,7 +253,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🛠️  แก้ไขภาพที่ไม่ผ่าน • REPAIR",
+                "🛠️  แก้ไขภาพไม่ผ่าน • REPAIR",
                 "เฉพาะจุด • สูงสุด 3 ครั้ง"
             ) {
                 repair()
@@ -267,7 +267,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "🔒  ยืนยันผ่านและล็อกฉาก • LOCK",
+                "🔒  ยืนยันและล็อกฉาก • LOCK",
                 "ยืนยันฉากนี้"
             ) {
                 lockScene()
@@ -280,7 +280,7 @@ class MainActivity : AppCompatActivity() {
         // ============================================================
 
         nextButton = action(
-            "▶  ไปยังฉากถัดไป • NEXT",
+            "▶  ฉากถัดไป • NEXT SCENE",
             "ไปยังฉากต่อไป"
         ) {
             nextScene()

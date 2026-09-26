@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity() {
     private val ice = Color.rgb(248, 247, 255)
     private val muted = Color.rgb(196, 193, 222)
     private val success = Color.rgb(83, 224, 210)
+    private val activeGreen = Color.rgb(46, 204, 113)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -244,7 +245,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             stepAction(1,
-                "❶ ✨ สร้างชื่อเรื่อง 5 ชื่อ • TITLES",
+                "❶ ★ สร้างชื่อเรื่อง 5 ชื่อ • TITLES",
                 "สร้างชื่อเรื่อง 5 ชื่อ"
             ) {
                 generateTitles()
@@ -272,7 +273,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             stepAction(2,
-                "❷ 🎬 สร้างเรื่อง 20 ฉาก • CREATE EP",
+                "❷ ◆ สร้างเรื่อง 20 ฉาก • CREATE EP",
                 "เริ่มสร้างเรื่อง"
             ) {
                 createEp()
@@ -286,7 +287,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             stepAction(3,
-                "❸ 🖼️ สร้างภาพฉากปัจจุบัน • SCENE",
+                "❸ ▣ สร้างภาพฉากปัจจุบัน • SCENE",
                 "สร้างฉากปัจจุบัน"
             ) {
                 if (!requireStep(3)) return@stepAction
@@ -302,7 +303,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             stepAction(4,
-                "❹ 🔍 ตรวจภาพฉาก • QC",
+                "❹ ◎ ตรวจภาพฉาก • QC",
                 "QC ฉากปัจจุบัน"
             ) {
                 if (!requireStep(4)) return@stepAction
@@ -318,7 +319,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             stepAction(5,
-                "❺ 🛠️ แก้ไขภาพไม่ผ่าน • REPAIR",
+                "❺ ⚒ แก้ไขภาพไม่ผ่าน • REPAIR",
                 "เฉพาะจุด • สูงสุด 3 ครั้ง"
             ) {
                 if (!requireStep(4) && activeStep != 5) return@stepAction
@@ -333,7 +334,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             stepAction(6,
-                "❻ 🔒 ยืนยันและล็อกฉาก • LOCK",
+                "❻ ◆ ยืนยันและล็อกฉาก • LOCK",
                 "ยืนยันฉากนี้"
             ) {
                 if (activeStep != 4 && activeStep != 5 && activeStep != 6) {
@@ -350,7 +351,7 @@ class MainActivity : AppCompatActivity() {
         // ============================================================
 
         nextButton = stepAction(7,
-            "➡️ ฉากถัดไป • NEXT SCENE",
+            "→ ฉากถัดไป • NEXT SCENE",
             "ไปยังฉากต่อไป"
         ) {
             if (!requireStep(7)) return@stepAction
@@ -1958,10 +1959,10 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
             val active = step == activeStep
             button.backgroundTintList =
                 android.content.res.ColorStateList.valueOf(
-                    if (active) gold else panel
+                    if (active) activeGreen else panel
                 )
             button.setTextColor(
-                if (active) Color.rgb(12, 15, 38) else ice
+                if (active) Color.WHITE else ice
             )
             button.elevation =
                 dp(if (active) 8 else 2).toFloat()

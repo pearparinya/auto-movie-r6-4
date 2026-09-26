@@ -345,7 +345,7 @@ class MainActivity : AppCompatActivity() {
 
         utilityRow.addView(
             Button(this).apply {
-                text = "❓ วิธีใช้งาน R${appVersion()}"
+                text = "❓ วิธีใช้งาน"
                 textSize = 14f
                 maxLines = 1
                 isSingleLine = true

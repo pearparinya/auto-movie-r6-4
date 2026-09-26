@@ -939,12 +939,11 @@ class MainActivity : AppCompatActivity() {
                 val directIntent = Intent(sendIntent).apply {
                     setPackage(packageName)
 
-                    // ChatGPT ต้องอยู่คนละ Android task กับ AUTO-MOVIE
-                    // เพื่อให้ผู้ใช้สลับกลับ AUTO-MOVIE จาก Recent Apps ได้ทันที
+                    // ใช้ ChatGPT task เดิมเมื่อมีอยู่
+                    // ห้าม MULTIPLE_TASK / NEW_DOCUMENT เพราะจะทำให้แตกเป็นหลาย ChatGPT task
                     addFlags(
                         Intent.FLAG_ACTIVITY_NEW_TASK or
-                            Intent.FLAG_ACTIVITY_MULTIPLE_TASK or
-                            Intent.FLAG_ACTIVITY_NEW_DOCUMENT
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP
                     )
                 }
                 startActivity(directIntent)
@@ -963,11 +962,7 @@ class MainActivity : AppCompatActivity() {
                 sendIntent,
                 "ส่งคำสั่งไปยัง ChatGPT"
             ).apply {
-                addFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK or
-                        Intent.FLAG_ACTIVITY_MULTIPLE_TASK or
-                        Intent.FLAG_ACTIVITY_NEW_DOCUMENT
-                )
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             startActivity(chooserIntent)
             status.text = "⚠ ไม่พบแอป ChatGPT • เลือกแอปจากเมนูแชร์"

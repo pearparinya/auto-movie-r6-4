@@ -497,7 +497,7 @@ class MainActivity : AppCompatActivity() {
 
         utilityRow.addView(
             Button(this).apply {
-                text = "🔄 อัปเดตแอป"
+                text = "↪ Update"
                 textSize = 14f
                 maxLines = 1
                 isSingleLine = true

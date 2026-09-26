@@ -1,4 +1,4 @@
-name: R6.7 Release Signed APK
+name: AUTO-MOVIE Release Signed APK
 
 on:
   workflow_dispatch:
@@ -75,7 +75,7 @@ jobs:
       - name: Check Android project files
         shell: bash
         run: |
-          echo "Checking AUTO-MOVIE R6.7 project..."
+          echo "Checking AUTO-MOVIE project..."
 
           test -f "settings.gradle.kts" || {
             echo "Missing: settings.gradle.kts"
@@ -99,13 +99,13 @@ jobs:
             exit 1
           }
 
-          echo "AUTO-MOVIE R6.7 project files verified."
+          echo "AUTO-MOVIE project files verified."
 
       # ============================================================
       # BUILD RELEASE
       # ============================================================
 
-      - name: Build R6.7 release APK
+      - name: Read app version\n        id: app_version\n        shell: bash\n        run: |\n          VERSION_NAME="$(grep -oP 'versionName\\s*=\\s*"\\K[^"]+' app/build.gradle.kts | head -n 1)"\n          if [ -z "$VERSION_NAME" ]; then\n            echo "Unable to read versionName."\n            exit 1\n          fi\n          echo "version=$VERSION_NAME" >> "$GITHUB_OUTPUT"\n          echo "Building AUTO-MOVIE R$VERSION_NAME"\n\n      - name: Build release APK
         shell: bash
         run: |
           gradle :app:assembleRelease
@@ -136,7 +136,7 @@ jobs:
       # SIGN WITH PERMANENT KEY
       # ============================================================
 
-      - name: Sign R6.7 release APK
+      - name: Sign release APK
         shell: bash
         env:
           STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -158,7 +158,7 @@ jobs:
             exit 1
           fi
 
-          SIGNED_APK="$RUNNER_TEMP/AUTO-MOVIE-R6.7-release.apk"
+          SIGNED_APK="$RUNNER_TEMP/AUTO-MOVIE-R${{ steps.app_version.outputs.version }}-release.apk"
 
           "$APKSIGNER" sign \
             --ks "$RUNNER_TEMP/auto-movie-release.jks" \
@@ -173,13 +173,13 @@ jobs:
             exit 1
           }
 
-          echo "AUTO-MOVIE R6.7 APK signed."
+          echo "AUTO-MOVIE R${{ steps.app_version.outputs.version }} APK signed."
 
       # ============================================================
       # VERIFY SIGNATURE
       # ============================================================
 
-      - name: Verify R6.7 signed APK
+      - name: Verify signed APK
         shell: bash
         run: |
           BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" \
@@ -191,18 +191,18 @@ jobs:
 
           "$BUILD_TOOLS/apksigner" verify \
             --verbose \
-            "$RUNNER_TEMP/AUTO-MOVIE-R6.7-release.apk"
+            "$RUNNER_TEMP/AUTO-MOVIE-R${{ steps.app_version.outputs.version }}-release.apk"
 
-          echo "AUTO-MOVIE R6.7 signature verified."
+          echo "AUTO-MOVIE R${{ steps.app_version.outputs.version }} signature verified."
 
       # ============================================================
       # UPLOAD
       # ============================================================
 
-      - name: Upload R6.7 signed APK
+      - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: AUTO-MOVIE-R6.7-SIGNED-APK
-          path: ${{ runner.temp }}/AUTO-MOVIE-R6.7-release.apk
+          name: AUTO-MOVIE-R${{ steps.app_version.outputs.version }}-SIGNED-APK
+          path: ${{ runner.temp }}/AUTO-MOVIE-R${{ steps.app_version.outputs.version }}-release.apk
           if-no-files-found: error
           retention-days: 30

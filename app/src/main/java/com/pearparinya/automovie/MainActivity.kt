@@ -327,20 +327,13 @@ class MainActivity : AppCompatActivity() {
         root.addView(
             Button(this).apply {
 
-                text = android.text.SpannableString(
-                    "❔ วิธีใช้งาน R${appVersion()}"
-                ).apply {
-                    setSpan(
-                        android.text.style.ForegroundColorSpan(gold),
-                        0, 1,
-                        android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-                    setSpan(
-                        android.text.style.AbsoluteSizeSpan(22, true),
-                        0, 1,
-                        android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-                }
+                text = "❓  วิธีใช้งาน R${appVersion()}"
+                textSize = 16f
+                setTextColor(Color.rgb(35, 35, 45))
+                setTypeface(typeface, Typeface.BOLD)
+                backgroundTintList = android.content.res.ColorStateList.valueOf(
+                    Color.rgb(255, 190, 74)
+                )
 
                 setOnClickListener {
                     showHelp()

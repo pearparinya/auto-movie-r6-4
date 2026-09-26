@@ -22,6 +22,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var progress: ProgressBar
     private lateinit var nextButton: Button
     private lateinit var input: EditText
+    private lateinit var titlePanel: LinearLayout
 
     private val navy = Color.rgb(8, 17, 35)
     private val panel = Color.rgb(17, 31, 55)
@@ -157,12 +158,20 @@ class MainActivity : AppCompatActivity() {
         root.addView(
             action(
                 "✦  GEN 5 ชื่อเรื่อง",
-                "AI Title Generator • หมุนหมวดอัตโนมัติ"
+                "สร้างชื่อในแอป • แตะชื่อเพื่อเลือก"
             ) {
                 generateTitles()
             },
             full()
         )
+
+        titlePanel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            visibility = android.view.View.GONE
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+            setBackgroundColor(panel)
+        }
+        root.addView(titlePanel, full())
 
         root.addView(
             section("PRODUCTION FLOW • GUIDED WORKFLOW")
@@ -350,39 +359,104 @@ class MainActivity : AppCompatActivity() {
         "หักมุมระทึกขวัญจิตวิทยา"
     )
 
+    private val titleBanks = listOf(
+        listOf(
+            "วันที่เราเริ่มไม่เหมือนเดิม",
+            "บ้านหลังเดิมที่ไม่มีคำว่าเรา",
+            "คนข้างกายที่ไกลกว่าเดิม",
+            "รอยร้าวใต้คำว่าครอบครัว",
+            "เมื่อความเงียบเข้ามาแทนที่รัก",
+            "คำว่ารักที่หายไปจากบ้าน",
+            "ระยะห่างบนเตียงเดียวกัน",
+            "วันที่หัวใจไม่กลับบ้าน",
+            "ครอบครัวที่เหลือเพียงชื่อ",
+            "ก่อนเราจะกลายเป็นคนแปลกหน้า"
+        ),
+        listOf(
+            "รักนี้มีคนซ่อนอยู่",
+            "เกมหัวใจที่ไม่มีคนชนะ",
+            "คำโกหกในคืนที่ไว้ใจ",
+            "คนรักหรือคนลวง",
+            "เงาของใครในหัวใจเธอ",
+            "เมื่อรักกลายเป็นเกม",
+            "ข้อความลับหลังคำว่ารัก",
+            "คนที่สามในความเงียบ",
+            "รักซ้อนในบ้านเดียวกัน",
+            "คืนที่ความจริงเปิดเผย"
+        ),
+        listOf(
+            "ความลับหลังประตูบ้าน",
+            "สิ่งที่ซ่อนอยู่ใต้ชายคา",
+            "บ้านนี้มีเรื่องที่ไม่เคยพูด",
+            "เสียงกระซิบในครอบครัว",
+            "ความจริงในห้องที่ปิดตาย",
+            "เมื่อบ้านเก็บความลับไม่ไหว",
+            "เรื่องที่ไม่มีใครกล้าถาม",
+            "ความลับบนโต๊ะอาหาร",
+            "คนในบ้านที่ฉันไม่เคยรู้จัก",
+            "ใต้หลังคาเดียวกันคนละความจริง"
+        ),
+        listOf(
+            "กลับมารักกันอีกครั้ง",
+            "บ้านที่เรายังซ่อมได้",
+            "ก่อนรักจะสายเกินไป",
+            "ขอโอกาสให้คำว่าเรา",
+            "วันที่เราเลือกเริ่มใหม่",
+            "ซ่อมหัวใจใต้หลังคาเดิม",
+            "มือที่ยังไม่ยอมปล่อย",
+            "รักที่ยังเหลือทางกลับ",
+            "เมื่อเราหันหน้ามาคุยกัน",
+            "บ้านเดิมกับหัวใจดวงใหม่"
+        ),
+        listOf(
+            "คนที่ยืนอยู่หลังฉัน",
+            "คืนที่บ้านไม่เหมือนเดิม",
+            "เสียงเรียกจากห้องว่าง",
+            "ความจริงที่จำไม่ได้",
+            "คนแปลกหน้าในกระจก",
+            "ก่อนประตูบานนั้นจะเปิด",
+            "ใครบางคนรู้ทุกอย่าง",
+            "ความเงียบที่กำลังโกหก",
+            "เงื่อนงำในคืนฝนตก",
+            "เมื่อคนใกล้ตัวไม่ใช่คนเดิม"
+        )
+    )
+
     private fun generateTitles() {
         val category = storyCategories[categoryIndex]
+        val bank = titleBanks[categoryIndex]
         categoryIndex = (categoryIndex + 1) % storyCategories.size
 
-        status.text = "✦ GEN TITLE • $category"
+        val titles = bank.shuffled().take(5)
+        titlePanel.removeAllViews()
+        titlePanel.visibility = android.view.View.VISIBLE
 
-        share(
-            """
-AUTO-MOVIE ENGINE 2.0
-AI TITLE GENERATOR
+        titlePanel.addView(TextView(this).apply {
+            text = "CATEGORY • $category\nแตะชื่อเรื่องที่ต้องการ"
+            textSize = 13f
+            setTextColor(gold)
+            setTypeface(typeface, Typeface.BOLD)
+            setPadding(dp(8), dp(4), dp(8), dp(10))
+        })
 
-CHANNEL:
-สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย
+        titles.forEachIndexed { index, title ->
+            titlePanel.addView(Button(this).apply {
+                text = "${index + 1}.  $title"
+                isAllCaps = false
+                gravity = Gravity.START or Gravity.CENTER_VERTICAL
+                textSize = 15f
+                setTextColor(ice)
+                backgroundTintList = android.content.res.ColorStateList.valueOf(navy)
+                setPadding(dp(14), dp(10), dp(14), dp(10))
+                setOnClickListener {
+                    input.setText(title)
+                    input.setSelection(input.text.length)
+                    status.text = "✓ เลือกชื่อเรื่องแล้ว • $title"
+                }
+            }, full())
+        }
 
-CATEGORY:
-$category
-
-สร้างชื่อเรื่องใหม่จำนวน 5 ชื่อ
-สำหรับซีรีส์สั้นดราม่าผัวเมีย
-
-กติกา:
-- ชื่อกระชับ จำง่าย และชวนติดตาม
-- ทั้ง 5 ชื่อต้องแตกต่างกันชัดเจน
-- ห้ามชื่อซ้ำหรือใกล้เคียงกัน
-- ต้องสอดคล้องกับ CATEGORY
-- ไม่ต้องสร้าง EP
-- ไม่ต้องเขียนเรื่องย่อ
-- แสดงเฉพาะหมายเลข 1-5 และชื่อเรื่อง
-
-หลังแสดง 5 ชื่อ ให้ STOP
-รอ Director เลือกชื่อ
-            """.trimIndent()
-        )
+        status.text = "✦ สร้าง 5 ชื่อแล้ว • $category"
     }
 
     private fun appVersion(): String {

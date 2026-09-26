@@ -179,7 +179,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "① ✨ สร้างชื่อเรื่อง 5 ชื่อ • TITLES",
+                "❶ ✨ สร้างชื่อเรื่อง 5 ชื่อ • TITLES",
                 "สร้างชื่อเรื่อง 5 ชื่อ"
             ) {
                 generateTitles()
@@ -207,7 +207,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "② 🎬 สร้างเรื่อง 20 ฉาก • CREATE EP",
+                "❷ 🎬 สร้างเรื่อง 20 ฉาก • CREATE EP",
                 "เริ่มสร้างเรื่อง"
             ) {
                 createEp()
@@ -221,7 +221,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "③ 🖼️ สร้างภาพฉากปัจจุบัน • SCENE",
+                "❸ 🖼️ สร้างภาพฉากปัจจุบัน • SCENE",
                 "สร้างฉากปัจจุบัน"
             ) {
                 share(
@@ -237,7 +237,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "④ 🔍 ตรวจภาพฉาก • QC",
+                "❹ 🔍 ตรวจภาพฉาก • QC",
                 "QC ฉากปัจจุบัน"
             ) {
                 share(
@@ -253,7 +253,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "⑤ 🛠️ แก้ไขภาพไม่ผ่าน • REPAIR",
+                "❺ 🛠️ แก้ไขภาพไม่ผ่าน • REPAIR",
                 "เฉพาะจุด • สูงสุด 3 ครั้ง"
             ) {
                 repair()
@@ -267,7 +267,7 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             action(
-                "⑥ 🔒 ยืนยันและล็อกฉาก • LOCK",
+                "❻ 🔒 ยืนยันและล็อกฉาก • LOCK",
                 "ยืนยันฉากนี้"
             ) {
                 lockScene()
@@ -302,7 +302,7 @@ class MainActivity : AppCompatActivity() {
         status = TextView(this).apply {
 
             text =
-                "● ระบบพร้อมใช้งาน  •  บริบทอัตโนมัติเปิด"
+                "● ระบบพร้อมใช้งาน  •  เชื่อมโยงฉากอัตโนมัติ"
 
             textSize = 11f
 

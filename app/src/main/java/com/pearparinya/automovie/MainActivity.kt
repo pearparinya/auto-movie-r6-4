@@ -47,6 +47,17 @@ class MainActivity : AppCompatActivity() {
         // HEADER
         // ============================================================
 
+        root.addView(ImageView(this).apply {
+            setImageResource(R.mipmap.ic_launcher)
+            contentDescription = "AUTO-MOVIE ENGINE 2.0"
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            adjustViewBounds = true
+            setPadding(dp(6), dp(2), dp(6), dp(10))
+        }, LinearLayout.LayoutParams(dp(118), dp(118)).apply {
+            gravity = Gravity.CENTER_HORIZONTAL
+            bottomMargin = dp(4)
+        })
+
         root.addView(TextView(this).apply {
             text = "AUTO-MOVIE"
             textSize = 30f

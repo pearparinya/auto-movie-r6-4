@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.view.Gravity
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
@@ -2089,6 +2090,7 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
             val request = DownloadManager.Request(Uri.parse(apkUrl))
                 .setTitle("AUTO-MOVIE R$version")
                 .setDescription("กำลังดาวน์โหลดอัปเดต…")
+                .setMimeType("application/vnd.android.package-archive")
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 .setDestinationUri(Uri.fromFile(targetFile))
 
@@ -2121,8 +2123,14 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
                                 }
                                 DownloadManager.STATUS_FAILED -> {
                                     finished = true
+                                    val reason = it.getInt(it.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
                                     runOnUiThread {
-                                        status.text = "⛔ ดาวน์โหลดอัปเดตไม่สำเร็จ"
+                                        status.text = "⛔ ดาวน์โหลดไม่สำเร็จ • รหัส $reason"
+                                        AlertDialog.Builder(this)
+                                            .setTitle("ดาวน์โหลดอัปเดตไม่สำเร็จ")
+                                            .setMessage("รหัสข้อผิดพลาด $reason\\n\\nกรุณาตรวจสอบอินเทอร์เน็ตและพื้นที่ว่าง แล้วลองอีกครั้ง")
+                                            .setPositiveButton("ตกลง", null)
+                                            .show()
                                     }
                                 }
                             }
@@ -2137,6 +2145,30 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
     }
 
     private fun installDownloadedApk(apkFile: File) {
+        if (!apkFile.exists() || apkFile.length() <= 0L) {
+            status.text = "⛔ ไม่พบไฟล์อัปเดต"
+            return
+        }
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O &&
+            !packageManager.canRequestPackageInstalls()
+        ) {
+            status.text = "⚠ กรุณาอนุญาตติดตั้งแอปจาก AUTO-MOVIE"
+            AlertDialog.Builder(this)
+                .setTitle("ต้องอนุญาตการติดตั้ง")
+                .setMessage("กด “เปิดการตั้งค่า” แล้วเปิด “อนุญาตจากแหล่งนี้” จากนั้นกลับมาที่ AUTO-MOVIE และกด Update อีกครั้ง")
+                .setNegativeButton("ยกเลิก", null)
+                .setPositiveButton("เปิดการตั้งค่า") { _, _ ->
+                    try {
+                        startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+                    } catch (_: Exception) {
+                        startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS))
+                    }
+                }
+                .show()
+            return
+        }
+
         try {
             val apkUri = FileProvider.getUriForFile(
                 this,

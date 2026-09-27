@@ -17,6 +17,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import org.json.JSONObject
 import java.io.File
@@ -50,6 +51,24 @@ class MainActivity : AppCompatActivity() {
     private lateinit var titlePanel: LinearLayout
     private lateinit var nextHint: TextView
     private lateinit var confirmOutputButton: Button
+    private lateinit var characterMasterButton: Button
+    private var pendingCharacterKey: String? = null
+
+    private val characterNames = linkedMapOf(
+        "gawin" to "กวิน",
+        "rinlada" to "รินลดา",
+        "mind" to "มายด์"
+    )
+
+    private val characterPicker = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        val key = pendingCharacterKey
+        pendingCharacterKey = null
+        if (uri != null && key != null) {
+            saveCharacterMaster(key, uri)
+        }
+    }
 
     private val navy = Color.rgb(12, 15, 38)
     private val panel = Color.rgb(37, 32, 78)
@@ -264,6 +283,19 @@ class MainActivity : AppCompatActivity() {
         }
         root.addView(titlePanel, full())
 
+        characterMasterButton = Button(this).apply {
+            textSize = 12f
+            maxLines = 1
+            isSingleLine = true
+            setTextColor(Color.BLACK)
+            setTypeface(typeface, Typeface.BOLD)
+            gravity = Gravity.CENTER
+            backgroundTintList = android.content.res.ColorStateList.valueOf(gold)
+            setOnClickListener { showCharacterMasterSetup() }
+        }
+        root.addView(characterMasterButton, full(dp(38)))
+        refreshCharacterMasterButton()
+
         root.addView(
             section("ขั้นตอนการสร้าง • PRODUCTION FLOW").apply {
                 gravity = Gravity.CENTER
@@ -304,7 +336,12 @@ class MainActivity : AppCompatActivity() {
                 "สร้างฉากปัจจุบัน"
             ) {
                 if (!requireStep(3)) return@stepAction
-                share(buildSceneCommand())
+                if (!characterMastersReady()) {
+                    status.text = "⚠ CHARACTER MASTER ไม่ครบ • ตั้งค่ากวิน รินลดา และมายด์ก่อน"
+                    showCharacterMasterSetup()
+                    return@stepAction
+                }
+                share(buildSceneCommand(), includeCharacterMasters = true)
                 status.text = "⏳ ส่ง GENERATE SCENE แล้ว • รอยืนยันว่ามีภาพ Output จริง"
                 refreshStepIndicator()
             },
@@ -648,6 +685,79 @@ class MainActivity : AppCompatActivity() {
         getSharedPreferences("auto_movie_state", Context.MODE_PRIVATE)
     }
 
+    private fun characterMasterFile(key: String): File {
+        val dir = File(filesDir, "character_masters")
+        if (!dir.exists()) dir.mkdirs()
+        return File(dir, "$key.master")
+    }
+
+    private fun characterMastersReady(): Boolean =
+        characterNames.keys.all { characterMasterFile(it).exists() }
+
+    private fun characterMasterUris(): ArrayList<Uri> {
+        val uris = arrayListOf<Uri>()
+        characterNames.keys.forEach { key ->
+            val file = characterMasterFile(key)
+            if (file.exists()) {
+                uris.add(
+                    FileProvider.getUriForFile(
+                        this,
+                        "${packageName}.fileprovider",
+                        file
+                    )
+                )
+            }
+        }
+        return uris
+    }
+
+    private fun refreshCharacterMasterButton() {
+        if (!::characterMasterButton.isInitialized) return
+        val count = characterNames.keys.count { characterMasterFile(it).exists() }
+        characterMasterButton.text =
+            if (count == 3) "👥 ตัวละครหลักพร้อม 3/3 • CHARACTER MASTER"
+            else "👥 ตั้งค่าตัวละครหลัก $count/3 • CHARACTER MASTER"
+        characterMasterButton.backgroundTintList =
+            android.content.res.ColorStateList.valueOf(
+                if (count == 3) activeGreen else gold
+            )
+    }
+
+    private fun showCharacterMasterSetup() {
+        val labels = characterNames.map { (key, name) ->
+            val ready = characterMasterFile(key).exists()
+            "${if (ready) "✓" else "○"} $name"
+        }.toTypedArray()
+
+        AlertDialog.Builder(this)
+            .setTitle("ตัวละครหลัก • CHARACTER MASTER")
+            .setMessage("ตั้งค่าครั้งเดียว แอปจะเก็บรูปไว้ในเครื่องและแนบให้อัตโนมัติเมื่อ CREATE EP / SCENE\n\nเสื้อผ้าในรูปไม่ใช่ชุดประจำตัว")
+            .setItems(labels) { _, which ->
+                pendingCharacterKey = characterNames.keys.elementAt(which)
+                characterPicker.launch(arrayOf("image/*"))
+            }
+            .setNegativeButton("ปิด", null)
+            .show()
+    }
+
+    private fun saveCharacterMaster(key: String, uri: Uri) {
+        try {
+            val target = characterMasterFile(key)
+            contentResolver.openInputStream(uri)?.use { inputStream ->
+                target.outputStream().use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+            } ?: throw IllegalStateException("เปิดรูปไม่ได้")
+            refreshCharacterMasterButton()
+            val name = characterNames[key] ?: key
+            val count = characterNames.keys.count { characterMasterFile(it).exists() }
+            status.text = "✓ บันทึก $name แล้ว • CHARACTER MASTER $count/3"
+            playTone(ToneGenerator.TONE_PROP_ACK, 90)
+        } catch (_: Exception) {
+            status.text = "⛔ บันทึกรูป CHARACTER MASTER ไม่สำเร็จ"
+        }
+    }
+
     private fun confirmNewStory() {
         val currentTitle = if (::input.isInitialized) input.text.toString().trim() else ""
         val label = if (currentTitle.isNotBlank()) "“$currentTitle”" else "งานปัจจุบัน"
@@ -836,8 +946,15 @@ class MainActivity : AppCompatActivity() {
         status.text =
             "🎬 กำลังเริ่ม EP • $categoryForThisEp"
 
+        if (!characterMastersReady()) {
+            status.text = "⚠ ตั้งค่าตัวละครหลัก 3 คนก่อนเริ่ม CREATE EP"
+            showCharacterMasterSetup()
+            return
+        }
+
         share(
-            buildMasterPrompt(story, categoryForThisEp)
+            buildMasterPrompt(story, categoryForThisEp),
+            includeCharacterMasters = true
         )
 
         // ROTATING CATEGORY:
@@ -991,21 +1108,23 @@ class MainActivity : AppCompatActivity() {
     // ============================================================
 
     private fun share(
-        text: String
+        text: String,
+        includeCharacterMasters: Boolean = false
     ) {
 
         hideKeyboard()
 
-        val sendIntent =
-            Intent(Intent.ACTION_SEND).apply {
-
-                type = "text/plain"
-
-                putExtra(
-                    Intent.EXTRA_TEXT,
-                    text
-                )
+        val masterUris = if (includeCharacterMasters) characterMasterUris() else arrayListOf()
+        val sendIntent = Intent(
+            if (masterUris.isNotEmpty()) Intent.ACTION_SEND_MULTIPLE else Intent.ACTION_SEND
+        ).apply {
+            type = if (masterUris.isNotEmpty()) "image/*" else "text/plain"
+            putExtra(Intent.EXTRA_TEXT, text)
+            if (masterUris.isNotEmpty()) {
+                putParcelableArrayListExtra(Intent.EXTRA_STREAM, masterUris)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
+        }
 
         // เปิด ChatGPT โดยตรงก่อน เพื่อตัด Android Share Sheet ออก
         // ไม่ใช้ resolveActivity() เพราะ Android 11+ จำกัด package visibility
@@ -1155,6 +1274,23 @@ Reference Image ใช้สำหรับ:
 
 เท่านั้น
 
+CHARACTER MASTER REGISTRY:
+
+ตัวละครหลักถาวรมีเพียง 3 คน:
+- MASTER 01 = กวิน (Gawin) — ตัวละครหลักชาย
+- MASTER 02 = รินลดา (Rinlada) — ตัวละครหลักหญิง
+- MASTER 03 = มายด์ (Mind) — ตัวละครหลักหญิง
+
+เมื่อคำสั่งจาก AUTO-MOVIE มีภาพแนบ 3 ภาพ:
+- ให้จับคู่ตามลำดับ MASTER 01 กวิน / MASTER 02 รินลดา / MASTER 03 มายด์
+- ภาพเหล่านี้คือ ORIGINAL IDENTITY MASTER ที่แอปแนบให้อัตโนมัติ
+- ห้ามถาม Director ให้แนบภาพทั้ง 3 คนซ้ำ หากภาพแนบมากับคำสั่งแล้ว
+- ใช้เฉพาะตัวละครหลักที่ EP MASTER / CURRENT SCENE ระบุว่าปรากฏในฉาก
+- ตัวละครอื่นทั้งหมดเป็น SUPPORTING CHARACTER ให้ระบบสร้างอัตโนมัติตามบท
+- SUPPORTING CHARACTER ต้องมีชื่อ/บทบาท/อายุโดยประมาณ/ลักษณะเด่นที่ล็อกไว้เมื่อปรากฏครั้งแรก
+- เมื่อ SUPPORTING CHARACTER คนเดิมกลับมา ให้รักษาข้อมูลที่ล็อกไว้จาก STORY/EP CONTEXT
+- ห้ามร้องขอ Identity Master จาก Director สำหรับตัวละครรองที่ระบบสร้างขึ้นเอง
+
 WARDROBE FIREWALL:
 
 ORIGINAL IDENTITY MASTER ใช้ได้เฉพาะ:
@@ -1269,12 +1405,12 @@ CURRENT SCENE
 ห้ามเปลี่ยนเหตุการณ์เดิม
 โดยไม่มีคำสั่ง Director
 
-ถ้าข้อมูล Identity Master
-ไม่ครบ
+สำหรับตัวละครหลัก กวิน / รินลดา / มายด์:
+ให้ใช้ ORIGINAL IDENTITY MASTER ที่ AUTO-MOVIE แนบมากับคำสั่ง
 
-ให้ถามเฉพาะ
-Identity Master
-ของตัวละครที่ขาด
+สำหรับตัวละครรอง:
+สร้างอัตโนมัติจากข้อมูล SUPPORTING CHARACTER ที่ล็อกไว้
+ห้ามขอ Director แนบ Identity Master เพิ่ม
 
 ห้ามถามหาบท Scene ซ้ำ
 
@@ -2026,7 +2162,7 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
 
 2. กด “สร้างเรื่อง 20 ฉาก • CREATE EP” เพื่อเริ่ม STORY และสร้าง EP 01 โดยระบบจะล็อก TITLE / CATEGORY เดิมต่อเนื่องถึง EP 05
 
-3. แนบรูปต้นฉบับของตัวละคร (ORIGINAL IDENTITY MASTER) สำหรับตัวละครที่ต้องปรากฏในเรื่อง เพื่อใช้รักษาใบหน้าและอัตลักษณ์ให้ต่อเนื่อง
+3. กด “CHARACTER MASTER” และเลือกรูป กวิน / รินลดา / มายด์ เพียงครั้งแรก แอปจะเก็บไว้ในเครื่องและแนบให้ ChatGPT อัตโนมัติใน CREATE EP / SCENE ตัวละครรองให้ระบบสร้างตามบทอัตโนมัติ
 
 4. กด “สร้างภาพฉากปัจจุบัน • SCENE” ระบบ AUTO-CONTEXT จะดึงข้อมูลของฉากจาก EP MASTER เดิมให้อัตโนมัติ ไม่ต้องคัดลอกบทมาวางใหม่
 

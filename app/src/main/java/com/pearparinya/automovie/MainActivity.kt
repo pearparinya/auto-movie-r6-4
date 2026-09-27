@@ -1095,6 +1095,15 @@ WORKFLOW DISPLAY RULE:
   ③ สร้างภาพฉากปัจจุบัน • SCENE
   กลับไปที่ AUTO-MOVIE แล้วกด ③ SCENE
 
+THAI DISPLAY RULE:
+- เนื้อหาที่แสดงให้ Director อ่านต้องใช้ภาษาไทยเป็นหลัก
+- หัวข้อ EP MASTER ให้ใช้ "ข้อมูลหลัก EP XX"
+- ใช้ป้ายกำกับ: ช่อง, ชื่อเรื่อง, หมวดเรื่อง, ตอน, จำนวนฉาก, ความยาว, รูปแบบ, กล้อง, สถานะ, ตัวละครหลัก
+- รายละเอียดแต่ละ Scene ให้ใช้หัวข้อไทย: ฉาก, สถานที่, ตัวละคร, ภาพ/การกระทำ, อารมณ์, บทพูด/ผู้บรรยาย, กล้อง, พรอมต์ Flow/Veo 3.1
+- คำระบบที่จำเป็น เช่น EP, Flow/Veo 3.1, Locked-off, QC, PASS, FAIL, REPAIR, LOCK, NEXT SCENE ให้คงภาษาอังกฤษไว้ร่วมกับภาษาไทย
+- หลีกเลี่ยงหัวข้ออังกฤษล้วน เช่น CHANNEL, TITLE, CATEGORY, EPISODE, SCENES, DURATION, FORMAT, CAMERA, STATUS ในผลลัพธ์ที่ Director อ่าน
+- กฎ/คำสั่งภายในระบบยังตีความตามคำศัพท์มาตรฐานเดิม ห้ามเปลี่ยนความหมาย Workflow
+
 PRODUCTION RULES:
 
 - 1 STORY มี 5 EP

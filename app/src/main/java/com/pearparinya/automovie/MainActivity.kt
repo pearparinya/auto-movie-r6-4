@@ -1205,9 +1205,9 @@ SELF-CONTAINED RULE:
         return """
 AUTO-MOVIE ENGINE 2.0
 R${appVersion()} • BUILD เวอร์ชั่น ${packageManager.getPackageInfo(packageName, 0).versionCode}
-ออกแบบและพัฒนาโดย นายปริญญา จันทร์จักษุ
-ANDROID PROFESSIONAL
-AUTO-CONTEXT + WARDROBE FIREWALL
+ออกแบบ/พัฒนา: นายปริญญา จันทร์จักษุ
+ANDROID PROFESSIONAL • AUTO-CONTEXT
+WARDROBE FIREWALL
 
 CHANNEL:
 สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย

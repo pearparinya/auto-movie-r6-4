@@ -2005,14 +2005,22 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
 
         Thread {
             try {
-                val connection = (URL(
-                    "https://api.github.com/repos/pearparinya/auto-movie-r6-4/releases/latest"
-                ).openConnection() as HttpURLConnection).apply {
-                    connectTimeout = 6000
-                    readTimeout = 6000
+                // Cache-bust GitHub's /releases/latest response. Some mobile/CDN paths
+                // can briefly return stale release metadata after the R6.24 asset is replaced.
+                val noCacheUrl =
+                    "https://api.github.com/repos/pearparinya/auto-movie-r6-4/releases/tags/R6.24?cb=" +
+                    System.currentTimeMillis()
+                val connection = (URL(noCacheUrl).openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 8000
+                    readTimeout = 8000
                     requestMethod = "GET"
+                    useCaches = false
+                    defaultUseCaches = false
                     setRequestProperty("Accept", "application/vnd.github+json")
                     setRequestProperty("User-Agent", "AUTO-MOVIE-Android")
+                    setRequestProperty("Cache-Control", "no-cache, no-store, max-age=0")
+                    setRequestProperty("Pragma", "no-cache")
+                    setRequestProperty("If-None-Match", "")
                 }
 
                 val responseCode = connection.responseCode

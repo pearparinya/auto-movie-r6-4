@@ -153,7 +153,7 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "พัฒนาโดย ปริญญา จันทร์จักษุ"
+            text = "ออกแบบและพัฒนาโดย นายปริญญา จันทร์จักษุ"
             textSize = 10f
             setTextColor(muted)
             gravity = Gravity.START
@@ -1204,7 +1204,10 @@ SELF-CONTAINED RULE:
 
         return """
 AUTO-MOVIE ENGINE 2.0
-R${appVersion()} ANDROID PROFESSIONAL AUTO-CONTEXT + WARDROBE FIREWALL
+R${appVersion()} • BUILD เวอร์ชั่น ${packageManager.getPackageInfo(packageName, 0).versionCode}
+ออกแบบและพัฒนาโดย นายปริญญา จันทร์จักษุ
+ANDROID PROFESSIONAL
+AUTO-CONTEXT + WARDROBE FIREWALL
 
 CHANNEL:
 สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย

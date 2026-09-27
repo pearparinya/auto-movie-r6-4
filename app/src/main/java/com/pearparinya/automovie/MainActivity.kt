@@ -2008,10 +2008,10 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
 
         Thread {
             try {
-                // Cache-bust GitHub's /releases/latest response. Some mobile/CDN paths
-                // can briefly return stale release metadata after the R6.24 asset is replaced.
+                // Every build now has an immutable release tag such as R6.24-B642.
+                // Read the release marked "latest" and cache-bust the request.
                 val noCacheUrl =
-                    "https://api.github.com/repos/pearparinya/auto-movie-r6-4/releases/tags/R6.24?cb=" +
+                    "https://api.github.com/repos/pearparinya/auto-movie-r6-4/releases/latest?cb=" +
                     System.currentTimeMillis()
                 val connection = (URL(noCacheUrl).openConnection() as HttpURLConnection).apply {
                     connectTimeout = 8000
@@ -2035,7 +2035,9 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
                 connection.disconnect()
 
                 val release = JSONObject(json)
-                val tag = release.optString("tag_name").removePrefix("R").removePrefix("v")
+                val rawTag = release.optString("tag_name")
+                val tag = Regex("""(?:R|v)?(\d+(?:\.\d+)+)""", RegexOption.IGNORE_CASE)
+                    .find(rawTag)?.groupValues?.getOrNull(1) ?: appVersion()
                 val releaseBody = release.optString("body")
                 val remoteBuild = Regex("""BUILD\s*[:#]?\s*(\d+)""", RegexOption.IGNORE_CASE)
                     .find(releaseBody)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: 0

@@ -129,14 +129,15 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "ระบบสร้างหนังอัตโนมัติ R${appVersion()}"
-            textSize = 14f
+            text = "ระบบสร้างหนังอัตโนมัติ"
+            textSize = 17f
             setTextColor(muted)
+            setTypeface(typeface, Typeface.BOLD)
             gravity = Gravity.START
             maxLines = 1
             isSingleLine = true
             setAutoSizeTextTypeUniformWithConfiguration(
-                9, 15, 1,
+                12, 18, 1,
                 android.util.TypedValue.COMPLEX_UNIT_SP
             )
             setPadding(0, 0, 0, 0)
@@ -144,7 +145,7 @@ class MainActivity : AppCompatActivity() {
 
         headerText.addView(TextView(this).apply {
             val buildNumber = packageManager.getPackageInfo(packageName, 0).versionCode
-            text = "BUILD เวอร์ชั่น $buildNumber"
+            text = "R${appVersion()} • BUILD เวอร์ชั่น $buildNumber"
             textSize = 11f
             setTextColor(gold)
             setTypeface(typeface, Typeface.BOLD)
@@ -154,7 +155,7 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "ออกแบบ/พัฒนา: นายปริญญา จันทร์จักษุ"
+            text = "พัฒนาโดย : นายปริญญา จันทร์จักษุ"
             textSize = 10f
             setTextColor(muted)
             gravity = Gravity.START
@@ -1217,7 +1218,7 @@ SELF-CONTAINED RULE:
         return """
 AUTO-MOVIE ENGINE 2.0
 R${appVersion()} • BUILD เวอร์ชั่น ${packageManager.getPackageInfo(packageName, 0).versionCode}
-ออกแบบ/พัฒนา: นายปริญญา จันทร์จักษุ
+พัฒนาโดย : นายปริญญา จันทร์จักษุ
 ANDROID PROFESSIONAL • AUTO-CONTEXT
 WARDROBE FIREWALL
 

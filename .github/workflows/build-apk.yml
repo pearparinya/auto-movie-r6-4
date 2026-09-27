@@ -118,8 +118,11 @@ jobs:
             echo "Unable to read versionName."
             exit 1
           fi
+          VERSION_CODE="$(sed -n 's/.*versionCode = \([0-9][0-9]*\).*/\1/p' app/build.gradle.kts | head -n 1)"
+          [ -n "$VERSION_CODE" ] || { echo "Unable to read versionCode."; exit 1; }
           echo "version=$VERSION_NAME" >> "$GITHUB_OUTPUT"
-          echo "Building AUTO-MOVIE R$VERSION_NAME"
+          echo "build=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "Building AUTO-MOVIE R$VERSION_NAME • BUILD $VERSION_CODE"
 
       - name: Build release APK
         shell: bash
@@ -257,8 +260,9 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release $TAG already exists; replacing APK asset."
           else
-            gh release create "$TAG"               --title "AUTO-MOVIE $TAG"               --notes "AUTO-MOVIE signed Android release $TAG"
+            gh release create "$TAG"               --title "AUTO-MOVIE $TAG"               --notes "AUTO-MOVIE signed Android release $TAG - BUILD: ${{ steps.app_version.outputs.build }}"
           fi
 
+          gh release edit "$TAG" --notes "AUTO-MOVIE signed Android release $TAG - BUILD: ${{ steps.app_version.outputs.build }}"
           gh release upload "$TAG" "$APK" --clobber
           echo "Published $APK to release $TAG."

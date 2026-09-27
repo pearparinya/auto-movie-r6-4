@@ -246,7 +246,9 @@ jobs:
 
 
       # ============================================================
-      # PUBLISH LATEST RELEASE FOR IN-APP UPDATE
+      # PUBLISH IMMUTABLE BUILD RELEASE FOR IN-APP UPDATE
+      # Each build gets its own tag/asset. This avoids stale asset IDs
+      # from repeatedly replacing the R6.24 release asset.
       # ============================================================
 
       - name: Publish APK to GitHub Release
@@ -254,38 +256,40 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="R${{ steps.app_version.outputs.version }}"
-          APK="$RUNNER_TEMP/AUTO-MOVIE-R${{ steps.app_version.outputs.version }}-release.apk"
+          VERSION="${{ steps.app_version.outputs.version }}"
+          BUILD="${{ steps.app_version.outputs.build }}"
+          TAG="R${VERSION}-B${BUILD}"
+          APK="$RUNNER_TEMP/AUTO-MOVIE-R${VERSION}-release.apk"
+          ASSET_NAME="AUTO-MOVIE-R${VERSION}-BUILD-${BUILD}.apk"
+          PUBLISH_APK="$RUNNER_TEMP/$ASSET_NAME"
 
+          cp "$APK" "$PUBLISH_APK"
+
+          # A build release is immutable. Re-running the same commit first
+          # removes only that build tag/release, never another build.
           if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG already exists; replacing APK asset."
-          else
-            gh release create "$TAG"               --title "AUTO-MOVIE $TAG"               --notes "AUTO-MOVIE signed Android release $TAG - BUILD: ${{ steps.app_version.outputs.build }}"
+            echo "Recreating existing build release $TAG."
+            gh release delete "$TAG" --yes --cleanup-tag
           fi
 
-          gh release edit "$TAG" --notes "AUTO-MOVIE signed Android release $TAG - BUILD: ${{ steps.app_version.outputs.build }}"
+          gh release create "$TAG" "$PUBLISH_APK" \
+            --target "${{ github.sha }}" \
+            --title "AUTO-MOVIE R${VERSION} • BUILD ${BUILD}" \
+            --notes "AUTO-MOVIE signed Android release R${VERSION} - BUILD: ${BUILD}" \
+            --latest
 
-          # Delete same-name asset explicitly before upload. This avoids
-          # gh release upload --clobber failing when GitHub returns a stale asset id.
-          ASSET_NAME="$(basename "$APK")"
-          gh release delete-asset "$TAG" "$ASSET_NAME" --yes >/dev/null 2>&1 || true
-          gh release upload "$TAG" "$APK"
-
-          echo "Verifying published release..."
-          EXPECTED_BUILD="${{ steps.app_version.outputs.build }}"
-          EXPECTED_ASSET="$(basename "$APK")"
-
+          echo "Verifying published build release..."
           ACTUAL_BODY="$(gh api "/repos/${{ github.repository }}/releases/tags/$TAG" --jq '.body')"
-          ACTUAL_ASSET="$(gh api "/repos/${{ github.repository }}/releases/tags/$TAG" --jq '.assets[] | select(.name == "'"$EXPECTED_ASSET"'") | .name' | head -n 1)"
+          ACTUAL_ASSET="$(gh api "/repos/${{ github.repository }}/releases/tags/$TAG" --jq '.assets[] | select(.name == "'"$ASSET_NAME"'") | .name' | head -n 1)"
 
-          echo "$ACTUAL_BODY" | grep -q "BUILD: $EXPECTED_BUILD" || {
+          echo "$ACTUAL_BODY" | grep -q "BUILD: $BUILD" || {
             echo "Release verification failed: BUILD metadata is not current."
             exit 1
           }
 
-          [ "$ACTUAL_ASSET" = "$EXPECTED_ASSET" ] || {
+          [ "$ACTUAL_ASSET" = "$ASSET_NAME" ] || {
             echo "Release verification failed: APK asset is missing."
             exit 1
           }
 
-          echo "Published and verified $APK to release $TAG • BUILD $EXPECTED_BUILD."
+          echo "Published and verified $TAG • $ASSET_NAME."

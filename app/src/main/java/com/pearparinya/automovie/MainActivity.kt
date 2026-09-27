@@ -887,11 +887,12 @@ SOURCE OF TRUTH:
 คำสั่งบังคับ:
 - ภายในคำตอบเดียว สร้าง STORY BIBLE แบบกระชับ วางเส้นเรื่อง EP 01–05 และแผน EP 01 จำนวน 20 ฉาก
 - จากนั้นสร้างภาพ SCENE 01 ทันที ห้ามหยุดรอ CONFIRM
-- REFERENCE ROUTING แบบรายตัว: IMAGE 1 = กวิน ONLY, IMAGE 2 = รินลดา ONLY, IMAGE 3 = มายด์ ONLY
-- ก่อนสร้างภาพ ให้ตัดสินใจก่อนว่า SCENE 01 มีตัวละครหลักคนใดปรากฏ แล้วใช้เฉพาะ IMAGE ของคนนั้น/เหล่านั้นเป็น Character Reference; ภาพของคนที่ไม่อยู่ในฉากให้ IGNORE สำหรับการสร้างภาพฉากนี้
-- สำหรับตัวละครที่ปรากฏ ให้จับคู่แบบ 1:1: กวิน→IMAGE1, รินลดา→IMAGE2, มายด์→IMAGE3 ห้าม cross-reference หรือผสมคุณลักษณะข้ามคน
-- ORIGINAL IMAGE ของแต่ละคนคือ IDENTITY AUTHORITY สูงสุด ห้าม recast และห้ามใช้ Scene Output เป็น Identity
-- PRIORITY: IDENTITY > Face/Hair/Natural Body > Story Action > Emotion > Pose > Wardrobe > Cinematic Beauty
+- FIXED CAST REGISTRY: IMAGE 1 = กวิน / IMAGE 2 = รินลดา / IMAGE 3 = มายด์
+- ภาพทั้ง 3 เป็นทะเบียนนักแสดงถาวร ห้ามตีความเป็นเพียง inspiration และห้ามออกแบบใบหน้าตัวละครหลักใหม่
+- ใน STORY BIBLE และ Scene Prompt ให้เรียกตัวละครหลักด้วยชื่อ + IMAGE ID เท่านั้น ไม่สร้างคำบรรยายรูปลักษณ์ใบหน้าใหม่
+- เมื่อตัวละครปรากฏ ให้ใช้บุคคลคนเดิมจาก IMAGE ของคนนั้นโดยตรง; คนที่ไม่อยู่ในฉากไม่ต้องนำมาวางในภาพ
+- ห้าม recast / substitute / face blend / face average / beautify / age shift และห้ามใช้ Scene Output เป็น Identity
+- PRIORITY: FIXED CAST IDENTITY > Natural Face/Hair/Body > Story Action > Emotion > Pose > Wardrobe > Cinematic Beauty
 - ตัวละครรองสร้างอัตโนมัติและล็อกลักษณะเมื่อปรากฏครั้งแรก
 - Identity Master ใช้เฉพาะ Face / Skin / Natural Body / Hair / Approximate Age / Identity ห้ามใช้เสื้อผ้าจากภาพ Master
 - STORY BIBLE ให้เป็นข้อความ/แผนเรื่อง ห้ามสร้าง portrait หรือ contact sheet ใหม่ของ MASTER 01/02/03
@@ -925,12 +926,13 @@ SELF-CONTAINED RULE:
 - ห้ามบังคับ Director กลับไปบทสนทนาเก่า
 - ถ้ามี STORY/EP context เดิมให้ใช้เพื่อความต่อเนื่อง
 - ถ้า context เดิมไม่อยู่ ให้ใช้ SOURCE OF TRUTH นี้รักษาแกนเรื่องและสร้างรายละเอียดฉากที่สมเหตุสมผลตาม EP/SCENE INDEX แล้วสร้างภาพทันที
-- REFERENCE ROUTING แบบรายฉาก: ระบุ ACTIVE CAST ของ SCENE ${fmt(currentScene)} ก่อนสร้างภาพ
-- IMAGE 1 = กวิน ONLY / IMAGE 2 = รินลดา ONLY / IMAGE 3 = มายด์ ONLY
-- ใช้เฉพาะ ORIGINAL IMAGE ของ ACTIVE CAST เป็น Character Reference; IMAGE ของตัวละครที่ไม่ปรากฏในฉากนี้ต้อง IGNORE เพื่อป้องกัน face contamination
-- จับคู่ ACTIVE CAST แบบ 1:1 เท่านั้น ห้าม cross-reference, face averaging, face blending, recast หรือ substitute actor
-- ทุก Scene ต้องย้อนกลับไปหา ORIGINAL IMAGE ของตัวละครนั้นโดยตรง ห้ามใช้ Scene Output ก่อนหน้าเป็น Identity Reference
-- PRIORITY: IDENTITY > Face/Hair/Natural Body > Story Action > Emotion > Pose > Wardrobe > Cinematic Beauty
+- FIXED CAST REGISTRY: IMAGE 1 = กวิน / IMAGE 2 = รินลดา / IMAGE 3 = มายด์
+- ใช้ IMAGE ทั้ง 3 เป็นทะเบียนนักแสดงถาวร ไม่สร้าง visual identity ใหม่จากข้อความ
+- สำหรับตัวละครหลักที่ปรากฏใน SCENE ${fmt(currentScene)} ให้ใช้บุคคลคนเดิมจาก IMAGE ของคนนั้นโดยตรง และบรรยายเฉพาะ wardrobe/action/emotion/position/gaze
+- ห้ามสร้างคำบรรยายโครงหน้า ตา จมูก ปาก ความหล่อ/สวย หรือรูปลักษณ์ใหม่เพื่อแทน IMAGE
+- ห้าม cross-reference / face averaging / face blending / recast / substitute actor / beautify / age shift
+- ทุก Scene ต้องกลับไปที่ ORIGINAL IMAGE 1/2/3 ห้ามใช้ Scene Output ก่อนหน้าเป็น Identity Source
+- PRIORITY: FIXED CAST IDENTITY > Natural Face/Hair/Body > Story Action > Emotion > Pose > Wardrobe > Cinematic Beauty
 - ใช้เฉพาะตัวละครที่เหมาะกับฉาก ตัวละครรองสร้างอัตโนมัติ
 - ตัวละครหลักทุกคนที่ปรากฏต้องอ้างอิง ORIGINAL MASTER ที่แนบมาโดยตรง ห้ามอ้างอิง portrait/Scene Output ที่ AI เคยสร้าง
 - Identity Master ห้ามเป็นแหล่งเสื้อผ้า ใช้ Wardrobe Firewall
@@ -1294,32 +1296,25 @@ Reference Image ใช้สำหรับ:
 
 เท่านั้น
 
-VISUAL IDENTITY LOCK — HIGHEST PRIORITY:
+VISUAL IDENTITY LOCK — FIXED CAST REGISTRY:
 
-IDENTITY GATE — HARD FAIL:
-- ลำดับภาพแนบถูกล็อกตายตัว: ATTACHMENT 1 = MASTER 01 = กวิน (Gawin) ONLY; ATTACHMENT 2 = MASTER 02 = รินลดา (Rinlada) ONLY; ATTACHMENT 3 = MASTER 03 = มายด์ (Mind) ONLY
-- ห้ามสลับ ATTACHMENT, ห้ามเฉลี่ย/ผสมใบหน้า, ห้ามถ่ายโอนลักษณะของ MASTER คนหนึ่งไปยังอีกคน
-- ORIGINAL ATTACHMENT ของแต่ละคนเป็น IDENTITY AUTHORITY สูงสุดในทุกฉาก แม้ภาพฉากก่อนหน้าจะดูสมจริงหรือสวยกว่า
-- PRIORITY บังคับ: IDENTITY > FACE/HAIR/BODY CONSISTENCY > STORY ACTION > EMOTION/EXPRESSION > POSE > WARDROBE > CINEMATIC BEAUTY
-- ถ้าอารมณ์ สีหน้า มุมหน้า ท่าทาง หรือความสวยของภาพทำให้หน้าหลุดจาก MASTER ให้ลด/ปรับสิ่งเหล่านั้นก่อน ห้ามเปลี่ยนคน
-- ห้าม RECAST, FACE SUBSTITUTE, BEAUTIFY, AGE SHIFT, FACE MORPH, BODY RESHAPE หรือสร้าง generic actor มาแทน
-- ภาพบุคคลในกรอบรูป กระจก จอภาพ หรือภาพพื้นหลัง ห้ามกลายเป็น Identity Reference ใหม่; ถ้าจำเป็นต้องเห็นตัวละครหลักในภาพดังกล่าว ต้องเป็น Identity เดียวกับ MASTER หรือทำให้รายละเอียดใบหน้าไม่เด่น
-- ก่อนส่ง Output ให้ตรวจรายคนตาม mapping: กวิน↔MASTER01, รินลดา↔MASTER02, มายด์↔MASTER03; คนใดไม่ตรง = IDENTITY HARD FAIL
-- SCENE-LOCAL REFERENCE ROUTING: ก่อนสร้างทุกภาพ ให้ประกาศภายในว่าใครคือ ACTIVE CAST แล้ว bind เฉพาะ MASTER ของคนนั้นแบบ 1:1; MASTER ของคนที่ไม่อยู่ในฉากต้องไม่มีอิทธิพลต่อใบหน้า/รูปร่างของ ACTIVE CAST
-- หากฉากมีหลายคน ให้รักษา identity แยกเป็นรายบุคคล ไม่สร้างใบหน้าเฉลี่ยของกลุ่ม และไม่ถ่ายโอนทรงผม/โครงหน้า/รูปร่างระหว่างกัน
-- เมื่อ HARD FAIL ให้พยายามสร้างภาพใหม่โดยกลับไปอ้างอิง ORIGINAL ATTACHMENT ของคนนั้นโดยตรง ไม่ใช้ Output ที่ผิดเป็นฐาน
-- หากระบบภาพไม่สามารถรักษา Identity ได้อย่างน่าเชื่อถือ ให้ระบุข้อจำกัดแทนการประกาศ PASS เท็จ
-
-- ภาพแนบ MASTER 01 / 02 / 03 คือแหล่งอ้างอิงอัตลักษณ์ทางภาพเพียงชุดเดียวของตัวละครหลัก และมีลำดับความสำคัญเหนือคำบรรยายตัวละครด้วยข้อความ
-- ห้ามสร้าง ตีความ ออกแบบ หรือแทนที่ใบหน้าใหม่จากชื่อ อายุ บทบาท บุคลิก หรือเนื้อเรื่อง
-- ทุกครั้งที่ตัวละครหลักปรากฏ ต้องอ้างอิง ORIGINAL IDENTITY MASTER ของคนนั้นโดยตรง ไม่ใช่ภาพที่ AI สร้างขึ้นภายหลัง
-- ต้องรักษาโครงหน้า รูปตา คิ้ว จมูก ปาก กราม สีผิว ทรงผม/แนวผม อายุโดยประมาณ และ NATURAL BODY PROPORTIONS ให้ใกล้ ORIGINAL MASTER มากที่สุด
-- ห้ามทำให้ผอมลง อ้วนขึ้น เพิ่ม/ลดกล้าม เปลี่ยนช่วงไหล่ อก เอว สะโพก หรือสัดส่วนร่างกายเพื่อให้เข้ากับฉากหรือเสื้อผ้า
-- เสื้อผ้าใน MASTER ไม่ใช่ Identity และต้องถูกแยกออกด้วย WARDROBE FIREWALL
-- ห้ามใช้ portrait / contact sheet / character card / STORY BIBLE portrait ที่สร้างโดย AI เป็น MASTER ใหม่
-- ห้ามใช้ภาพ Scene ก่อนหน้าเป็น MASTER ใหม่
-- ถ้าความเหมือนของใบหน้า/รูปร่างกับ ORIGINAL MASTER ไม่เพียงพอ ให้ถือว่า INTERNAL QC = FAIL และสร้างใหม่ก่อนส่ง Output
-- หากระบบสร้างภาพไม่สามารถยึดภาพแนบเป็น visual reference ได้อย่างน่าเชื่อถือ ห้ามอ้างว่า Identity Lock สำเร็จ ให้รายงานข้อจำกัดแทนการสร้างคนใหม่แล้วเรียกว่าเป็นตัวละครเดิม
+FIXED CAST REGISTRY — SINGLE SOURCE OF TRUTH:
+- IMAGE 1 = กวิน (Gawin)
+- IMAGE 2 = รินลดา (Rinlada)
+- IMAGE 3 = มายด์ (Mind)
+- ทั้ง 3 IMAGE คือทะเบียนนักแสดงถาวรของ STORY นี้ ไม่ใช่ภาพตัวอย่างสำหรับสร้างคนใหม่
+- เมื่อต้องใช้ตัวละครหลัก ให้ใช้ "บุคคลคนเดิมจาก IMAGE หมายเลขนั้น" โดยตรง
+- ห้ามสร้าง visual identity ใหม่จากชื่อ อายุ บุคลิก บทบาท เนื้อเรื่อง หรือคำบรรยายความหล่อ/สวย
+- ห้ามเขียนหรืออนุมานคำบรรยายใบหน้าใหม่ เช่น รูปหน้า ตา คิ้ว จมูก ปาก กราม ความหล่อ/สวย เชื้อชาติ หรือสไตล์ใบหน้า เพื่อใช้แทน IMAGE
+- คำบรรยาย Scene ของตัวละครหลักอนุญาตเฉพาะ: ชื่อ/IMAGE ID, เสื้อผ้าตาม Scene, ตำแหน่ง, การกระทำ, อารมณ์ และทิศทางการมอง
+- ห้าม RECAST, SUBSTITUTE ACTOR, FACE BLEND, FACE AVERAGE, BEAUTIFY, AGE SHIFT, FACE MORPH หรือ BODY RESHAPE
+- ห้ามใช้ Scene Output, portrait ที่ AI สร้าง, contact sheet, character card, รูปในกรอบ, กระจก หรือจอภาพ เป็น Identity Source ใหม่
+- ทุก Scene ต้องย้อนกลับไปที่ IMAGE 1/2/3 ชุดเดิมเสมอ
+- เสื้อผ้าใน IMAGE 1/2/3 ไม่ใช่ Identity และห้ามคัดลอกตาม WARDROBE FIREWALL
+- ถ้ามีหลายตัวละครในฉาก ให้รักษาแต่ละ IMAGE ID แยกจากกันแบบ 1:1 ห้ามถ่ายโอนลักษณะระหว่างคน
+- PRIORITY: FIXED CAST IDENTITY > NATURAL FACE/HAIR/BODY CONTINUITY > STORY ACTION > EMOTION > POSE > WARDROBE > CINEMATIC BEAUTY
+- ก่อนส่งภาพ ตรวจว่าบุคคลที่ใช้แทน กวิน/รินลดา/มายด์ ยังเป็นบุคคลคนเดิมจาก IMAGE 1/2/3 ตามลำดับ ถ้าเห็นชัดว่าเป็นคนใหม่ = INTERNAL QC FAIL
+- หากระบบภาพไม่สามารถรักษาบุคคลเดิมจาก IMAGE ได้อย่างน่าเชื่อถือ ให้ระบุข้อจำกัด ห้ามประกาศ Identity PASS เท็จ
 
 STORY BIBLE IMAGE RULE:
 - STORY BIBLE เป็นข้อมูลข้อความ/แผนเรื่อง ไม่ต้องสร้างภาพ portrait ใหม่ของ MASTER 01/02/03
@@ -1328,7 +1323,7 @@ STORY BIBLE IMAGE RULE:
 - ห้ามรวม STORY BIBLE, ตาราง, portrait ตัวละคร และ SCENE 01 เป็นภาพ collage/infographic เดียว
 - Output ภาพ SCENE ต้องเป็นภาพฉาก 9:16 แบบเต็มฉาก ไม่ใส่ตาราง/ตัวหนังสือ/character card ทับในภาพ
 
-CHARACTER MASTER REGISTRY:
+FIXED CAST COMPATIBILITY MAP:
 
 ตัวละครหลักถาวรมีเพียง 3 คน:
 - MASTER 01 = กวิน (Gawin) — ตัวละครหลักชาย

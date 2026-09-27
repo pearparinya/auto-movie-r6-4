@@ -142,7 +142,7 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "สร้างเรื่อง → สร้างฉาก → ตรวจภาพ → ยืนยัน"
+            text = "เลือกเรื่อง → START → NEXT SCENE"
             textSize = 10f
             setTextColor(ice)
             gravity = Gravity.START
@@ -861,9 +861,13 @@ SOURCE OF TRUTH:
 คำสั่งบังคับ:
 - ภายในคำตอบเดียว สร้าง STORY BIBLE แบบกระชับ วางเส้นเรื่อง EP 01–05 และแผน EP 01 จำนวน 20 ฉาก
 - จากนั้นสร้างภาพ SCENE 01 ทันที ห้ามหยุดรอ CONFIRM
-- ภาพแนบเรียง MASTER 01 กวิน / MASTER 02 รินลดา / MASTER 03 มายด์
+- ภาพแนบเรียง MASTER 01 กวิน / MASTER 02 รินลดา / MASTER 03 มายด์ และเป็น ORIGINAL VISUAL IDENTITY MASTER ที่มีอำนาจสูงสุด
 - ตัวละครรองสร้างอัตโนมัติและล็อกลักษณะเมื่อปรากฏครั้งแรก
 - Identity Master ใช้เฉพาะ Face / Skin / Natural Body / Hair / Approximate Age / Identity ห้ามใช้เสื้อผ้าจากภาพ Master
+- STORY BIBLE ให้เป็นข้อความ/แผนเรื่อง ห้ามสร้าง portrait หรือ contact sheet ใหม่ของ MASTER 01/02/03
+- หลัง STORY BIBLE ให้สร้างเฉพาะภาพ SCENE 01 แบบ 9:16 เต็มฉาก ห้ามทำ collage/infographic และห้ามใส่ตารางหรือข้อความลงในภาพ
+- ก่อนส่งภาพ ให้เทียบ Face + Hair + Natural Body Proportions ของตัวละครหลักทุกคนกับ ORIGINAL MASTER ที่แนบมาโดยตรง
+- ถ้าใบหน้า/รูปร่างไม่ใกล้ ORIGINAL MASTER ให้ INTERNAL QC = FAIL และสร้างใหม่ก่อนส่งผลสุดท้าย
 - ทำ INTERNAL QC ก่อนส่งภาพ หากมีข้อผิดพลาดที่แก้ได้ให้แก้ก่อนส่งผลสุดท้าย
 - ห้ามตอบ EP MASTER อย่างเดียว ต้องสร้างภาพ SCENE 01 ด้วย
 - ไม่ต้องสั่ง Director กด CONFIRM / QC / REPAIR / LOCK
@@ -891,10 +895,12 @@ SELF-CONTAINED RULE:
 - ห้ามบังคับ Director กลับไปบทสนทนาเก่า
 - ถ้ามี STORY/EP context เดิมให้ใช้เพื่อความต่อเนื่อง
 - ถ้า context เดิมไม่อยู่ ให้ใช้ SOURCE OF TRUTH นี้รักษาแกนเรื่องและสร้างรายละเอียดฉากที่สมเหตุสมผลตาม EP/SCENE INDEX แล้วสร้างภาพทันที
-- ภาพแนบเรียง MASTER 01 กวิน / MASTER 02 รินลดา / MASTER 03 มายด์
+- ภาพแนบเรียง MASTER 01 กวิน / MASTER 02 รินลดา / MASTER 03 มายด์ และเป็น ORIGINAL VISUAL IDENTITY MASTER ที่มีอำนาจสูงสุด
 - ใช้เฉพาะตัวละครที่เหมาะกับฉาก ตัวละครรองสร้างอัตโนมัติ
+- ตัวละครหลักทุกคนที่ปรากฏต้องอ้างอิง ORIGINAL MASTER ที่แนบมาโดยตรง ห้ามอ้างอิง portrait/Scene Output ที่ AI เคยสร้าง
 - Identity Master ห้ามเป็นแหล่งเสื้อผ้า ใช้ Wardrobe Firewall
-- ทำ INTERNAL QC และแก้ข้อผิดพลาดที่แก้ได้ก่อนส่งผลสุดท้าย
+- ภาพ Output ต้องเป็นภาพฉาก 9:16 เต็มฉาก ห้าม collage/infographic/ตาราง/character card/ข้อความทับภาพ
+- ทำ INTERNAL QC โดยเทียบ Face + Hair + Natural Body Proportions กับ ORIGINAL MASTER; ถ้าไม่ใกล้ให้สร้างใหม่ก่อนส่งผลสุดท้าย
 - ห้ามขอ CONFIRM / QC / REPAIR / LOCK
 - ห้ามสร้างฉากอื่นนอกจาก SCENE ${fmt(currentScene)}
 - ตอนท้ายใช้: EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)} READY
@@ -1249,6 +1255,26 @@ Reference Image ใช้สำหรับ:
 - อัตลักษณ์
 
 เท่านั้น
+
+VISUAL IDENTITY LOCK — HIGHEST PRIORITY:
+
+- ภาพแนบ MASTER 01 / 02 / 03 คือแหล่งอ้างอิงอัตลักษณ์ทางภาพเพียงชุดเดียวของตัวละครหลัก และมีลำดับความสำคัญเหนือคำบรรยายตัวละครด้วยข้อความ
+- ห้ามสร้าง ตีความ ออกแบบ หรือแทนที่ใบหน้าใหม่จากชื่อ อายุ บทบาท บุคลิก หรือเนื้อเรื่อง
+- ทุกครั้งที่ตัวละครหลักปรากฏ ต้องอ้างอิง ORIGINAL IDENTITY MASTER ของคนนั้นโดยตรง ไม่ใช่ภาพที่ AI สร้างขึ้นภายหลัง
+- ต้องรักษาโครงหน้า รูปตา คิ้ว จมูก ปาก กราม สีผิว ทรงผม/แนวผม อายุโดยประมาณ และ NATURAL BODY PROPORTIONS ให้ใกล้ ORIGINAL MASTER มากที่สุด
+- ห้ามทำให้ผอมลง อ้วนขึ้น เพิ่ม/ลดกล้าม เปลี่ยนช่วงไหล่ อก เอว สะโพก หรือสัดส่วนร่างกายเพื่อให้เข้ากับฉากหรือเสื้อผ้า
+- เสื้อผ้าใน MASTER ไม่ใช่ Identity และต้องถูกแยกออกด้วย WARDROBE FIREWALL
+- ห้ามใช้ portrait / contact sheet / character card / STORY BIBLE portrait ที่สร้างโดย AI เป็น MASTER ใหม่
+- ห้ามใช้ภาพ Scene ก่อนหน้าเป็น MASTER ใหม่
+- ถ้าความเหมือนของใบหน้า/รูปร่างกับ ORIGINAL MASTER ไม่เพียงพอ ให้ถือว่า INTERNAL QC = FAIL และสร้างใหม่ก่อนส่ง Output
+- หากระบบสร้างภาพไม่สามารถยึดภาพแนบเป็น visual reference ได้อย่างน่าเชื่อถือ ห้ามอ้างว่า Identity Lock สำเร็จ ให้รายงานข้อจำกัดแทนการสร้างคนใหม่แล้วเรียกว่าเป็นตัวละครเดิม
+
+STORY BIBLE IMAGE RULE:
+- STORY BIBLE เป็นข้อมูลข้อความ/แผนเรื่อง ไม่ต้องสร้างภาพ portrait ใหม่ของ MASTER 01/02/03
+- ถ้าจำเป็นต้องแสดงรายชื่อตัวละคร ให้ใช้ชื่อและรหัส MASTER เท่านั้น
+- ภาพที่ต้องสร้างใน START คือภาพ SCENE 01 เพียงภาพเดียวหลังวาง STORY BIBLE
+- ห้ามรวม STORY BIBLE, ตาราง, portrait ตัวละคร และ SCENE 01 เป็นภาพ collage/infographic เดียว
+- Output ภาพ SCENE ต้องเป็นภาพฉาก 9:16 แบบเต็มฉาก ไม่ใส่ตาราง/ตัวหนังสือ/character card ทับในภาพ
 
 CHARACTER MASTER REGISTRY:
 
@@ -2129,28 +2155,32 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
     private fun showHelp() {
 
         AlertDialog.Builder(this)
-            .setTitle("วิธีใช้งาน AUTO-MOVIE")
+            .setTitle("วิธีใช้งาน AUTO-MOVIE • QUICK FLOW")
             .setMessage(
                 """
-ขั้นตอนการใช้งาน • WORKFLOW
+ใช้งานเพียง 3 ขั้นตอน
 
-1. กด “สร้างชื่อเรื่อง 5 ชื่อ • TITLES” แล้วเลือกชื่อเรื่อง 1 ชื่อ จากนั้นระบบจึงปลดล็อกขั้นตอน ② CREATE EP
+① NEW STORY
+กด “สร้างเรื่องใหม่” แล้วเลือกชื่อเรื่องที่ต้องการ ระบบจะล็อกชื่อเรื่องและหมวดเรื่องไว้ตลอด EP 01–05
 
-2. กด “สร้างเรื่อง 20 ฉาก • CREATE EP” เพื่อเริ่ม STORY และสร้าง EP 01 โดยระบบจะล็อก TITLE / CATEGORY เดิมต่อเนื่องถึง EP 05
+CHARACTER MASTER
+ตั้งค่ารูป กวิน / รินลดา / มายด์ เพียงครั้งเดียว แอปเก็บรูปต้นฉบับไว้ในเครื่องและแนบให้อัตโนมัติทุกครั้งที่ START / NEXT SCENE
+รูปทั้ง 3 คือ ORIGINAL IDENTITY MASTER ใช้สำหรับใบหน้า ทรงผม สีผิว และรูปร่างธรรมชาติเท่านั้น เสื้อผ้าในรูปไม่ใช่ชุดประจำตัว
 
-3. กด “CHARACTER MASTER” และเลือกรูป กวิน / รินลดา / มายด์ เพียงครั้งแรก แอปจะเก็บไว้ในเครื่องและแนบให้ ChatGPT อัตโนมัติใน CREATE EP / SCENE ตัวละครรองให้ระบบสร้างตามบทอัตโนมัติ
+② START
+กดครั้งเดียว แอปส่ง Character Master + คำสั่งไป ChatGPT
+จากนั้นส่งข้อความใน ChatGPT เพื่อให้สร้าง STORY BIBLE / โครงเรื่อง และสร้างภาพ SCENE 01 ต่อทันที
+ไม่ต้อง CONFIRM / QC / REPAIR / LOCK
 
-4. กด “สร้างภาพฉากปัจจุบัน • SCENE” ระบบ AUTO-CONTEXT จะดึงข้อมูลของฉากจาก EP MASTER เดิมให้อัตโนมัติ ไม่ต้องคัดลอกบทมาวางใหม่
+③ NEXT SCENE
+เมื่อได้ภาพฉากปัจจุบันแล้ว กลับ AUTO-MOVIE และกด NEXT SCENE
+ระบบจะเลื่อนไปฉากถัดไป แนบ ORIGINAL CHARACTER MASTER เดิม และรักษาความต่อเนื่องให้อัตโนมัติ
+ทำซ้ำจนจบ 20 ฉากต่อ EP และต่อเนื่องถึง EP 05
 
-5. เมื่อได้ภาพแล้ว กด “ตรวจภาพฉาก • QC” เพื่อตรวจใบหน้า ตัวละคร ความต่อเนื่องของเรื่อง และเสื้อผ้า (WARDROBE FIREWALL)
-
-6. ถ้าผลตรวจเป็น FAIL ให้กด “แก้ไขภาพไม่ผ่าน • REPAIR” ระบบจะแก้เฉพาะจุดที่ผิด โดยแก้ได้สูงสุด 3 ครั้งต่อฉาก
-
-7. ถ้าผลตรวจเป็น PASS ให้กด “ยืนยันและล็อกฉาก • LOCK” เพื่อยืนยันว่าฉากนี้เสร็จสมบูรณ์
-
-8. จากนั้นปุ่ม “ฉากถัดไป • NEXT SCENE” จะเปิดใช้งาน กดเพื่อทำฉากต่อไป ระบบจะดึงข้อมูลจาก EP MASTER เดิมให้อัตโนมัติ
-
-8. ทำขั้นตอนเดิมจนครบ SCENE 20 เมื่อจบเรื่อง ระบบจะบันทึกงาน (SAVE EP) ส่งต่องาน (HANDOFF) และหยุด (STOP)
+สำคัญ:
+• ใช้ ORIGINAL MASTER เดิมเสมอ ห้ามใช้ภาพ AI ที่สร้างภายหลังเป็น Master ใหม่
+• ตัวละครรองให้ระบบสร้างและรักษาความต่อเนื่องอัตโนมัติ
+• ทุกฉาก 8 วินาที • 9:16 • Flow/Veo 3.1 • Locked-off
                 """.trimIndent()
             )
             .setPositiveButton("เข้าใจแล้ว", null)

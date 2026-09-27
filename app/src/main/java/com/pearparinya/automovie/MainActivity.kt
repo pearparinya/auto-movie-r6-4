@@ -153,7 +153,7 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "ออกแบบและพัฒนาโดย นายปริญญา จันทร์จักษุ"
+            text = "ออกแบบ/พัฒนา: นายปริญญา จันทร์จักษุ"
             textSize = 10f
             setTextColor(muted)
             gravity = Gravity.START

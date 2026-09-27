@@ -270,4 +270,22 @@ jobs:
           ASSET_NAME="$(basename "$APK")"
           gh release delete-asset "$TAG" "$ASSET_NAME" --yes >/dev/null 2>&1 || true
           gh release upload "$TAG" "$APK"
-          echo "Published $APK to release $TAG • BUILD ${{ steps.app_version.outputs.build }}."
+
+          echo "Verifying published release..."
+          EXPECTED_BUILD="${{ steps.app_version.outputs.build }}"
+          EXPECTED_ASSET="$(basename "$APK")"
+
+          ACTUAL_BODY="$(gh api "/repos/${{ github.repository }}/releases/tags/$TAG" --jq '.body')"
+          ACTUAL_ASSET="$(gh api "/repos/${{ github.repository }}/releases/tags/$TAG" --jq '.assets[] | select(.name == "'"$EXPECTED_ASSET"'") | .name' | head -n 1)"
+
+          echo "$ACTUAL_BODY" | grep -q "BUILD: $EXPECTED_BUILD" || {
+            echo "Release verification failed: BUILD metadata is not current."
+            exit 1
+          }
+
+          [ "$ACTUAL_ASSET" = "$EXPECTED_ASSET" ] || {
+            echo "Release verification failed: APK asset is missing."
+            exit 1
+          }
+
+          echo "Published and verified $APK to release $TAG • BUILD $EXPECTED_BUILD."

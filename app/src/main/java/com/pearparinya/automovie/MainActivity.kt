@@ -87,7 +87,7 @@ class MainActivity : AppCompatActivity() {
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(14), dp(24), dp(14), dp(4))
+            setPadding(dp(14), dp(42), dp(14), dp(4))
             setBackgroundColor(navy)
         }
 
@@ -142,11 +142,36 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
+            val buildNumber = packageManager.getPackageInfo(packageName, 0).versionCode
+            text = "BUILD เวอร์ชั่น $buildNumber"
+            textSize = 11f
+            setTextColor(gold)
+            setTypeface(typeface, Typeface.BOLD)
+            gravity = Gravity.START
+            maxLines = 1
+            isSingleLine = true
+        }, full())
+
+        headerText.addView(TextView(this).apply {
+            text = "พัฒนาโดย ปริญญา จันทร์จักษุ"
+            textSize = 10f
+            setTextColor(muted)
+            gravity = Gravity.START
+            maxLines = 1
+            isSingleLine = true
+            setAutoSizeTextTypeUniformWithConfiguration(
+                8, 10, 1,
+                android.util.TypedValue.COMPLEX_UNIT_SP
+            )
+        }, full())
+
+        headerText.addView(TextView(this).apply {
             text = "เลือกเรื่อง → START → NEXT SCENE"
             textSize = 10f
             setTextColor(ice)
             gravity = Gravity.START
             maxLines = 1
+            isSingleLine = true
         }, full())
 
         headerRow.addView(headerText, LinearLayout.LayoutParams(

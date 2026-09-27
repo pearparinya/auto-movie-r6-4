@@ -887,8 +887,10 @@ SOURCE OF TRUTH:
 คำสั่งบังคับ:
 - ภายในคำตอบเดียว สร้าง STORY BIBLE แบบกระชับ วางเส้นเรื่อง EP 01–05 และแผน EP 01 จำนวน 20 ฉาก
 - จากนั้นสร้างภาพ SCENE 01 ทันที ห้ามหยุดรอ CONFIRM
-- IDENTITY MAP แบบล็อกตายตัว: ATTACHMENT 1 = MASTER 01 กวิน ONLY / ATTACHMENT 2 = MASTER 02 รินลดา ONLY / ATTACHMENT 3 = MASTER 03 มายด์ ONLY
-- ORIGINAL ATTACHMENT ของแต่ละคนคือ IDENTITY AUTHORITY สูงสุด ห้ามสลับ ห้ามผสมหน้า ห้าม recast และห้ามใช้ Scene Output เป็น Identity
+- REFERENCE ROUTING แบบรายตัว: IMAGE 1 = กวิน ONLY, IMAGE 2 = รินลดา ONLY, IMAGE 3 = มายด์ ONLY
+- ก่อนสร้างภาพ ให้ตัดสินใจก่อนว่า SCENE 01 มีตัวละครหลักคนใดปรากฏ แล้วใช้เฉพาะ IMAGE ของคนนั้น/เหล่านั้นเป็น Character Reference; ภาพของคนที่ไม่อยู่ในฉากให้ IGNORE สำหรับการสร้างภาพฉากนี้
+- สำหรับตัวละครที่ปรากฏ ให้จับคู่แบบ 1:1: กวิน→IMAGE1, รินลดา→IMAGE2, มายด์→IMAGE3 ห้าม cross-reference หรือผสมคุณลักษณะข้ามคน
+- ORIGINAL IMAGE ของแต่ละคนคือ IDENTITY AUTHORITY สูงสุด ห้าม recast และห้ามใช้ Scene Output เป็น Identity
 - PRIORITY: IDENTITY > Face/Hair/Natural Body > Story Action > Emotion > Pose > Wardrobe > Cinematic Beauty
 - ตัวละครรองสร้างอัตโนมัติและล็อกลักษณะเมื่อปรากฏครั้งแรก
 - Identity Master ใช้เฉพาะ Face / Skin / Natural Body / Hair / Approximate Age / Identity ห้ามใช้เสื้อผ้าจากภาพ Master
@@ -923,8 +925,11 @@ SELF-CONTAINED RULE:
 - ห้ามบังคับ Director กลับไปบทสนทนาเก่า
 - ถ้ามี STORY/EP context เดิมให้ใช้เพื่อความต่อเนื่อง
 - ถ้า context เดิมไม่อยู่ ให้ใช้ SOURCE OF TRUTH นี้รักษาแกนเรื่องและสร้างรายละเอียดฉากที่สมเหตุสมผลตาม EP/SCENE INDEX แล้วสร้างภาพทันที
-- IDENTITY MAP แบบล็อกตายตัว: ATTACHMENT 1 = MASTER 01 กวิน ONLY / ATTACHMENT 2 = MASTER 02 รินลดา ONLY / ATTACHMENT 3 = MASTER 03 มายด์ ONLY
-- ORIGINAL ATTACHMENT ของแต่ละคนคือ IDENTITY AUTHORITY สูงสุด ห้ามสลับ ห้ามผสมหน้า ห้าม recast และห้ามใช้ Scene Output เป็น Identity
+- REFERENCE ROUTING แบบรายฉาก: ระบุ ACTIVE CAST ของ SCENE ${fmt(currentScene)} ก่อนสร้างภาพ
+- IMAGE 1 = กวิน ONLY / IMAGE 2 = รินลดา ONLY / IMAGE 3 = มายด์ ONLY
+- ใช้เฉพาะ ORIGINAL IMAGE ของ ACTIVE CAST เป็น Character Reference; IMAGE ของตัวละครที่ไม่ปรากฏในฉากนี้ต้อง IGNORE เพื่อป้องกัน face contamination
+- จับคู่ ACTIVE CAST แบบ 1:1 เท่านั้น ห้าม cross-reference, face averaging, face blending, recast หรือ substitute actor
+- ทุก Scene ต้องย้อนกลับไปหา ORIGINAL IMAGE ของตัวละครนั้นโดยตรง ห้ามใช้ Scene Output ก่อนหน้าเป็น Identity Reference
 - PRIORITY: IDENTITY > Face/Hair/Natural Body > Story Action > Emotion > Pose > Wardrobe > Cinematic Beauty
 - ใช้เฉพาะตัวละครที่เหมาะกับฉาก ตัวละครรองสร้างอัตโนมัติ
 - ตัวละครหลักทุกคนที่ปรากฏต้องอ้างอิง ORIGINAL MASTER ที่แนบมาโดยตรง ห้ามอ้างอิง portrait/Scene Output ที่ AI เคยสร้าง
@@ -1300,6 +1305,8 @@ IDENTITY GATE — HARD FAIL:
 - ห้าม RECAST, FACE SUBSTITUTE, BEAUTIFY, AGE SHIFT, FACE MORPH, BODY RESHAPE หรือสร้าง generic actor มาแทน
 - ภาพบุคคลในกรอบรูป กระจก จอภาพ หรือภาพพื้นหลัง ห้ามกลายเป็น Identity Reference ใหม่; ถ้าจำเป็นต้องเห็นตัวละครหลักในภาพดังกล่าว ต้องเป็น Identity เดียวกับ MASTER หรือทำให้รายละเอียดใบหน้าไม่เด่น
 - ก่อนส่ง Output ให้ตรวจรายคนตาม mapping: กวิน↔MASTER01, รินลดา↔MASTER02, มายด์↔MASTER03; คนใดไม่ตรง = IDENTITY HARD FAIL
+- SCENE-LOCAL REFERENCE ROUTING: ก่อนสร้างทุกภาพ ให้ประกาศภายในว่าใครคือ ACTIVE CAST แล้ว bind เฉพาะ MASTER ของคนนั้นแบบ 1:1; MASTER ของคนที่ไม่อยู่ในฉากต้องไม่มีอิทธิพลต่อใบหน้า/รูปร่างของ ACTIVE CAST
+- หากฉากมีหลายคน ให้รักษา identity แยกเป็นรายบุคคล ไม่สร้างใบหน้าเฉลี่ยของกลุ่ม และไม่ถ่ายโอนทรงผม/โครงหน้า/รูปร่างระหว่างกัน
 - เมื่อ HARD FAIL ให้พยายามสร้างภาพใหม่โดยกลับไปอ้างอิง ORIGINAL ATTACHMENT ของคนนั้นโดยตรง ไม่ใช้ Output ที่ผิดเป็นฐาน
 - หากระบบภาพไม่สามารถรักษา Identity ได้อย่างน่าเชื่อถือ ให้ระบุข้อจำกัดแทนการประกาศ PASS เท็จ
 

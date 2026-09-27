@@ -1814,6 +1814,9 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
 
                 val release = JSONObject(json)
                 val tag = release.optString("tag_name").removePrefix("R").removePrefix("v")
+                val releaseBody = release.optString("body")
+                val remoteBuild = Regex("""BUILD\s*[:#]?\s*(\d+)""", RegexOption.IGNORE_CASE)
+                    .find(releaseBody)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: 0
                 val assets = release.optJSONArray("assets")
                     ?: throw IllegalStateException("ไม่พบไฟล์ APK")
 
@@ -1832,12 +1835,17 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
                 }
 
                 runOnUiThread {
-                    if (!isNewerVersion(tag, appVersion())) {
+                    val localBuild = BuildConfig.VERSION_CODE
+                    val versionIsNewer = isNewerVersion(tag, appVersion())
+                    val sameVersionNewerBuild = !versionIsNewer &&
+                        !isNewerVersion(appVersion(), tag) &&
+                        remoteBuild > localBuild
+                    if (!versionIsNewer && !sameVersionNewerBuild) {
                         if (!silent) {
-                            status.text = "✓ AUTO-MOVIE R${appVersion()} เป็นเวอร์ชันล่าสุดแล้ว"
+                            status.text = "✓ AUTO-MOVIE R${appVersion()} • BUILD ${BuildConfig.VERSION_CODE} เป็นเวอร์ชันล่าสุดแล้ว"
                         }
                     } else {
-                        showUpdateDialog(tag, apkUrl)
+                        showUpdateDialog(tag, remoteBuild, apkUrl)
                     }
                 }
             } catch (e: Exception) {
@@ -1867,9 +1875,9 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
         return false
     }
 
-    private fun showUpdateDialog(version: String, apkUrl: String) {
+    private fun showUpdateDialog(version: String, build: Int, apkUrl: String) {
         AlertDialog.Builder(this)
-            .setTitle("พบ AUTO-MOVIE R$version")
+            .setTitle("พบ AUTO-MOVIE R$version • BUILD $build")
             .setMessage("มีเวอร์ชันใหม่พร้อมใช้งาน\n\nกด “ดาวน์โหลดและติดตั้ง” เพื่อเริ่มอัปเดต")
             .setNegativeButton("ไว้ภายหลัง", null)
             .setPositiveButton("ดาวน์โหลดและติดตั้ง") { _, _ ->

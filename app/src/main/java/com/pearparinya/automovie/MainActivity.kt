@@ -266,12 +266,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         root.addView(
-            stepAction(1,
-                "❶ ★ สร้างชื่อเรื่อง 5 ชื่อ • TITLES",
-                "สร้างชื่อเรื่อง 5 ชื่อ"
-            ) {
-                generateTitles()
-            },
+            stepAction(1, "❶ ✨ สร้างเรื่องใหม่ • NEW STORY", "เลือกชื่อเรื่องและหมวดเรื่อง") { generateTitles() },
             full()
         )
 
@@ -296,12 +291,7 @@ class MainActivity : AppCompatActivity() {
         root.addView(characterMasterButton, full(dp(38)))
         refreshCharacterMasterButton()
 
-        root.addView(
-            section("ขั้นตอนการสร้าง • PRODUCTION FLOW").apply {
-                gravity = Gravity.CENTER
-            }
-        )
-
+        root.addView(section("โหมดรวดเร็ว • QUICK FLOW").apply { gravity = Gravity.CENTER })
         nextHint = TextView(this).apply {
             textSize = 11f
             setTextColor(muted)
@@ -312,130 +302,12 @@ class MainActivity : AppCompatActivity() {
         }
         root.addView(nextHint, full())
 
-        // ============================================================
-        // CREATE EP
-        // ============================================================
-
         root.addView(
-            stepAction(2,
-                "❷ ◆ สร้างเรื่อง 20 ฉาก • CREATE EP",
-                "เริ่มสร้างเรื่อง"
-            ) {
-                createEp()
-            },
+            stepAction(2, "❷ 🎬 สร้างโครงเรื่อง + ฉาก 01 • START", "ส่งครั้งเดียว: วางโครง EP และสร้างภาพฉากแรกทันที") { startQuickStory() },
             full()
         )
-
-        // ============================================================
-        // GENERATE SCENE
-        // ============================================================
-
         root.addView(
-            stepAction(3,
-                "❸ ▣ สร้างภาพฉากปัจจุบัน • SCENE",
-                "สร้างฉากปัจจุบัน"
-            ) {
-                if (!requireStep(3)) return@stepAction
-                if (!characterMastersReady()) {
-                    status.text = "⚠ CHARACTER MASTER ไม่ครบ • ตั้งค่ากวิน รินลดา และมายด์ก่อน"
-                    showCharacterMasterSetup()
-                    return@stepAction
-                }
-                share(buildSceneCommand(), includeCharacterMasters = true)
-                status.text = "⏳ ส่ง GENERATE SCENE แล้ว • รอยืนยันว่ามีภาพ Output จริง"
-                refreshStepIndicator()
-            },
-            full()
-        )
-
-        confirmOutputButton = action(
-            "✓ ยืนยันผลลัพธ์ • CONFIRM",
-            "ยืนยัน EP MASTER หรือภาพ Output ก่อนเข้าสู่ขั้นถัดไป"
-        ) {
-            when (activeStep) {
-                2 -> {
-                    status.text = "✓ ยืนยัน EP MASTER แล้ว • ไปขั้นตอน ③"
-                    setActiveStep(3)
-                }
-                3 -> {
-                    status.text = "✓ ยืนยันว่ามีภาพ Output จริงแล้ว • ไปขั้นตอน ④ QC"
-                    setActiveStep(4)
-                }
-                else -> {
-                    playTone(ToneGenerator.TONE_PROP_NACK, 120)
-                    status.text = "⛔ ขั้นตอนนี้ไม่ต้องยืนยันผลลัพธ์"
-                }
-            }
-        }.apply {
-            backgroundTintList = android.content.res.ColorStateList.valueOf(panel)
-        }
-        root.addView(confirmOutputButton, full())
-
-        // ============================================================
-        // QC CHECK
-        // ============================================================
-
-        root.addView(
-            stepAction(4,
-                "❹ ◎ ตรวจภาพฉาก • QC",
-                "QC ฉากปัจจุบัน"
-            ) {
-                if (!requireStep(4)) return@stepAction
-                share(buildQcCommand())
-                // แอปรับผล QC กลับอัตโนมัติไม่ได้: Director เลือก FAIL→REPAIR หรือ PASS→LOCK
-                refreshStepIndicator()
-            },
-            full()
-        )
-
-        // ============================================================
-        // REPAIR
-        // ============================================================
-
-        root.addView(
-            stepAction(5,
-                "❺ ⚒ แก้ไขภาพไม่ผ่าน • REPAIR",
-                "เฉพาะจุด • สูงสุด 3 ครั้ง"
-            ) {
-                if (!requireStep(4)) return@stepAction
-                repair()
-            },
-            full()
-        )
-
-        // ============================================================
-        // PASS & LOCK
-        // ============================================================
-
-        root.addView(
-            stepAction(6,
-                "❻ ◆ QC ผ่าน • ล็อกฉาก • LOCK",
-                "ใช้เมื่อผล QC ผ่านแล้ว"
-            ) {
-                if (!requireStep(4)) return@stepAction
-                lockScene()
-            },
-            full()
-        )
-
-        // ============================================================
-        // NEXT SCENE
-        // ============================================================
-
-        nextButton = stepAction(7,
-            "→ ฉากถัดไป • NEXT SCENE",
-            "ไปยังฉากต่อไป"
-        ) {
-            if (!requireStep(7)) return@stepAction
-            nextScene()
-        }.apply {
-
-            isEnabled = false
-            alpha = 0.45f
-        }
-
-        root.addView(
-            nextButton,
+            stepAction(3, "❸ ➜ สร้างฉากถัดไป • NEXT SCENE", "สร้างฉากต่อไปทันที ไม่ต้อง CONFIRM/QC/LOCK") { generateNextQuickScene() },
             full()
         )
 
@@ -841,7 +713,13 @@ class MainActivity : AppCompatActivity() {
         repairCount = statePrefs.getInt("repair", 0).coerceIn(0, 3)
         sceneLocked = statePrefs.getBoolean("locked", false)
         categoryIndex = statePrefs.getInt("categoryIndex", 0).coerceIn(0, storyCategories.lastIndex)
-        activeStep = statePrefs.getInt("activeStep", 1).coerceIn(1, 7)
+        activeStep = statePrefs.getInt("activeStep", 1).let { old ->
+            when {
+                old <= 1 -> 1
+                old == 2 -> 2
+                else -> 3
+            }
+        }
         storyStartTimeMs = statePrefs.getLong("storyStartTimeMs", 0L)
         storyEndTimeMs = statePrefs.getLong("storyEndTimeMs", 0L)
         updateTimeLabel()
@@ -915,6 +793,112 @@ class MainActivity : AppCompatActivity() {
         } catch (_: Exception) {
             "6.8"
         }
+    }
+
+    private fun startQuickStory() {
+        if (!requireStep(2)) return
+        if (!characterMastersReady()) {
+            status.text = "⚠ ตั้งค่าตัวละครหลัก 3/3 ก่อนเริ่มเรื่อง"
+            showCharacterMasterSetup()
+            return
+        }
+        val story = input.text.toString().trim()
+        if (story.isBlank()) { status.text = "⚠ เลือกชื่อเรื่องก่อน"; return }
+        currentEp = 1
+        currentScene = 1
+        repairCount = 0
+        sceneLocked = false
+        storyStartTimeMs = System.currentTimeMillis()
+        storyEndTimeMs = 0L
+        val category = selectedCategory ?: storyCategories[categoryIndex]
+        selectedCategory = category
+        val usedIndex = storyCategories.indexOf(category)
+        categoryIndex = if (usedIndex >= 0) (usedIndex + 1) % storyCategories.size else (categoryIndex + 1) % storyCategories.size
+        setActiveStep(3)
+        updateUi()
+        saveWorkState()
+        share(buildQuickStartCommand(story, category), includeCharacterMasters = true)
+        status.text = "🚀 START • โครงเรื่อง + ภาพ SCENE 01 ในครั้งเดียว"
+    }
+
+    private fun generateNextQuickScene() {
+        if (!requireStep(3)) return
+        if (!characterMastersReady()) { showCharacterMasterSetup(); return }
+        if (currentScene < 20) {
+            currentScene++
+        } else if (currentEp < 5) {
+            currentEp++
+            currentScene = 1
+        } else {
+            storyEndTimeMs = System.currentTimeMillis()
+            selectedCategory = null
+            setActiveStep(1)
+            saveWorkState()
+            status.text = "🏁 STORY COMPLETE • 5 EP / 100 SCENES"
+            return
+        }
+        updateUi()
+        saveWorkState()
+        share(buildQuickSceneCommand(), includeCharacterMasters = true)
+        status.text = "🚀 EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)} • ส่งแล้ว"
+    }
+
+    private fun buildQuickStartCommand(story: String, category: String): String {
+        return rules() + """
+
+QUICK FLOW COMMAND:
+START STORY + BUILD STORY BIBLE + GENERATE EP 01 SCENE 01 NOW
+
+SOURCE OF TRUTH:
+ชื่อเรื่อง: $story
+หมวดเรื่อง: $category
+ตอน: EP 01 / 05
+ฉากปัจจุบัน: SCENE 01 / 20
+ความยาว: 8 วินาที
+รูปแบบ: 9:16 • One Scene / One Image • Flow/Veo 3.1
+กล้อง: Locked-off static camera
+
+คำสั่งบังคับ:
+- ภายในคำตอบเดียว สร้าง STORY BIBLE แบบกระชับ วางเส้นเรื่อง EP 01–05 และแผน EP 01 จำนวน 20 ฉาก
+- จากนั้นสร้างภาพ SCENE 01 ทันที ห้ามหยุดรอ CONFIRM
+- ภาพแนบเรียง MASTER 01 กวิน / MASTER 02 รินลดา / MASTER 03 มายด์
+- ตัวละครรองสร้างอัตโนมัติและล็อกลักษณะเมื่อปรากฏครั้งแรก
+- Identity Master ใช้เฉพาะ Face / Skin / Natural Body / Hair / Approximate Age / Identity ห้ามใช้เสื้อผ้าจากภาพ Master
+- ทำ INTERNAL QC ก่อนส่งภาพ หากมีข้อผิดพลาดที่แก้ได้ให้แก้ก่อนส่งผลสุดท้าย
+- ห้ามตอบ EP MASTER อย่างเดียว ต้องสร้างภาพ SCENE 01 ด้วย
+- ไม่ต้องสั่ง Director กด CONFIRM / QC / REPAIR / LOCK
+- ตอนท้ายใช้: EP 01 • SCENE 01 READY
+        """.trimIndent()
+    }
+
+    private fun buildQuickSceneCommand(): String {
+        return rules() + """
+
+QUICK FLOW COMMAND:
+GENERATE EXACT CURRENT SCENE NOW — SELF-CONTAINED MODE
+
+SOURCE OF TRUTH:
+ชื่อเรื่อง: ${input.text.toString().trim()}
+หมวดเรื่อง: ${selectedCategory ?: storyCategories[categoryIndex]}
+ตอน: EP ${fmt(currentEp)} / 05
+ฉาก: SCENE ${fmt(currentScene)} / 20
+ความยาว: 8 วินาที
+รูปแบบ: 9:16 • One Scene / One Image • Flow/Veo 3.1
+กล้อง: Locked-off static camera
+
+SELF-CONTAINED RULE:
+- ห้ามตอบ EP MASTER NOT FOUND
+- ห้ามบังคับ Director กลับไปบทสนทนาเก่า
+- ถ้ามี STORY/EP context เดิมให้ใช้เพื่อความต่อเนื่อง
+- ถ้า context เดิมไม่อยู่ ให้ใช้ SOURCE OF TRUTH นี้รักษาแกนเรื่องและสร้างรายละเอียดฉากที่สมเหตุสมผลตาม EP/SCENE INDEX แล้วสร้างภาพทันที
+- ภาพแนบเรียง MASTER 01 กวิน / MASTER 02 รินลดา / MASTER 03 มายด์
+- ใช้เฉพาะตัวละครที่เหมาะกับฉาก ตัวละครรองสร้างอัตโนมัติ
+- Identity Master ห้ามเป็นแหล่งเสื้อผ้า ใช้ Wardrobe Firewall
+- ทำ INTERNAL QC และแก้ข้อผิดพลาดที่แก้ได้ก่อนส่งผลสุดท้าย
+- ห้ามขอ CONFIRM / QC / REPAIR / LOCK
+- ห้ามสร้างฉากอื่นนอกจาก SCENE ${fmt(currentScene)}
+- ตอนท้ายใช้: EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)} READY
+        """.trimIndent()
     }
 
     // ============================================================
@@ -1197,33 +1181,14 @@ CHANNEL:
 SYSTEM MODE:
 AUTO-CONTEXT = ON
 
-APP ↔ CHATGPT WORKFLOW SYNC:
-- คำสั่งจากปุ่ม AUTO-MOVIE คือสถานะงานปัจจุบันของ Director
-- ChatGPT ต้องทำเฉพาะขั้นตอนที่ COMMAND ระบุ
-- ห้ามข้ามขั้นตอน ห้ามเปลี่ยน TITLE / CATEGORY / CURRENT SCENE เอง
-- CREATE EP → GENERATE SCENE → QC → (REPAIR ถ้าจำเป็น) → PASS & LOCK → NEXT SCENE
-- CATEGORY ต้องล็อกคงเดิมตลอด STORY ตั้งแต่ EP 01 ถึง EP 05
-- การหมุน CATEGORY เกิดเฉพาะตอน CREATE EP ของเรื่องใหม่
-- หากข้อมูลในแชทขัดกับ ACTIVE WORK STATE ให้ตอบ SYNC MISMATCH และหยุด ห้ามเดาหรือดำเนินการต่อผิดงาน
-
-WORKFLOW DISPLAY RULE:
-- ทุกคำตอบที่จบขั้นตอน ต้องลงท้ายด้วยหัวข้อ "ขั้นตอนถัดไป • NEXT STEP"
-- ต้องใช้หมายเลข + ชื่อภาษาไทย + ชื่ออังกฤษให้ตรงกับปุ่มใน AUTO-MOVIE 100%
-- ห้ามใช้ชื่อขั้นตอนอื่นแทนชื่อเมนูจริง
-- ชื่อเมนูมาตรฐาน:
-  ① สร้างชื่อเรื่อง 5 ชื่อ • TITLES
-  ② สร้างเรื่อง 20 ฉาก • CREATE EP
-  ③ สร้างภาพฉากปัจจุบัน • SCENE
-  ✓ ยืนยันผลลัพธ์ • CONFIRM
-  ④ ตรวจภาพฉาก • QC
-  ⑤ แก้ไขภาพไม่ผ่าน • REPAIR
-  ⑥ QC ผ่าน • ล็อกฉาก • LOCK
-  → ฉากถัดไป • NEXT SCENE
-- บรรทัดสุดท้ายต้องระบุชัดว่า "กลับไปที่ AUTO-MOVIE แล้วกด [ชื่อปุ่มถัดไป]"
-- ตัวอย่างหลัง CREATE EP สำเร็จ:
-  ขั้นตอนถัดไป • NEXT STEP
-  ③ สร้างภาพฉากปัจจุบัน • SCENE
-  กลับไปที่ AUTO-MOVIE แล้วกด ③ SCENE
+QUICK FLOW SYNC:
+- Workflow ใหม่มีเพียง 3 ขั้นตอน: ① NEW STORY → ② START → ③ NEXT SCENE
+- START ต้องสร้างโครงเรื่องและภาพ SCENE 01 ในคำสั่งเดียว
+- NEXT SCENE ต้องสร้างภาพฉากปัจจุบันทันทีแบบ SELF-CONTAINED
+- ห้ามสั่ง Director กลับไปกด CONFIRM / QC / REPAIR / LOCK
+- QC และการแก้ข้อผิดพลาดพื้นฐานให้ทำภายในคำสั่งเดียวก่อนส่ง Output
+- ห้ามตอบ EP MASTER NOT FOUND; หากบริบทเดิมไม่มี ให้ใช้ SOURCE OF TRUTH จาก AUTO-MOVIE และดำเนินงานต่อ
+- CATEGORY ล็อกตลอด STORY EP 01–05 และหมุนเฉพาะเมื่อเริ่มเรื่องใหม่
 
 THAI DISPLAY RULE:
 - เนื้อหาที่แสดงให้ Director อ่านต้องใช้ภาษาไทยเป็นหลัก
@@ -2332,7 +2297,7 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
     }
 
     private fun setActiveStep(step: Int) {
-        val nextStep = step.coerceIn(1, 7)
+        val nextStep = step.coerceIn(1, 3)
         val changed = nextStep != activeStep
         activeStep = nextStep
         refreshStepIndicator()
@@ -2346,49 +2311,20 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
     private fun refreshStepIndicator() {
         stepButtons.forEach { (step, button) ->
             val active = step == activeStep
-            val allowed = when (activeStep) {
-                1 -> step == 1
-                2 -> step == 2
-                3 -> step == 3
-                4 -> step == 4 || step == 5 || step == 6
-                7 -> step == 7
-                else -> false
-            }
-
-            button.isEnabled = allowed
-            button.backgroundTintList =
-                android.content.res.ColorStateList.valueOf(
-                    if (active) activeGreen else panel
-                )
+            button.isEnabled = active
+            button.backgroundTintList = android.content.res.ColorStateList.valueOf(if (active) activeGreen else panel)
             button.setTextColor(if (active) Color.WHITE else ice)
             button.elevation = dp(if (active) 8 else 2).toFloat()
-            button.alpha = when {
-                active -> 1f
-                allowed -> 0.90f
-                else -> 0.38f
-            }
+            button.alpha = if (active) 1f else 0.38f
         }
-
-        if (::confirmOutputButton.isInitialized) {
-            confirmOutputButton.isEnabled = activeStep == 2 || activeStep == 3
-            confirmOutputButton.alpha = if (confirmOutputButton.isEnabled) 0.95f else 0.38f
-        }
-
         if (::nextHint.isInitialized) {
             nextHint.text = when (activeStep) {
-                1 -> "NEXT • ① สร้างและเลือกชื่อเรื่อง"
-                2 -> "② CREATE EP → ได้ EP MASTER แล้วกด CONFIRM"
-                3 -> "③ SCENE → มีภาพ Output จริงแล้วกด CONFIRM"
-                4 -> "QC RESULT • FAIL → ⑤ REPAIR   |   PASS → ⑥ LOCK"
-                7 -> if (currentScene == 20 && currentEp < 5) {
-                    "NEXT • HANDOFF → EP ${fmt(currentEp + 1)}"
-                } else {
-                    "NEXT • ไป Scene ถัดไป"
-                }
+                1 -> "① เลือกชื่อเรื่อง • NEW STORY"
+                2 -> "② START → โครงเรื่อง + ภาพฉาก 01 ในครั้งเดียว"
+                3 -> "③ ได้ภาพแล้ว → กด NEXT SCENE เพื่อสร้างฉากต่อไป"
                 else -> ""
             }
         }
-        updateNextButton()
     }
 
     private fun action(

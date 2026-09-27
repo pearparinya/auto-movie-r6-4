@@ -1835,14 +1835,14 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
                 }
 
                 runOnUiThread {
-                    val localBuild = BuildConfig.VERSION_CODE
+                    val localBuild = packageManager.getPackageInfo(packageName, 0).versionCode
                     val versionIsNewer = isNewerVersion(tag, appVersion())
                     val sameVersionNewerBuild = !versionIsNewer &&
                         !isNewerVersion(appVersion(), tag) &&
                         remoteBuild > localBuild
                     if (!versionIsNewer && !sameVersionNewerBuild) {
                         if (!silent) {
-                            status.text = "✓ AUTO-MOVIE R${appVersion()} • BUILD ${BuildConfig.VERSION_CODE} เป็นเวอร์ชันล่าสุดแล้ว"
+                            status.text = "✓ AUTO-MOVIE R${appVersion()} • BUILD ${packageManager.getPackageInfo(packageName, 0).versionCode} เป็นเวอร์ชันล่าสุดแล้ว"
                         }
                     } else {
                         showUpdateDialog(tag, remoteBuild, apkUrl)

@@ -729,15 +729,26 @@ class MainActivity : AppCompatActivity() {
             "${if (ready) "✓" else "○"} $name"
         }.toTypedArray()
 
-        AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setTitle("ตัวละครหลัก • CHARACTER MASTER")
-            .setMessage("ตั้งค่าครั้งเดียว แอปจะเก็บรูปไว้ในเครื่องและแนบให้อัตโนมัติเมื่อ CREATE EP / SCENE\n\nเสื้อผ้าในรูปไม่ใช่ชุดประจำตัว")
-            .setItems(labels) { _, which ->
+            .setSingleChoiceItems(labels, -1, null)
+            .setNegativeButton("ปิด", null)
+            .setPositiveButton("เลือกรูป", null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val which = dialog.listView.checkedItemPosition
+                if (which == android.widget.AdapterView.INVALID_POSITION) {
+                    Toast.makeText(this, "แตะเลือก กวิน / รินลดา / มายด์ ก่อน", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
                 pendingCharacterKey = characterNames.keys.elementAt(which)
+                dialog.dismiss()
                 characterPicker.launch(arrayOf("image/*"))
             }
-            .setNegativeButton("ปิด", null)
-            .show()
+        }
+        dialog.show()
     }
 
     private fun saveCharacterMaster(key: String, uri: Uri) {

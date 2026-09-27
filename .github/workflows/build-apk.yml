@@ -264,5 +264,10 @@ jobs:
           fi
 
           gh release edit "$TAG" --notes "AUTO-MOVIE signed Android release $TAG - BUILD: ${{ steps.app_version.outputs.build }}"
-          gh release upload "$TAG" "$APK" --clobber
-          echo "Published $APK to release $TAG."
+
+          # Delete same-name asset explicitly before upload. This avoids
+          # gh release upload --clobber failing when GitHub returns a stale asset id.
+          ASSET_NAME="$(basename "$APK")"
+          gh release delete-asset "$TAG" "$ASSET_NAME" --yes >/dev/null 2>&1 || true
+          gh release upload "$TAG" "$APK"
+          echo "Published $APK to release $TAG • BUILD ${{ steps.app_version.outputs.build }}."

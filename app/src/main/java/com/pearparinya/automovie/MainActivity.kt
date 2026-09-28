@@ -1225,14 +1225,39 @@ SELF-CONTAINED RULE:
             includeCharacterMasters -> characterMasterUris()
             else -> arrayListOf()
         }
-        val sendIntent = Intent(
-            if (masterUris.isNotEmpty()) Intent.ACTION_SEND_MULTIPLE else Intent.ACTION_SEND
-        ).apply {
+        // Android/ChatGPT handles a single image more reliably with ACTION_SEND.
+        // Use ACTION_SEND_MULTIPLE only when the current scene really has 2+ masters.
+        val sendAction =
+            if (masterUris.size > 1) Intent.ACTION_SEND_MULTIPLE else Intent.ACTION_SEND
+
+        val sendIntent = Intent(sendAction).apply {
             type = if (masterUris.isNotEmpty()) "image/*" else "text/plain"
             putExtra(Intent.EXTRA_TEXT, text)
-            if (masterUris.isNotEmpty()) {
-                putParcelableArrayListExtra(Intent.EXTRA_STREAM, masterUris)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+            when (masterUris.size) {
+                0 -> Unit
+                1 -> {
+                    putExtra(Intent.EXTRA_STREAM, masterUris.first())
+                    clipData = android.content.ClipData.newUri(
+                        contentResolver,
+                        "AUTO-MOVIE CHARACTER MASTER",
+                        masterUris.first()
+                    )
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                else -> {
+                    putParcelableArrayListExtra(Intent.EXTRA_STREAM, masterUris)
+                    val clip = android.content.ClipData.newUri(
+                        contentResolver,
+                        "AUTO-MOVIE CHARACTER MASTERS",
+                        masterUris.first()
+                    )
+                    masterUris.drop(1).forEach { uri ->
+                        clip.addItem(android.content.ClipData.Item(uri))
+                    }
+                    clipData = clip
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
             }
         }
 

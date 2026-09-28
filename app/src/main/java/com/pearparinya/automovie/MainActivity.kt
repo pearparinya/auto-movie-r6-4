@@ -1073,6 +1073,9 @@ CONTINUITY ENGINE:
 - ใช้เฉพาะตัวละครที่เหมาะกับฉาก ตัวละครรองสร้างอัตโนมัติ
 - ตัวละครหลักทุกคนที่ปรากฏต้องอ้างอิง ORIGINAL MASTER ที่แนบมาโดยตรง ห้ามอ้างอิง portrait/Scene Output ที่ AI เคยสร้าง
 - Identity Master ห้ามเป็นแหล่งเสื้อผ้า ใช้ Wardrobe Firewall
+- ACCESSORY FIREWALL — HARD: สร้อยคอ แหวน นาฬิกา ต่างหู แว่น และเครื่องประดับทุกชนิดจาก ORIGINAL MASTER ห้ามติดตามมาที่ฉากใหม่ เว้นแต่ CURRENT SCENE LEDGER ระบุชิ้นนั้นอย่างชัดเจน; หาก Ledger ไม่ระบุ = ไม่ใส่
+- MASTER POSE/COMPOSITION FIREWALL: ห้ามคัดลอกท่ายืน มุมหน้า ระยะ portrait ฉากหลังสีเขียว หรือองค์ประกอบจาก MASTER; ใช้ MASTER เฉพาะ Identity เท่านั้น
+- NARRATIVE FRAMING: ภาพต้องแสดง STORY BEAT ผ่านการกระทำจริง เลือก medium / medium-wide / full-body ตามฉาก หลีกเลี่ยง portrait pose และการจ้องกล้องโดยไม่มีเหตุผล
 - ภาพ Output ต้องเป็นภาพฉาก 9:16 เต็มฉาก ห้าม collage/infographic/ตาราง/character card/ข้อความทับภาพ
 - IDENTITY MATCH MODE = STRUCTURE-FIRST: ให้คง facial geometry, head width/length, eye spacing, eyebrow shape, nose bridge/tip, lips, jaw/chin, ears, hairline/hairstyle, moustache+beard pattern, skin tone, approximate age และ natural body proportions จาก ORIGINAL MASTER ก่อนอารมณ์/แสง/ความสวยงาม
 - EXPRESSION DELTA ONLY: เปลี่ยนได้เฉพาะกล้ามเนื้อสีหน้าที่จำเป็นต่ออารมณ์ของฉาก เช่น ขมวดคิ้ว/สายตา/มุมปาก แต่ห้ามให้อารมณ์เปลี่ยนโครงหน้า อายุ หนวดเครา ทรงผม หรือสัดส่วนศีรษะ

@@ -983,6 +983,12 @@ SOURCE OF TRUTH:
 - SCENE 01 ACTIVE CAST = กวิน เท่านั้น แม้ START จะส่ง MASTER ครบ 3 ภาพ
 - รินลดาและมายด์ใช้สำหรับ FIXED CAST REGISTRY / STORY BIBLE เท่านั้น ห้ามให้ปรากฏในภาพ SCENE 01
 - ภาพ SCENE 01 ต้องใช้ ATTACHMENT 1 เป็น ORIGINAL IDENTITY MASTER ของกวินโดยตรง ห้ามสร้างใบหน้ากวินใหม่จากข้อความ
+- FIXED CAST IDENTITY DNA — MASTER 01 กวิน: ใช้ภาพ ATTACHMENT 1 เป็นแหล่งอัตลักษณ์เพียงแหล่งเดียวตลอด EP 01–05 ทุกครั้งที่กวินปรากฏ ต้องย้อนอ้างอิง ORIGINAL MASTER นี้ใหม่ ไม่สืบทอดใบหน้าจากภาพฉากก่อนหน้า
+- ล็อกลักษณะจาก MASTER 01 เฉพาะ: facial geometry / head shape / eyes / eyebrows / nose / lips / jawline / ears / hair shape+color / moustache+beard pattern / skin tone / approximate age / natural body build+proportions
+- ห้ามเปลี่ยนกวินให้หล่อขึ้น อ่อนวัยขึ้น ผิวเนียนขึ้น หน้าเรียวขึ้น ตาโตขึ้น จมูกเปลี่ยน ทรงผมเปลี่ยน หนวดเคราหาย หรือรูปร่างเปลี่ยน แม้เพื่อ cinematic beauty
+- MASTER WARDROBE FIREWALL: เสื้อเชิ้ตสีน้ำตาล เสื้อยืดสีขาว กางเกงยีนส์ ค้อน บ้านไม้ ท่าตอกตะปู และองค์ประกอบฉากใน MASTER 01 ไม่ใช่ Identity และห้ามคัดลอกมา เว้นแต่ STORY/SCENE ระบุเอง
+- IDENTITY SOURCE IS IMMUTABLE: ห้ามใช้ Scene Output, ภาพแต่งงาน, background photo, storyboard, generated portrait หรือคำบรรยายข้อความแทน ORIGINAL MASTER
+- IDENTITY GATE — HARD FAIL: ก่อนส่งภาพต้องตรวจตัวละครที่เห็นจริงกับ ORIGINAL MASTER ของคนนั้น หาก facial geometry / hair / facial hair / natural body proportions เปลี่ยนชัดเจน ให้ถือว่าภาพไม่ผ่านและสร้างใหม่ก่อนส่ง ห้ามยอมรับใบหน้าที่เพียงคล้าย
 - STORY BIBLE ต้องออกแบบเหตุการณ์ให้สอดคล้องกับ CAST PLAN ที่ AUTO-MOVIE กำหนดด้านล่าง ห้ามเปลี่ยนรายชื่อตัวละครหลักของแต่ละฉาก:
 ${sceneCastPlan()}
 - สร้าง EP 01 SCENE BLUEPRINT ครบ 20 ฉาก โดยแต่ละฉากล็อก 8 ช่อง: TIME, LOCATION, ACTIVE CAST, WARDROBE, PROPS, KNOWLEDGE, EMOTION, STORY BEAT
@@ -993,6 +999,9 @@ ${sceneCastPlan()}
 - SECONDARY CAST REGISTRY: ตัวละครรองต้องมีชื่อ/บทบาท/ลักษณะคงที่ เมื่อกลับมาอีกต้องเป็นคนเดิม
 - ในแต่ละฉากอนาคต AUTO-MOVIE จะส่งเฉพาะ ORIGINAL MASTER ของ ACTIVE CAST จริง เพื่อลด identity contamination
 - ห้าม recast / substitute / face blend / face average / beautify / age shift และห้ามใช้ Scene Output เป็น Identity
+- ORIGINAL MASTER RE-ANCHOR: ทุก NEXT SCENE ให้ใช้เฉพาะ ORIGINAL MASTER ที่แนบของ ACTIVE CAST เป็น Identity authority ใหม่อีกครั้ง ห้ามใช้หน้าจากฉากก่อนเป็น reference แม้ฉากก่อนจะดูถูกต้อง
+- WARDROBE IS SCENE DATA, NOT IDENTITY: เสื้อผ้า รองเท้า เครื่องประดับ อุปกรณ์ ท่าทาง สถานที่ และแสงของ MASTER ห้ามติดตามตัวละครไปฉากใหม่; ให้ใช้ CURRENT SCENE LEDGER / continuity เท่านั้น
+- BACKGROUND FACE FIREWALL: ห้ามสร้างรูปถ่าย/กรอบรูป/จอมือถือที่มีใบหน้าทางเลือกของตัวละครหลัก ถ้าจำเป็นต้องมี ให้ไม่เห็นรายละเอียดใบหน้าหรือใช้ Identity เดียวกับ ORIGINAL MASTER
 - PRIORITY: ATTACHED ORIGINAL MASTER > Natural Face/Hair/Body > Story Action > Emotion > Pose > Wardrobe > Cinematic Beauty
 - ตัวละครรองสร้างอัตโนมัติและล็อกลักษณะเมื่อปรากฏครั้งแรก
 - Identity Master ใช้เฉพาะ Face / Skin / Natural Body / Hair / Approximate Age / Identity ห้ามใช้เสื้อผ้าจากภาพ Master

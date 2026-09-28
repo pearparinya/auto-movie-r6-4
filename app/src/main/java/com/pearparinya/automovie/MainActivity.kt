@@ -912,23 +912,34 @@ class MainActivity : AppCompatActivity() {
     private fun generateNextQuickScene() {
         if (!requireStep(3)) return
         if (!characterMastersReady()) { showCharacterMasterSetup(); return }
+
+        // EP boundary is deliberate: Scene 20 creates a handoff and stops.
+        // The next press starts the following EP at Scene 01 using that handoff contract.
         if (currentScene < 20) {
             currentScene++
-        } else if (currentEp < 5) {
-            currentEp++
-            currentScene = 1
-        } else {
+            updateUi()
+            saveWorkState()
+            share(buildQuickSceneCommand(), characterKeys = sceneCastKeys(currentScene))
+            status.text = "🚀 EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)} • ส่งแล้ว"
+            return
+        }
+
+        if (currentEp >= 5) {
             storyEndTimeMs = System.currentTimeMillis()
             selectedCategory = null
             setActiveStep(1)
             saveWorkState()
+            updateUi()
             status.text = "🏁 STORY COMPLETE • 5 EP / 100 SCENES"
             return
         }
+
+        currentEp++
+        currentScene = 1
         updateUi()
         saveWorkState()
         share(buildQuickSceneCommand(), characterKeys = sceneCastKeys(currentScene))
-        status.text = "🚀 EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)} • ส่งแล้ว"
+        status.text = "🎬 HANDOFF → EP ${fmt(currentEp)} • SCENE 01"
     }
 
     private fun buildQuickStartCommand(story: String, category: String): String {
@@ -991,11 +1002,18 @@ SOURCE OF TRUTH:
 รูปแบบ: 9:16 • One Scene / One Image • Flow/Veo 3.1
 กล้อง: Locked-off static camera
 
-SELF-CONTAINED RULE:
-- ห้ามตอบ EP MASTER NOT FOUND
-- ห้ามบังคับ Director กลับไปบทสนทนาเก่า
-- ถ้ามี STORY/EP context เดิมให้ใช้เพื่อความต่อเนื่อง
-- ถ้า context เดิมไม่อยู่ ให้ใช้ SOURCE OF TRUTH นี้รักษาแกนเรื่องและสร้างรายละเอียดฉากที่สมเหตุสมผลตาม EP/SCENE INDEX แล้วสร้างภาพทันที
+CONTINUITY ENGINE:
+- ห้ามตอบ EP MASTER NOT FOUND และห้ามบังคับ Director กลับไปบทสนทนาเก่า
+- ใช้ STORY BIBLE + แผน EP + เหตุการณ์ที่เกิดขึ้นจริงในฉากก่อนหน้าเป็น CANON ต่อเนื่อง ห้ามเขียนทับข้อเท็จจริงเดิม
+- ก่อนสร้างฉาก ให้สรุป CONTINUITY STATE ภายในแบบไม่ต้องถามผู้ใช้: เวลา/วัน, สถานที่, ตัวละครที่อยู่ในพื้นที่, เสื้อผ้าปัจจุบัน, อุปกรณ์/ของที่ถือ, ความสัมพันธ์, ข้อมูลที่แต่ละคนรู้, บาดแผลหรือสภาพร่างกาย, และเหตุการณ์ค้างจากฉากก่อน
+- SAME-DAY WARDROBE LOCK: ถ้ายังเป็นวัน/ช่วงเหตุการณ์เดียวกัน เสื้อผ้าของตัวละครต้องต่อเนื่อง ห้ามเปลี่ยนชุดเอง; เปลี่ยนได้เมื่อ STORY ระบุการเปลี่ยนเวลา/สถานการณ์อย่างมีเหตุผล
+- LOCATION LOCK: ประตู หน้าต่าง เตียง โต๊ะ เฟอร์นิเจอร์ และทิศทางพื้นที่หลักต้องต่อเนื่องเมื่อยังอยู่สถานที่เดิม
+- PROP LOCK: โทรศัพท์ กระเป๋า เอกสาร รถ กุญแจ แหวน และวัตถุสำคัญต้องอยู่กับผู้ถือ/ตำแหน่งตามเหตุการณ์ล่าสุด ห้ามหายหรือเพิ่มเอง
+- KNOWLEDGE LOCK: ตัวละครห้ามรู้ความลับ/เหตุการณ์ที่ยังไม่เห็น ไม่ได้ยิน หรือไม่มีผู้บอก
+- EMOTION ARC: อารมณ์ต้องพัฒนาจากเหตุการณ์ก่อนหน้า ไม่รีเซ็ตกลับเป็นกลางโดยไม่มีเหตุผล
+- DIALOGUE/NARRATION: ถ้ามีผู้พูด ให้มีเฉพาะผู้พูดที่กำหนดขยับปาก; ถ้าเป็น voice-over ทุกคนในภาพปิดปากตามธรรมชาติและห้าม lip-sync
+- ฉากต้องทำหน้าที่เดินเรื่องเพียงหนึ่ง beat ชัดเจนภายใน 8 วินาที และต้องมีเหตุผลส่งต่อไปฉากถัดไป
+- ถ้ามี STORY/EP context เดิมให้ยึดเป็นหลัก; ถ้า context เดิมไม่อยู่ ให้ใช้ SOURCE OF TRUTH + EP/SCENE INDEX สร้างรายละเอียดขั้นต่ำที่ไม่ขัดกับ canon แล้วสร้างฉากทันที
 - SELECTIVE MASTER ENGINE = ON
 - ACTIVE CAST ของ SCENE ${fmt(currentScene)} = ${sceneCastNames(currentScene)}
 - คำสั่งนี้แนบเฉพาะ ORIGINAL MASTER ของ ACTIVE CAST จริง ตามลำดับนี้: ${sceneCastKeys(currentScene).mapIndexed { index, key -> "ATTACHMENT ${index + 1} = ${characterNames[key]}" }.joinToString(" / ")}
@@ -1012,6 +1030,9 @@ SELF-CONTAINED RULE:
 - ทำ INTERNAL QC โดยเทียบ Face + Hair + Natural Body Proportions กับ ORIGINAL MASTER; ถ้าไม่ใกล้ให้สร้างใหม่ก่อนส่งผลสุดท้าย
 - ห้ามขอ CONFIRM / QC / REPAIR / LOCK
 - ห้ามสร้างฉากอื่นนอกจาก SCENE ${fmt(currentScene)}
+- ถ้า SCENE ${fmt(currentScene)} = SCENE 20: หลังสร้างฉาก ให้สร้าง EP${fmt(currentEp)}_HANDOFF แบบข้อความสั้นเก็บ CANON ที่ต้องส่งต่อ ได้แก่ unresolved conflict, location/time, wardrobe, props, character knowledge, relationship/emotion state และ hook ของ EP ถัดไป; จากนั้น STOP ห้ามเริ่ม EP ถัดไปเอง
+- ถ้า SCENE ${fmt(currentScene)} = SCENE 01 และ EP มากกว่า 01: ให้ถือ HANDOFF จาก EP ก่อนหน้าเป็น continuity authority และเปิด EP ใหม่โดยไม่รีเซ็ตความสัมพันธ์/ความรู้/props
+- ถ้า EP 05 • SCENE 20: ปิดเส้นเรื่องหลักและใช้สถานะ STORY COMPLETE หลังภาพและ HANDOFF สุดท้าย
 - ตอนท้ายใช้: EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)} READY
         """.trimIndent()
     }

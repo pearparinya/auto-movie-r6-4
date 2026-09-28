@@ -593,6 +593,57 @@ class MainActivity : AppCompatActivity() {
     private fun characterMastersReady(): Boolean =
         characterNames.keys.all { characterMasterFile(it).exists() }
 
+    // Identity-safe selective master engine.
+    // The app owns the cast schedule, so it can attach only the original
+    // masters that are actually allowed to appear in the current scene.
+    private fun sceneCastKeys(scene: Int): List<String> = when (scene.coerceIn(1, 20)) {
+        1 -> listOf("gawin")
+        2 -> listOf("rinlada")
+        3 -> listOf("gawin")
+        4 -> listOf("rinlada")
+        5 -> listOf("gawin", "rinlada")
+        6 -> listOf("mind")
+        7 -> listOf("gawin")
+        8 -> listOf("rinlada")
+        9 -> listOf("gawin", "mind")
+        10 -> listOf("rinlada")
+        11 -> listOf("gawin", "rinlada")
+        12 -> listOf("mind")
+        13 -> listOf("gawin")
+        14 -> listOf("rinlada", "mind")
+        15 -> listOf("gawin")
+        16 -> listOf("rinlada")
+        17 -> listOf("gawin", "rinlada")
+        18 -> listOf("mind")
+        19 -> listOf("gawin")
+        else -> listOf("gawin", "rinlada", "mind")
+    }
+
+    private fun sceneCastNames(scene: Int): String =
+        sceneCastKeys(scene).mapNotNull { characterNames[it] }.joinToString(" + ")
+
+    private fun sceneCastPlan(): String =
+        (1..20).joinToString("\n") { scene ->
+            "SCENE ${fmt(scene)} = ${sceneCastNames(scene)}"
+        }
+
+    private fun characterMasterUris(keys: List<String>): ArrayList<Uri> {
+        val uris = arrayListOf<Uri>()
+        keys.forEach { key ->
+            val file = characterMasterFile(key)
+            if (file.exists()) {
+                uris.add(
+                    FileProvider.getUriForFile(
+                        this,
+                        "${packageName}.fileprovider",
+                        file
+                    )
+                )
+            }
+        }
+        return uris
+    }
+
     private fun characterMasterUris(): ArrayList<Uri> {
         val uris = arrayListOf<Uri>()
         characterNames.keys.forEach { key ->
@@ -844,7 +895,7 @@ class MainActivity : AppCompatActivity() {
         setActiveStep(3)
         updateUi()
         saveWorkState()
-        share(buildQuickStartCommand(story, category), includeCharacterMasters = true)
+        share(buildQuickStartCommand(story, category), characterKeys = sceneCastKeys(1))
         status.text = "🚀 START • โครงเรื่อง + ภาพ SCENE 01 ในครั้งเดียว"
     }
 
@@ -866,7 +917,7 @@ class MainActivity : AppCompatActivity() {
         }
         updateUi()
         saveWorkState()
-        share(buildQuickSceneCommand(), includeCharacterMasters = true)
+        share(buildQuickSceneCommand(), characterKeys = sceneCastKeys(currentScene))
         status.text = "🚀 EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)} • ส่งแล้ว"
     }
 
@@ -888,12 +939,15 @@ SOURCE OF TRUTH:
 คำสั่งบังคับ:
 - ภายในคำตอบเดียว สร้าง STORY BIBLE แบบกระชับ วางเส้นเรื่อง EP 01–05 และแผน EP 01 จำนวน 20 ฉาก
 - จากนั้นสร้างภาพ SCENE 01 ทันที ห้ามหยุดรอ CONFIRM
-- FIXED CAST REGISTRY: IMAGE 1 = กวิน / IMAGE 2 = รินลดา / IMAGE 3 = มายด์
-- ภาพทั้ง 3 เป็นทะเบียนนักแสดงถาวร ห้ามตีความเป็นเพียง inspiration และห้ามออกแบบใบหน้าตัวละครหลักใหม่
-- ใน STORY BIBLE และ Scene Prompt ให้เรียกตัวละครหลักด้วยชื่อ + IMAGE ID เท่านั้น ไม่สร้างคำบรรยายรูปลักษณ์ใบหน้าใหม่
-- เมื่อตัวละครปรากฏ ให้ใช้บุคคลคนเดิมจาก IMAGE ของคนนั้นโดยตรง; คนที่ไม่อยู่ในฉากไม่ต้องนำมาวางในภาพ
+- SELECTIVE MASTER ENGINE = ON
+- SCENE 01 ACTIVE CAST = กวิน เท่านั้น
+- คำสั่งนี้แนบ ORIGINAL MASTER ของกวินเพียง 1 ภาพ: ATTACHMENT 1 = กวิน
+- ห้ามนำรินลดา/มายด์เข้าภาพ SCENE 01 และห้ามสร้างใบหน้าของกวินใหม่จากข้อความ
+- STORY BIBLE ต้องออกแบบเหตุการณ์ให้สอดคล้องกับ CAST PLAN ที่ AUTO-MOVIE กำหนดด้านล่าง ห้ามเปลี่ยนรายชื่อตัวละครหลักของแต่ละฉาก:
+${sceneCastPlan()}
+- ในแต่ละฉากอนาคต AUTO-MOVIE จะส่งเฉพาะ ORIGINAL MASTER ของ ACTIVE CAST จริง เพื่อลด identity contamination
 - ห้าม recast / substitute / face blend / face average / beautify / age shift และห้ามใช้ Scene Output เป็น Identity
-- PRIORITY: FIXED CAST IDENTITY > Natural Face/Hair/Body > Story Action > Emotion > Pose > Wardrobe > Cinematic Beauty
+- PRIORITY: ATTACHED ORIGINAL MASTER > Natural Face/Hair/Body > Story Action > Emotion > Pose > Wardrobe > Cinematic Beauty
 - ตัวละครรองสร้างอัตโนมัติและล็อกลักษณะเมื่อปรากฏครั้งแรก
 - Identity Master ใช้เฉพาะ Face / Skin / Natural Body / Hair / Approximate Age / Identity ห้ามใช้เสื้อผ้าจากภาพ Master
 - STORY BIBLE ให้เป็นข้อความ/แผนเรื่อง ห้ามสร้าง portrait หรือ contact sheet ใหม่ของ MASTER 01/02/03
@@ -927,13 +981,15 @@ SELF-CONTAINED RULE:
 - ห้ามบังคับ Director กลับไปบทสนทนาเก่า
 - ถ้ามี STORY/EP context เดิมให้ใช้เพื่อความต่อเนื่อง
 - ถ้า context เดิมไม่อยู่ ให้ใช้ SOURCE OF TRUTH นี้รักษาแกนเรื่องและสร้างรายละเอียดฉากที่สมเหตุสมผลตาม EP/SCENE INDEX แล้วสร้างภาพทันที
-- FIXED CAST REGISTRY: IMAGE 1 = กวิน / IMAGE 2 = รินลดา / IMAGE 3 = มายด์
-- ใช้ IMAGE ทั้ง 3 เป็นทะเบียนนักแสดงถาวร ไม่สร้าง visual identity ใหม่จากข้อความ
-- สำหรับตัวละครหลักที่ปรากฏใน SCENE ${fmt(currentScene)} ให้ใช้บุคคลคนเดิมจาก IMAGE ของคนนั้นโดยตรง และบรรยายเฉพาะ wardrobe/action/emotion/position/gaze
-- ห้ามสร้างคำบรรยายโครงหน้า ตา จมูก ปาก ความหล่อ/สวย หรือรูปลักษณ์ใหม่เพื่อแทน IMAGE
+- SELECTIVE MASTER ENGINE = ON
+- ACTIVE CAST ของ SCENE ${fmt(currentScene)} = ${sceneCastNames(currentScene)}
+- คำสั่งนี้แนบเฉพาะ ORIGINAL MASTER ของ ACTIVE CAST จริง ตามลำดับนี้: ${sceneCastKeys(currentScene).mapIndexed { index, key -> "ATTACHMENT ${index + 1} = ${characterNames[key]}" }.joinToString(" / ")}
+- ห้ามเพิ่มตัวละครหลักคนอื่นที่ไม่ได้อยู่ใน ACTIVE CAST ของฉากนี้
+- ใช้บุคคลคนเดิมจาก ATTACHMENT ของคนนั้นโดยตรง และบรรยายเฉพาะ wardrobe/action/emotion/position/gaze
+- ห้ามสร้างคำบรรยายโครงหน้า ตา จมูก ปาก ความหล่อ/สวย หรือรูปลักษณ์ใหม่เพื่อแทน ATTACHMENT
 - ห้าม cross-reference / face averaging / face blending / recast / substitute actor / beautify / age shift
-- ทุก Scene ต้องกลับไปที่ ORIGINAL IMAGE 1/2/3 ห้ามใช้ Scene Output ก่อนหน้าเป็น Identity Source
-- PRIORITY: FIXED CAST IDENTITY > Natural Face/Hair/Body > Story Action > Emotion > Pose > Wardrobe > Cinematic Beauty
+- ทุก Scene ใช้ ORIGINAL MASTER ที่ AUTO-MOVIE แนบในคำสั่งปัจจุบัน ห้ามใช้ Scene Output ก่อนหน้าเป็น Identity Source
+- PRIORITY: ATTACHED ORIGINAL MASTER > Natural Face/Hair/Body > Story Action > Emotion > Pose > Wardrobe > Cinematic Beauty
 - ใช้เฉพาะตัวละครที่เหมาะกับฉาก ตัวละครรองสร้างอัตโนมัติ
 - ตัวละครหลักทุกคนที่ปรากฏต้องอ้างอิง ORIGINAL MASTER ที่แนบมาโดยตรง ห้ามอ้างอิง portrait/Scene Output ที่ AI เคยสร้าง
 - Identity Master ห้ามเป็นแหล่งเสื้อผ้า ใช้ Wardrobe Firewall
@@ -1148,12 +1204,17 @@ SELF-CONTAINED RULE:
 
     private fun share(
         text: String,
-        includeCharacterMasters: Boolean = false
+        includeCharacterMasters: Boolean = false,
+        characterKeys: List<String>? = null
     ) {
 
         hideKeyboard()
 
-        val masterUris = if (includeCharacterMasters) characterMasterUris() else arrayListOf()
+        val masterUris = when {
+            characterKeys != null -> characterMasterUris(characterKeys)
+            includeCharacterMasters -> characterMasterUris()
+            else -> arrayListOf()
+        }
         val sendIntent = Intent(
             if (masterUris.isNotEmpty()) Intent.ACTION_SEND_MULTIPLE else Intent.ACTION_SEND
         ).apply {
@@ -1300,18 +1361,19 @@ Reference Image ใช้สำหรับ:
 VISUAL IDENTITY LOCK — FIXED CAST REGISTRY:
 
 FIXED CAST REGISTRY — SINGLE SOURCE OF TRUTH:
-- IMAGE 1 = กวิน (Gawin)
-- IMAGE 2 = รินลดา (Rinlada)
-- IMAGE 3 = มายด์ (Mind)
-- ทั้ง 3 IMAGE คือทะเบียนนักแสดงถาวรของ STORY นี้ ไม่ใช่ภาพตัวอย่างสำหรับสร้างคนใหม่
+- MASTER กวิน / รินลดา / มายด์ คือทะเบียนนักแสดงถาวรของ STORY
+- SELECTIVE MASTER ENGINE จะเลือกแนบเฉพาะ ORIGINAL MASTER ของ ACTIVE CAST ในฉากปัจจุบัน
+- หมายเลข ATTACHMENT เป็นลำดับเฉพาะของคำสั่งปัจจุบัน ให้ยึด mapping ที่ AUTO-MOVIE ระบุใน CURRENT SCENE
+- MASTER ที่ไม่ได้แนบในคำสั่งปัจจุบัน = ตัวละครนั้นห้ามปรากฏในภาพฉากนี้
+- ORIGINAL MASTER ที่แนบคือบุคคลจริงของบท ไม่ใช่ภาพตัวอย่างสำหรับสร้างคนใหม่
 - เมื่อต้องใช้ตัวละครหลัก ให้ใช้ "บุคคลคนเดิมจาก IMAGE หมายเลขนั้น" โดยตรง
 - ห้ามสร้าง visual identity ใหม่จากชื่อ อายุ บุคลิก บทบาท เนื้อเรื่อง หรือคำบรรยายความหล่อ/สวย
 - ห้ามเขียนหรืออนุมานคำบรรยายใบหน้าใหม่ เช่น รูปหน้า ตา คิ้ว จมูก ปาก กราม ความหล่อ/สวย เชื้อชาติ หรือสไตล์ใบหน้า เพื่อใช้แทน IMAGE
 - คำบรรยาย Scene ของตัวละครหลักอนุญาตเฉพาะ: ชื่อ/IMAGE ID, เสื้อผ้าตาม Scene, ตำแหน่ง, การกระทำ, อารมณ์ และทิศทางการมอง
 - ห้าม RECAST, SUBSTITUTE ACTOR, FACE BLEND, FACE AVERAGE, BEAUTIFY, AGE SHIFT, FACE MORPH หรือ BODY RESHAPE
 - ห้ามใช้ Scene Output, portrait ที่ AI สร้าง, contact sheet, character card, รูปในกรอบ, กระจก หรือจอภาพ เป็น Identity Source ใหม่
-- ทุก Scene ต้องย้อนกลับไปที่ IMAGE 1/2/3 ชุดเดิมเสมอ
-- เสื้อผ้าใน IMAGE 1/2/3 ไม่ใช่ Identity และห้ามคัดลอกตาม WARDROBE FIREWALL
+- ทุก Scene ต้องย้อนกลับไปที่ ORIGINAL MASTER ที่ AUTO-MOVIE แนบสำหรับ ACTIVE CAST เสมอ
+- เสื้อผ้าใน ORIGINAL MASTER ไม่ใช่ Identity และห้ามคัดลอกตาม WARDROBE FIREWALL
 - ถ้ามีหลายตัวละครในฉาก ให้รักษาแต่ละ IMAGE ID แยกจากกันแบบ 1:1 ห้ามถ่ายโอนลักษณะระหว่างคน
 - PRIORITY: FIXED CAST IDENTITY > NATURAL FACE/HAIR/BODY CONTINUITY > STORY ACTION > EMOTION > POSE > WARDROBE > CINEMATIC BEAUTY
 - ก่อนส่งภาพ ตรวจว่าบุคคลที่ใช้แทน กวิน/รินลดา/มายด์ ยังเป็นบุคคลคนเดิมจาก IMAGE 1/2/3 ตามลำดับ ถ้าเห็นชัดว่าเป็นคนใหม่ = INTERNAL QC FAIL

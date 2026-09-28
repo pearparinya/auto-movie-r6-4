@@ -1086,6 +1086,11 @@ CONTINUITY ENGINE:
 - MASTER-FIRST RECONSTRUCTION: เริ่มจาก identity geometry ของ ORIGINAL MASTER ที่แนบในคำสั่งนี้ก่อนทุกครั้ง แล้วจึงใส่ expression / pose / wardrobe / lighting ของฉาก ห้ามเริ่มจากหน้าฉากก่อน
 - IDENTITY CHECKPOINTS: ก่อนส่งภาพตรวจ 3 ชั้น: eyes+nose+mouth geometry → jaw+hairline+facial hair → head/body natural proportions; drift ชั้นใดชั้นหนึ่งชัดเจน = INVALID OUTPUT และสร้างใหม่
 - NO BEAUTY OVERRIDE: dramatic emotion, cinematic lighting, lens perspective และ styling ห้ามเปลี่ยน facial structure, age impression, facial hair หรือ natural build
+- MASTER ACCESSORY ZERO-TRANSFER: หาก CURRENT SCENE LEDGER ไม่ได้ระบุเครื่องประดับอย่างชัดเจน ตัวละครต้องไม่มีสร้อยคอ/โซ่/แหวน/นาฬิกา/ต่างหู/แว่น แม้ ORIGINAL MASTER จะสวมอยู่; การติดเครื่องประดับจาก MASTER โดยไม่มี Scene authority = WLF-01 และต้องแก้ก่อนส่ง
+- MASTER CLOTHING ZERO-TRANSFER: สี/คอเสื้อ/สูท/เสื้อเชิ้ต/ชุดเดรสและรายละเอียดการแต่งกายใน MASTER ต้องไม่ถูกนำมาเป็นค่าเริ่มต้นของฉาก ให้สร้าง wardrobe จาก SCENE BLUEPRINT เท่านั้น
+- GAZE STORY LOCK: สายตาต้องมองบุคคล/วัตถุ/จุดที่สัมพันธ์กับ STORY BEAT ห้ามมองกล้องหรือโพสเหมือน portrait เว้นแต่เหตุการณ์ระบุโดยตรง
+- ACTION-FIRST FRAME: ภาพต้องจับช่วงที่ตัวละครกำลังกระทำ STORY BEAT จริง มือ/อุปกรณ์/ตำแหน่งร่างกายต้องเล่าเหตุการณ์ ไม่ใช่เพียงนั่งหรือยืนแสดงอารมณ์
+- FINAL VISUAL GATE: ก่อนส่งตรวจ 4 ข้อพร้อมกัน — (1) Identity ตรง ORIGINAL MASTER (2) ไม่มี wardrobe/accessory leakage (3) gaze/action ตรง STORY BEAT (4) ไม่มี alternate face ใน background; ข้อใดผิดให้ถือ OUTPUT INVALID และแก้เฉพาะข้อผิดพลาดก่อนส่ง
 - ห้ามขอ CONFIRM / QC / REPAIR / LOCK
 - ห้ามสร้างฉากอื่นนอกจาก SCENE ${fmt(currentScene)}
 - ถ้า SCENE ${fmt(currentScene)} = SCENE 20: หลังสร้างฉาก ให้สร้าง EP${fmt(currentEp)}_HANDOFF แบบข้อความสั้นเก็บ CANON ที่ต้องส่งต่อ ได้แก่ unresolved conflict, location/time, wardrobe, props, character knowledge, relationship/emotion state และ hook ของ EP ถัดไป; จากนั้น STOP ห้ามเริ่ม EP ถัดไปเอง

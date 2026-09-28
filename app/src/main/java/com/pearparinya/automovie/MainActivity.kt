@@ -1275,27 +1275,45 @@ SELF-CONTAINED RULE:
             }
         }
 
-        // Let Android route the share payload. This is more compatible with
-        // ChatGPT's current share receiver than forcing the package directly,
-        // especially when an image stream is attached.
+        // QUICK FLOW: open ChatGPT directly when its Android share target
+        // accepts the exact payload. Keep Android Share Sheet only as fallback.
+        val chatGptPackage = "com.openai.chatgpt"
         try {
-            val chooserIntent = Intent.createChooser(
-                sendIntent,
-                "ส่งคำสั่งไปยัง ChatGPT"
-            )
-            startActivity(chooserIntent)
-            status.text =
-                if (masterUris.isEmpty() && (includeCharacterMasters || characterKeys != null))
-                    "⚠ เปิดเมนูแชร์แล้ว • แต่ CHARACTER MASTER แนบไม่สำเร็จ"
-                else
-                    "↗ เปิดเมนูแชร์แล้ว • เลือก ChatGPT"
-        } catch (e: Exception) {
-            status.text = "⛔ เปิดเมนูแชร์ไม่สำเร็จ: ${e.javaClass.simpleName}"
-            Toast.makeText(
-                this,
-                "เปิดเมนูแชร์ไม่สำเร็จ: ${e.message ?: e.javaClass.simpleName}",
-                Toast.LENGTH_LONG
-            ).show()
+            val directIntent = Intent(sendIntent).apply {
+                setPackage(chatGptPackage)
+            }
+
+            if (directIntent.resolveActivity(packageManager) != null) {
+                startActivity(directIntent)
+                status.text =
+                    if (masterUris.isEmpty() && (includeCharacterMasters || characterKeys != null))
+                        "⚠ เปิด ChatGPT แล้ว • แต่ CHARACTER MASTER แนบไม่สำเร็จ"
+                    else
+                        "↗ เปิด ChatGPT โดยตรงแล้ว"
+            } else {
+                val chooserIntent = Intent.createChooser(
+                    sendIntent,
+                    "ส่งคำสั่งไปยัง ChatGPT"
+                )
+                startActivity(chooserIntent)
+                status.text = "↗ ไม่พบตัวรับแชร์ ChatGPT โดยตรง • เลือก ChatGPT จากเมนูแชร์"
+            }
+        } catch (directError: Exception) {
+            try {
+                val chooserIntent = Intent.createChooser(
+                    sendIntent,
+                    "ส่งคำสั่งไปยัง ChatGPT"
+                )
+                startActivity(chooserIntent)
+                status.text = "↗ เปิด ChatGPT โดยตรงไม่ได้ • ใช้เมนูแชร์สำรอง"
+            } catch (fallbackError: Exception) {
+                status.text = "⛔ เปิด ChatGPT/เมนูแชร์ไม่สำเร็จ: ${fallbackError.javaClass.simpleName}"
+                Toast.makeText(
+                    this,
+                    "เปิด ChatGPT ไม่สำเร็จ: ${fallbackError.message ?: fallbackError.javaClass.simpleName}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
     }
 

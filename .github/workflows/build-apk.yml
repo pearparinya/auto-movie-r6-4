@@ -230,9 +230,14 @@ jobs:
             --jq '.artifacts[] | select(.name | startswith("AUTO-MOVIE-R")) | .id' \
           | while read -r ARTIFACT_ID; do
               [ -z "$ARTIFACT_ID" ] && continue
-              gh api --method DELETE \
+              # Another workflow run can delete the same artifact between
+              # listing and deletion. A 404 therefore means "already deleted"
+              # and must not abort an otherwise valid signed release.
+              if ! gh api --method DELETE \
                 -H "Accept: application/vnd.github+json" \
-                "/repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID"
+                "/repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID"; then
+                echo "Artifact $ARTIFACT_ID was already removed or unavailable; continuing."
+              fi
             done
           echo "Old AUTO-MOVIE APK artifacts deleted."
 

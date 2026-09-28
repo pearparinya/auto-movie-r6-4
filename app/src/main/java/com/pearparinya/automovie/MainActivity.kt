@@ -992,6 +992,14 @@ SOURCE OF TRUTH:
 - MASTER-FIRST RECONSTRUCTION: ก่อนกำหนดท่าทาง/แสง/เสื้อผ้า ให้ยึด ATTACHMENT 1 เป็นฐานใบหน้า ศีรษะ ทรงผม หนวดเครา สีผิว อายุโดยประมาณ และสัดส่วนธรรมชาติของกวินก่อน แล้วจึงเปลี่ยนเฉพาะ expression/pose/wardrobe ตามฉาก
 - IDENTITY CHECKPOINTS: ตรวจซ้ำ 3 จุดก่อนส่ง: (1) eyes+nose+mouth geometry (2) jaw+hairline+facial hair (3) head-to-body proportions; หากข้อใด drift ชัดเจน = INVALID OUTPUT และต้องสร้างใหม่
 - NO BEAUTY OVERRIDE: cinematic lighting, dramatic emotion, camera angle และ wardrobe ห้ามมีสิทธิ์เปลี่ยน identity geometry ของกวิน
+- LIKENESS FIDELITY MODE — MAX: เป้าหมายคือ “คนเดิมในสถานการณ์ใหม่” ไม่ใช่ “คนหน้าคล้าย”; ห้าม reinterpret ใบหน้าเป็นนักแสดงคนใหม่
+- PRESERVE MICRO-IDENTITY: รักษาระยะตา ความหนา/แนวคิ้ว สันและปลายจมูก รูปริมฝีปาก แนวกราม hairline และตำแหน่ง/ความหนาหนวดเคราตาม ORIGINAL MASTER ให้ใกล้ที่สุด
+- EXPRESSION DELTA ONLY: อารมณ์ของฉากเปลี่ยนได้เฉพาะกล้ามเนื้อสีหน้า/สายตา/ท่าทาง ห้ามให้อารมณ์เปลี่ยนโครงหน้า อายุ หรือความเป็นบุคคล
+- CAMERA IDENTITY SAFETY: หลีกเลี่ยงเลนส์กว้างระยะใกล้ มุมกด/เงยจัด แสงแข็ง หรือ perspective ที่บิดรูปหน้า; ใช้มุมธรรมชาติและระยะที่ยังอ่านอัตลักษณ์จาก MASTER ได้ชัด
+- FACE VISIBILITY GATE: เมื่อกวินเป็น ACTIVE CAST ต้องเห็นใบหน้าชัดพอสำหรับตรวจ Identity; ห้ามมือ/พร็อพ/เงามืดบังจุดสำคัญของตา จมูก ปาก และกรามเกินจำเป็น
+- SCENE DIVERSITY FIREWALL: ห้ามวนภาพ “นั่งคิด/อ่านเอกสาร/โต๊ะทำงาน” ซ้ำโดยไม่มี STORY BEAT รองรับ; แต่ละฉากต้องมี ACTION + LOCATION/PROP PURPOSE ที่แตกต่างและเดินเรื่องจริง
+- CINEMATIC ≠ PORTRAIT: ห้ามสร้างภาพเหมือนถ่ายโปรไฟล์; ตัวละครต้องกำลังกระทำสิ่งที่สัมพันธ์กับ STORY BEAT และสภาพแวดล้อมต้องมีข้อมูลเรื่องราว
+- OUTPUT CLEAN FRAME: ภาพฉากสุดท้ายต้องไม่มีข้อความ โลโก้ UI contact sheet หรือภาพ Master แทรกในเฟรม
 - STORY BIBLE ต้องออกแบบเหตุการณ์ให้สอดคล้องกับ CAST PLAN ที่ AUTO-MOVIE กำหนดด้านล่าง ห้ามเปลี่ยนรายชื่อตัวละครหลักของแต่ละฉาก:
 ${sceneCastPlan()}
 - สร้าง EP 01 SCENE BLUEPRINT ครบ 20 ฉาก โดยแต่ละฉากล็อก 8 ช่อง: TIME, LOCATION, ACTIVE CAST, WARDROBE, PROPS, KNOWLEDGE, EMOTION, STORY BEAT

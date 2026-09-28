@@ -905,8 +905,8 @@ class MainActivity : AppCompatActivity() {
         setActiveStep(3)
         updateUi()
         saveWorkState()
-        share(buildQuickStartCommand(story, category), characterKeys = sceneCastKeys(1))
-        status.text = "🚀 START • โครงเรื่อง + ภาพ SCENE 01 ในครั้งเดียว"
+        share(buildQuickStartCommand(story, category), characterKeys = characterNames.keys.toList())
+        status.text = "🚀 START • แนบ MASTER 3/3 + โครงเรื่อง + ภาพ SCENE 01"
     }
 
     private fun generateNextQuickScene() {
@@ -949,10 +949,15 @@ SOURCE OF TRUTH:
 คำสั่งบังคับ:
 - ภายในคำตอบเดียว สร้าง STORY BIBLE แบบกระชับ วางเส้นเรื่อง EP 01–05 และแผน EP 01 จำนวน 20 ฉาก
 - จากนั้นสร้างภาพ SCENE 01 ทันที ห้ามหยุดรอ CONFIRM
-- SELECTIVE MASTER ENGINE = ON
-- SCENE 01 ACTIVE CAST = กวิน เท่านั้น
-- คำสั่งนี้แนบ ORIGINAL MASTER ของกวินเพียง 1 ภาพ: ATTACHMENT 1 = กวิน
-- ห้ามนำรินลดา/มายด์เข้าภาพ SCENE 01 และห้ามสร้างใบหน้าของกวินใหม่จากข้อความ
+- START ATTACHMENT HANDSHAKE = REQUIRED
+- คำสั่ง START นี้ต้องมี ORIGINAL CHARACTER MASTER ครบ 3 ภาพแนบมาพร้อมข้อความใน Android share payload เดียวกัน
+- ATTACHMENT 1 = กวิน / MASTER 01
+- ATTACHMENT 2 = รินลดา / MASTER 02
+- ATTACHMENT 3 = มายด์ / MASTER 03
+- ก่อนทำ STORY BIBLE ให้ตรวจว่ามองเห็นภาพแนบทั้ง 3 ภาพจริง หากไม่ครบ ให้หยุดและแจ้ง ATTACHMENT TRANSPORT FAIL ห้ามสร้างภาพโดยเดาใบหน้า
+- SCENE 01 ACTIVE CAST = กวิน เท่านั้น แม้ START จะส่ง MASTER ครบ 3 ภาพ
+- รินลดาและมายด์ใช้สำหรับ FIXED CAST REGISTRY / STORY BIBLE เท่านั้น ห้ามให้ปรากฏในภาพ SCENE 01
+- ภาพ SCENE 01 ต้องใช้ ATTACHMENT 1 เป็น ORIGINAL IDENTITY MASTER ของกวินโดยตรง ห้ามสร้างใบหน้ากวินใหม่จากข้อความ
 - STORY BIBLE ต้องออกแบบเหตุการณ์ให้สอดคล้องกับ CAST PLAN ที่ AUTO-MOVIE กำหนดด้านล่าง ห้ามเปลี่ยนรายชื่อตัวละครหลักของแต่ละฉาก:
 ${sceneCastPlan()}
 - ในแต่ละฉากอนาคต AUTO-MOVIE จะส่งเฉพาะ ORIGINAL MASTER ของ ACTIVE CAST จริง เพื่อลด identity contamination
@@ -1239,8 +1244,9 @@ SELF-CONTAINED RULE:
             arrayListOf()
         }
 
-        // Android/ChatGPT handles a single image more reliably with ACTION_SEND.
-        // Use ACTION_SEND_MULTIPLE only when the current scene really has 2+ masters.
+        // START now sends all three original masters in one payload so ChatGPT
+        // receives a stable fixed-cast registry before STORY BIBLE/SCENE 01.
+        // One image uses ACTION_SEND; 2+ images use ACTION_SEND_MULTIPLE.
         val sendAction =
             if (masterUris.size > 1) Intent.ACTION_SEND_MULTIPLE else Intent.ACTION_SEND
 
@@ -1258,6 +1264,8 @@ SELF-CONTAINED RULE:
                         masterUris.first()
                     )
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                    try { grantUriPermission("com.openai.chatgpt", masterUris.first(), Intent.FLAG_GRANT_READ_URI_PERMISSION) } catch (_: Exception) {}
                 }
                 else -> {
                     putParcelableArrayListExtra(Intent.EXTRA_STREAM, masterUris)
@@ -1271,6 +1279,10 @@ SELF-CONTAINED RULE:
                     }
                     clipData = clip
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                    masterUris.forEach { uri ->
+                        try { grantUriPermission("com.openai.chatgpt", uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) } catch (_: Exception) {}
+                    }
                 }
             }
         }

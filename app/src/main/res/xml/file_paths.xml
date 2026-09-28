@@ -6,4 +6,7 @@
     <files-path
         name="character_masters"
         path="character_masters/" />
+    <cache-path
+        name="character_master_exports"
+        path="character_master_exports/" />
 </paths>

@@ -989,6 +989,9 @@ SOURCE OF TRUTH:
 - MASTER WARDROBE FIREWALL: เสื้อเชิ้ตสีน้ำตาล เสื้อยืดสีขาว กางเกงยีนส์ ค้อน บ้านไม้ ท่าตอกตะปู และองค์ประกอบฉากใน MASTER 01 ไม่ใช่ Identity และห้ามคัดลอกมา เว้นแต่ STORY/SCENE ระบุเอง
 - IDENTITY SOURCE IS IMMUTABLE: ห้ามใช้ Scene Output, ภาพแต่งงาน, background photo, storyboard, generated portrait หรือคำบรรยายข้อความแทน ORIGINAL MASTER
 - IDENTITY GATE — HARD FAIL: ก่อนส่งภาพต้องตรวจตัวละครที่เห็นจริงกับ ORIGINAL MASTER ของคนนั้น หาก facial geometry / hair / facial hair / natural body proportions เปลี่ยนชัดเจน ให้ถือว่าภาพไม่ผ่านและสร้างใหม่ก่อนส่ง ห้ามยอมรับใบหน้าที่เพียงคล้าย
+- MASTER-FIRST RECONSTRUCTION: ก่อนกำหนดท่าทาง/แสง/เสื้อผ้า ให้ยึด ATTACHMENT 1 เป็นฐานใบหน้า ศีรษะ ทรงผม หนวดเครา สีผิว อายุโดยประมาณ และสัดส่วนธรรมชาติของกวินก่อน แล้วจึงเปลี่ยนเฉพาะ expression/pose/wardrobe ตามฉาก
+- IDENTITY CHECKPOINTS: ตรวจซ้ำ 3 จุดก่อนส่ง: (1) eyes+nose+mouth geometry (2) jaw+hairline+facial hair (3) head-to-body proportions; หากข้อใด drift ชัดเจน = INVALID OUTPUT และต้องสร้างใหม่
+- NO BEAUTY OVERRIDE: cinematic lighting, dramatic emotion, camera angle และ wardrobe ห้ามมีสิทธิ์เปลี่ยน identity geometry ของกวิน
 - STORY BIBLE ต้องออกแบบเหตุการณ์ให้สอดคล้องกับ CAST PLAN ที่ AUTO-MOVIE กำหนดด้านล่าง ห้ามเปลี่ยนรายชื่อตัวละครหลักของแต่ละฉาก:
 ${sceneCastPlan()}
 - สร้าง EP 01 SCENE BLUEPRINT ครบ 20 ฉาก โดยแต่ละฉากล็อก 8 ช่อง: TIME, LOCATION, ACTIVE CAST, WARDROBE, PROPS, KNOWLEDGE, EMOTION, STORY BEAT
@@ -1074,6 +1077,9 @@ CONTINUITY ENGINE:
 - CAMERA IDENTITY SAFETY: หลีกเลี่ยงเลนส์กว้างใกล้ใบหน้าและมุมที่บิดสัดส่วน; ใช้มุม/ระยะธรรมชาติที่ยังเห็นอัตลักษณ์ชัด เว้นแต่ STORY บังคับ
 - BACKGROUND PORTRAIT FIREWALL: กรอบรูป/ภาพถ่าย/หน้าจอด้านหลังห้ามแสดงใบหน้าตัวละครหลักแบบละเอียด เพราะอาจสร้าง alternate identity; ให้เบลอ/หันออก/ไม่เห็นหน้าแทน
 - ทำ INTERNAL QC โดยเทียบ Face + Hair + Facial Hair + Natural Body Proportions กับ ORIGINAL MASTER; ถ้าต่างชัดเจนให้ถือเป็น IDENTITY FAIL และสร้างใหม่ก่อนส่งผลสุดท้าย
+- MASTER-FIRST RECONSTRUCTION: เริ่มจาก identity geometry ของ ORIGINAL MASTER ที่แนบในคำสั่งนี้ก่อนทุกครั้ง แล้วจึงใส่ expression / pose / wardrobe / lighting ของฉาก ห้ามเริ่มจากหน้าฉากก่อน
+- IDENTITY CHECKPOINTS: ก่อนส่งภาพตรวจ 3 ชั้น: eyes+nose+mouth geometry → jaw+hairline+facial hair → head/body natural proportions; drift ชั้นใดชั้นหนึ่งชัดเจน = INVALID OUTPUT และสร้างใหม่
+- NO BEAUTY OVERRIDE: dramatic emotion, cinematic lighting, lens perspective และ styling ห้ามเปลี่ยน facial structure, age impression, facial hair หรือ natural build
 - ห้ามขอ CONFIRM / QC / REPAIR / LOCK
 - ห้ามสร้างฉากอื่นนอกจาก SCENE ${fmt(currentScene)}
 - ถ้า SCENE ${fmt(currentScene)} = SCENE 20: หลังสร้างฉาก ให้สร้าง EP${fmt(currentEp)}_HANDOFF แบบข้อความสั้นเก็บ CANON ที่ต้องส่งต่อ ได้แก่ unresolved conflict, location/time, wardrobe, props, character knowledge, relationship/emotion state และ hook ของ EP ถัดไป; จากนั้น STOP ห้ามเริ่ม EP ถัดไปเอง

@@ -1220,11 +1220,25 @@ SELF-CONTAINED RULE:
 
         hideKeyboard()
 
-        val masterUris = when {
-            characterKeys != null -> characterMasterUris(characterKeys)
-            includeCharacterMasters -> characterMasterUris()
-            else -> arrayListOf()
+        // Diagnostic/fail-safe: attachment preparation must never make START
+        // fail silently. If PNG export/FileProvider fails, show the real error
+        // and still allow the text payload to reach Android's share UI.
+        val masterUris: ArrayList<Uri> = try {
+            when {
+                characterKeys != null -> characterMasterUris(characterKeys)
+                includeCharacterMasters -> characterMasterUris()
+                else -> arrayListOf()
+            }
+        } catch (e: Exception) {
+            status.text = "⚠ CHARACTER MASTER แนบไม่สำเร็จ: ${e.javaClass.simpleName}"
+            Toast.makeText(
+                this,
+                "แนบ CHARACTER MASTER ไม่สำเร็จ: ${e.message ?: e.javaClass.simpleName}",
+                Toast.LENGTH_LONG
+            ).show()
+            arrayListOf()
         }
+
         // Android/ChatGPT handles a single image more reliably with ACTION_SEND.
         // Use ACTION_SEND_MULTIPLE only when the current scene really has 2+ masters.
         val sendAction =
@@ -1270,9 +1284,18 @@ SELF-CONTAINED RULE:
                 "ส่งคำสั่งไปยัง ChatGPT"
             )
             startActivity(chooserIntent)
-            status.text = "↗ เลือก ChatGPT เพื่อส่งคำสั่ง"
-        } catch (_: Exception) {
-            status.text = "⛔ ไม่สามารถเปิดเมนูส่งไป ChatGPT ได้"
+            status.text =
+                if (masterUris.isEmpty() && (includeCharacterMasters || characterKeys != null))
+                    "⚠ เปิดเมนูแชร์แล้ว • แต่ CHARACTER MASTER แนบไม่สำเร็จ"
+                else
+                    "↗ เปิดเมนูแชร์แล้ว • เลือก ChatGPT"
+        } catch (e: Exception) {
+            status.text = "⛔ เปิดเมนูแชร์ไม่สำเร็จ: ${e.javaClass.simpleName}"
+            Toast.makeText(
+                this,
+                "เปิดเมนูแชร์ไม่สำเร็จ: ${e.message ?: e.javaClass.simpleName}",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 

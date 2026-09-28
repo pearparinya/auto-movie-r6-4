@@ -627,11 +627,35 @@ class MainActivity : AppCompatActivity() {
             "SCENE ${fmt(scene)} = ${sceneCastNames(scene)}"
         }
 
+    private fun shareableCharacterMasterFile(key: String): File? {
+        val source = characterMasterFile(key)
+        if (!source.exists()) return null
+
+        // ChatGPT/Android receivers may reject the private ".master" extension
+        // even when the bytes are a valid image. Export an attachment copy with
+        // a real image extension while keeping the protected original unchanged.
+        val exportDir = File(cacheDir, "character_master_exports")
+        if (!exportDir.exists()) exportDir.mkdirs()
+
+        val displayName = when (key) {
+            "gawin" -> "GAWIN_MASTER.png"
+            "rinlada" -> "RINLADA_MASTER.png"
+            "mind" -> "MIND_MASTER.png"
+            else -> "${key.uppercase()}_MASTER.png"
+        }
+        val exported = File(exportDir, displayName)
+        source.inputStream().use { input ->
+            exported.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        return exported
+    }
+
     private fun characterMasterUris(keys: List<String>): ArrayList<Uri> {
         val uris = arrayListOf<Uri>()
         keys.forEach { key ->
-            val file = characterMasterFile(key)
-            if (file.exists()) {
+            shareableCharacterMasterFile(key)?.let { file ->
                 uris.add(
                     FileProvider.getUriForFile(
                         this,
@@ -644,22 +668,8 @@ class MainActivity : AppCompatActivity() {
         return uris
     }
 
-    private fun characterMasterUris(): ArrayList<Uri> {
-        val uris = arrayListOf<Uri>()
-        characterNames.keys.forEach { key ->
-            val file = characterMasterFile(key)
-            if (file.exists()) {
-                uris.add(
-                    FileProvider.getUriForFile(
-                        this,
-                        "${packageName}.fileprovider",
-                        file
-                    )
-                )
-            }
-        }
-        return uris
-    }
+    private fun characterMasterUris(): ArrayList<Uri> =
+        characterMasterUris(characterNames.keys.toList())
 
     private fun refreshCharacterMasterButton() {
         if (!::characterMasterButton.isInitialized) return

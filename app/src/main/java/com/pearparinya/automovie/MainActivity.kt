@@ -985,6 +985,12 @@ SOURCE OF TRUTH:
 - ภาพ SCENE 01 ต้องใช้ ATTACHMENT 1 เป็น ORIGINAL IDENTITY MASTER ของกวินโดยตรง ห้ามสร้างใบหน้ากวินใหม่จากข้อความ
 - STORY BIBLE ต้องออกแบบเหตุการณ์ให้สอดคล้องกับ CAST PLAN ที่ AUTO-MOVIE กำหนดด้านล่าง ห้ามเปลี่ยนรายชื่อตัวละครหลักของแต่ละฉาก:
 ${sceneCastPlan()}
+- สร้าง EP 01 SCENE BLUEPRINT ครบ 20 ฉาก โดยแต่ละฉากล็อก 8 ช่อง: TIME, LOCATION, ACTIVE CAST, WARDROBE, PROPS, KNOWLEDGE, EMOTION, STORY BEAT
+- ทุก SCENE ต้องมี CONTINUITY FROM SCENE ก่อนหน้าแบบสั้น ห้ามเวลา/สถานที่/เสื้อผ้า/ของประกอบ/ความรู้/อารมณ์กระโดดโดยไม่มีเหตุผล
+- STORY BEAT แต่ละฉากต้องไม่ซ้ำและต้องเดินเรื่องไปข้างหน้าภายใน 8 วินาที
+- TURNING POINT = SCENE 05 / 10 / 15 และ SCENE 20 = EP CLIFFHANGER + EP01_HANDOFF
+- EP01_HANDOFF ต้องเก็บ unresolved conflict, time/location, wardrobe, props, character knowledge, relationship/emotion state และ hook สำหรับ EP 02
+- SECONDARY CAST REGISTRY: ตัวละครรองต้องมีชื่อ/บทบาท/ลักษณะคงที่ เมื่อกลับมาอีกต้องเป็นคนเดิม
 - ในแต่ละฉากอนาคต AUTO-MOVIE จะส่งเฉพาะ ORIGINAL MASTER ของ ACTIVE CAST จริง เพื่อลด identity contamination
 - ห้าม recast / substitute / face blend / face average / beautify / age shift และห้ามใช้ Scene Output เป็น Identity
 - PRIORITY: ATTACHED ORIGINAL MASTER > Natural Face/Hair/Body > Story Action > Emotion > Pose > Wardrobe > Cinematic Beauty
@@ -1033,6 +1039,10 @@ CONTINUITY ENGINE:
 - NO RESET / NO REPLAY: ห้ามย้อนเล่นเหตุการณ์เดิม ห้ามเริ่มบทสนทนาเดิมซ้ำ ห้ามรีเซ็ตตัวละครกลับจุดก่อนหน้า
 - NO RANDOM JUMP: ห้ามข้ามเวลา/สถานที่แบบไม่มีเหตุผลเชื่อม ถ้าจำเป็นต้องข้าม ให้มี visual/narrative cue ที่เข้าใจได้
 - ฉากต้องทำหน้าที่เดินเรื่องเพียงหนึ่ง beat ชัดเจนภายใน 8 วินาที และต้องมีเหตุผลส่งต่อไปฉากถัดไป
+- SCENE BLUEPRINT LOCK: ใช้ TIME / LOCATION / ACTIVE CAST / WARDROBE / PROPS / KNOWLEDGE / EMOTION / STORY BEAT ของเลขฉากปัจจุบันจาก EP PLAN เป็น authority ห้ามสุ่มเปลี่ยนเอง
+- PREVIOUS→CURRENT CHECK: ตรวจฉากปัจจุบันกับ SCENE STATE ล่าสุดก่อนสร้าง ถ้าขัดกันให้แก้รายละเอียดฉากปัจจุบันโดยคง STORY BEAT เดิม
+- NO RESET RULE: NEXT SCENE ห้ามรีเซ็ตเสื้อผ้า อารมณ์ ของประกอบ ความสัมพันธ์ หรือข้อมูลที่ตัวละครรู้
+- CAUSAL LINK: การกระทำแรกต้องต่อเหตุผลจากฉากก่อน และตอนจบต้องสร้างเหตุผลไปฉากถัดไป
 - OUTPUT CONTRACT: ส่งตามลำดับ SCENE STATE (ข้อความสั้น) → IMAGE 9:16 → FLOW/VEO 3.1 PROMPT 8 SEC → NEXT HOOK (1 บรรทัด) เพื่อให้ฉากถัดไปมีจุดต่อที่แน่นอน
 - SCENE STATE ต้องบันทึกเฉพาะสิ่งที่เห็น/เกิดขึ้นจริงในฉากนี้: END TIME, END LOCATION, ACTIVE CAST, WARDROBE, PROPS, KNOWLEDGE CHANGE, EMOTION/RELATIONSHIP CHANGE, LAST ACTION
 - ถ้ามี STORY/EP context เดิมให้ยึดเป็นหลัก; ถ้า context เดิมไม่อยู่ ให้ใช้ SOURCE OF TRUTH + EP/SCENE INDEX สร้างรายละเอียดขั้นต่ำที่ไม่ขัดกับ canon แล้วสร้างฉากทันที

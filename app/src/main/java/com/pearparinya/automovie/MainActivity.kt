@@ -1004,6 +1004,9 @@ ${sceneCastPlan()}
 - ห้าม recast / substitute / face blend / face average / beautify / age shift และห้ามใช้ Scene Output เป็น Identity
 - ORIGINAL MASTER RE-ANCHOR: ทุก NEXT SCENE ให้ใช้เฉพาะ ORIGINAL MASTER ที่แนบของ ACTIVE CAST เป็น Identity authority ใหม่อีกครั้ง ห้ามใช้หน้าจากฉากก่อนเป็น reference แม้ฉากก่อนจะดูถูกต้อง
 - WARDROBE IS SCENE DATA, NOT IDENTITY: เสื้อผ้า รองเท้า เครื่องประดับ อุปกรณ์ ท่าทาง สถานที่ และแสงของ MASTER ห้ามติดตามตัวละครไปฉากใหม่; ให้ใช้ CURRENT SCENE LEDGER / continuity เท่านั้น
+- ACCESSORY FIREWALL — HARD: สร้อยคอ แหวน นาฬิกา ต่างหู แว่น กระดุม/ปกเสื้อ และเครื่องประดับทุกชนิดที่เห็นใน ORIGINAL MASTER เป็นเพียงข้อมูลของภาพอ้างอิง ห้ามคัดลอกติดตัวละครในฉาก เว้นแต่ CURRENT SCENE LEDGER ระบุเครื่องประดับชิ้นนั้นอย่างชัดเจน
+- MASTER POSE/COMPOSITION FIREWALL: ห้ามคัดลอกท่ายืน มุมหน้า ระยะครึ่งตัว ฉากหลังสีเขียว หรือองค์ประกอบ portrait จาก MASTER; ภาพฉากต้องจัดองค์ประกอบใหม่ตาม STORY BEAT และการกระทำของฉากเท่านั้น
+- NARRATIVE FRAMING: ให้เลือก medium / medium-wide / full-body ตามการกระทำ เพื่อเห็นตัวละครกำลังทำสิ่งที่เดินเรื่องจริง หลีกเลี่ยงภาพ portrait โพสกล้องหรือจ้องกล้องโดยไม่มีเหตุผลในเนื้อเรื่อง
 - BACKGROUND FACE FIREWALL: ห้ามสร้างรูปถ่าย/กรอบรูป/จอมือถือที่มีใบหน้าทางเลือกของตัวละครหลัก ถ้าจำเป็นต้องมี ให้ไม่เห็นรายละเอียดใบหน้าหรือใช้ Identity เดียวกับ ORIGINAL MASTER
 - PRIORITY: ATTACHED ORIGINAL MASTER > Natural Face/Hair/Body > Story Action > Emotion > Pose > Wardrobe > Cinematic Beauty
 - ตัวละครรองสร้างอัตโนมัติและล็อกลักษณะเมื่อปรากฏครั้งแรก

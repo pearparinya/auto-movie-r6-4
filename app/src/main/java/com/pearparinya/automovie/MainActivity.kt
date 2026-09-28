@@ -778,6 +778,17 @@ class MainActivity : AppCompatActivity() {
         playTone(ToneGenerator.TONE_PROP_ACK, 100)
     }
 
+    private fun sceneLedgerKey(ep: Int, scene: Int) = "sceneLedger_${ep}_${scene}"
+
+    private fun saveSceneLedger(ep: Int, scene: Int) {
+        val previous = if (scene > 1) "EP ${fmt(ep)} SCENE ${fmt(scene - 1)}" else if (ep > 1) "EP ${fmt(ep - 1)} SCENE 20 HANDOFF" else "STORY START"
+        val ledger = "CURRENT=EP ${fmt(ep)} SCENE ${fmt(scene)}; PREVIOUS=$previous; STORY=${if (::input.isInitialized) input.text.toString().trim() else ""}; CATEGORY=${selectedCategory.orEmpty()}"
+        statePrefs.edit().putString(sceneLedgerKey(ep, scene), ledger).apply()
+    }
+
+    private fun currentSceneLedger(): String =
+        statePrefs.getString(sceneLedgerKey(currentEp, currentScene), "").orEmpty()
+
     private fun saveWorkState() {
         statePrefs.edit()
             .putString("story", if (::input.isInitialized) input.text.toString() else "")
@@ -903,6 +914,7 @@ class MainActivity : AppCompatActivity() {
         val usedIndex = storyCategories.indexOf(category)
         categoryIndex = if (usedIndex >= 0) (usedIndex + 1) % storyCategories.size else (categoryIndex + 1) % storyCategories.size
         setActiveStep(3)
+        saveSceneLedger(currentEp, currentScene)
         updateUi()
         saveWorkState()
         share(buildQuickStartCommand(story, category), characterKeys = characterNames.keys.toList())
@@ -917,6 +929,7 @@ class MainActivity : AppCompatActivity() {
         // The next press starts the following EP at Scene 01 using that handoff contract.
         if (currentScene < 20) {
             currentScene++
+            saveSceneLedger(currentEp, currentScene)
             updateUi()
             saveWorkState()
             share(buildQuickSceneCommand(), characterKeys = sceneCastKeys(currentScene))
@@ -936,6 +949,7 @@ class MainActivity : AppCompatActivity() {
 
         currentEp++
         currentScene = 1
+        saveSceneLedger(currentEp, currentScene)
         updateUi()
         saveWorkState()
         share(buildQuickSceneCommand(), characterKeys = sceneCastKeys(currentScene))
@@ -1002,6 +1016,9 @@ SOURCE OF TRUTH:
 รูปแบบ: 9:16 • One Scene / One Image • Flow/Veo 3.1
 กล้อง: Locked-off static camera
 
+AUTO-MOVIE SCENE LEDGER:
+${currentSceneLedger().ifBlank { "CURRENT=EP ${fmt(currentEp)} SCENE ${fmt(currentScene)}; PREVIOUS=derive from current conversation; STORY=${input.text.toString().trim()}; CATEGORY=${selectedCategory.orEmpty()}" }}
+
 CONTINUITY ENGINE:
 - ห้ามตอบ EP MASTER NOT FOUND และห้ามบังคับ Director กลับไปบทสนทนาเก่า
 - ใช้ STORY BIBLE + แผน EP + เหตุการณ์ที่เกิดขึ้นจริงในฉากก่อนหน้าเป็น CANON ต่อเนื่อง ห้ามเขียนทับข้อเท็จจริงเดิม
@@ -1012,7 +1029,12 @@ CONTINUITY ENGINE:
 - KNOWLEDGE LOCK: ตัวละครห้ามรู้ความลับ/เหตุการณ์ที่ยังไม่เห็น ไม่ได้ยิน หรือไม่มีผู้บอก
 - EMOTION ARC: อารมณ์ต้องพัฒนาจากเหตุการณ์ก่อนหน้า ไม่รีเซ็ตกลับเป็นกลางโดยไม่มีเหตุผล
 - DIALOGUE/NARRATION: ถ้ามีผู้พูด ให้มีเฉพาะผู้พูดที่กำหนดขยับปาก; ถ้าเป็น voice-over ทุกคนในภาพปิดปากตามธรรมชาติและห้าม lip-sync
+- SCENE TRANSITION CONTRACT: เปิดฉากจากผลลัพธ์/อารมณ์/ตำแหน่งที่ฉากก่อนหน้าทิ้งไว้ แล้วเปลี่ยนสถานะของเรื่องอย่างน้อย 1 อย่างก่อนจบฉาก
+- NO RESET / NO REPLAY: ห้ามย้อนเล่นเหตุการณ์เดิม ห้ามเริ่มบทสนทนาเดิมซ้ำ ห้ามรีเซ็ตตัวละครกลับจุดก่อนหน้า
+- NO RANDOM JUMP: ห้ามข้ามเวลา/สถานที่แบบไม่มีเหตุผลเชื่อม ถ้าจำเป็นต้องข้าม ให้มี visual/narrative cue ที่เข้าใจได้
 - ฉากต้องทำหน้าที่เดินเรื่องเพียงหนึ่ง beat ชัดเจนภายใน 8 วินาที และต้องมีเหตุผลส่งต่อไปฉากถัดไป
+- OUTPUT CONTRACT: ส่งตามลำดับ SCENE STATE (ข้อความสั้น) → IMAGE 9:16 → FLOW/VEO 3.1 PROMPT 8 SEC → NEXT HOOK (1 บรรทัด) เพื่อให้ฉากถัดไปมีจุดต่อที่แน่นอน
+- SCENE STATE ต้องบันทึกเฉพาะสิ่งที่เห็น/เกิดขึ้นจริงในฉากนี้: END TIME, END LOCATION, ACTIVE CAST, WARDROBE, PROPS, KNOWLEDGE CHANGE, EMOTION/RELATIONSHIP CHANGE, LAST ACTION
 - ถ้ามี STORY/EP context เดิมให้ยึดเป็นหลัก; ถ้า context เดิมไม่อยู่ ให้ใช้ SOURCE OF TRUTH + EP/SCENE INDEX สร้างรายละเอียดขั้นต่ำที่ไม่ขัดกับ canon แล้วสร้างฉากทันที
 - SELECTIVE MASTER ENGINE = ON
 - ACTIVE CAST ของ SCENE ${fmt(currentScene)} = ${sceneCastNames(currentScene)}

@@ -1068,7 +1068,12 @@ CONTINUITY ENGINE:
 - ตัวละครหลักทุกคนที่ปรากฏต้องอ้างอิง ORIGINAL MASTER ที่แนบมาโดยตรง ห้ามอ้างอิง portrait/Scene Output ที่ AI เคยสร้าง
 - Identity Master ห้ามเป็นแหล่งเสื้อผ้า ใช้ Wardrobe Firewall
 - ภาพ Output ต้องเป็นภาพฉาก 9:16 เต็มฉาก ห้าม collage/infographic/ตาราง/character card/ข้อความทับภาพ
-- ทำ INTERNAL QC โดยเทียบ Face + Hair + Natural Body Proportions กับ ORIGINAL MASTER; ถ้าไม่ใกล้ให้สร้างใหม่ก่อนส่งผลสุดท้าย
+- IDENTITY MATCH MODE = STRUCTURE-FIRST: ให้คง facial geometry, head width/length, eye spacing, eyebrow shape, nose bridge/tip, lips, jaw/chin, ears, hairline/hairstyle, moustache+beard pattern, skin tone, approximate age และ natural body proportions จาก ORIGINAL MASTER ก่อนอารมณ์/แสง/ความสวยงาม
+- EXPRESSION DELTA ONLY: เปลี่ยนได้เฉพาะกล้ามเนื้อสีหน้าที่จำเป็นต่ออารมณ์ของฉาก เช่น ขมวดคิ้ว/สายตา/มุมปาก แต่ห้ามให้อารมณ์เปลี่ยนโครงหน้า อายุ หนวดเครา ทรงผม หรือสัดส่วนศีรษะ
+- NO IDENTITY DRIFT: ห้ามเพิ่มความคมของกราม/คิ้ว/จมูก ห้ามทำหน้าผอม/กว้างขึ้น ห้ามเพิ่มหรือลดหนวดเครา และห้าม stylize ใบหน้าเพราะ dramatic lighting
+- CAMERA IDENTITY SAFETY: หลีกเลี่ยงเลนส์กว้างใกล้ใบหน้าและมุมที่บิดสัดส่วน; ใช้มุม/ระยะธรรมชาติที่ยังเห็นอัตลักษณ์ชัด เว้นแต่ STORY บังคับ
+- BACKGROUND PORTRAIT FIREWALL: กรอบรูป/ภาพถ่าย/หน้าจอด้านหลังห้ามแสดงใบหน้าตัวละครหลักแบบละเอียด เพราะอาจสร้าง alternate identity; ให้เบลอ/หันออก/ไม่เห็นหน้าแทน
+- ทำ INTERNAL QC โดยเทียบ Face + Hair + Facial Hair + Natural Body Proportions กับ ORIGINAL MASTER; ถ้าต่างชัดเจนให้ถือเป็น IDENTITY FAIL และสร้างใหม่ก่อนส่งผลสุดท้าย
 - ห้ามขอ CONFIRM / QC / REPAIR / LOCK
 - ห้ามสร้างฉากอื่นนอกจาก SCENE ${fmt(currentScene)}
 - ถ้า SCENE ${fmt(currentScene)} = SCENE 20: หลังสร้างฉาก ให้สร้าง EP${fmt(currentEp)}_HANDOFF แบบข้อความสั้นเก็บ CANON ที่ต้องส่งต่อ ได้แก่ unresolved conflict, location/time, wardrobe, props, character knowledge, relationship/emotion state และ hook ของ EP ถัดไป; จากนั้น STOP ห้ามเริ่ม EP ถัดไปเอง

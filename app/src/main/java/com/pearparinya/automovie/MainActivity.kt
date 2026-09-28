@@ -2285,66 +2285,90 @@ PREVIOUS SCENE: ${fmt(currentScene - 1)} = PASS & LOCK
     }
 
     private fun downloadAndInstallUpdate(version: String, apkUrl: String) {
-        try {
-            val fileName = "AUTO-MOVIE-R$version-release.apk"
-            val targetFile = File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName)
-            if (targetFile.exists()) targetFile.delete()
+        val buildNumber = try {
+            Regex("""BUILD-(\d+)""", RegexOption.IGNORE_CASE)
+                .find(apkUrl)?.groupValues?.getOrNull(1) ?: "update"
+        } catch (_: Exception) {
+            "update"
+        }
+        val fileName = "AUTO-MOVIE-R$version-BUILD-$buildNumber.apk"
+        val downloadDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+        if (downloadDir == null) {
+            status.text = "⛔ ไม่พบพื้นที่สำหรับดาวน์โหลด"
+            return
+        }
+        val targetFile = File(downloadDir, fileName)
 
-            val request = DownloadManager.Request(Uri.parse(apkUrl))
-                .setTitle("AUTO-MOVIE R$version")
-                .setDescription("กำลังดาวน์โหลดอัปเดต…")
-                .setMimeType("application/vnd.android.package-archive")
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                .setDestinationUri(Uri.fromFile(targetFile))
+        status.text = "⬇ กำลังดาวน์โหลด AUTO-MOVIE R$version…"
 
-            val manager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            val downloadId = manager.enqueue(request)
-            status.text = "⬇ กำลังดาวน์โหลด AUTO-MOVIE R$version…"
+        Thread {
+            try {
+                if (targetFile.exists()) targetFile.delete()
 
-            Thread {
-                var finished = false
-                while (!finished) {
-                    val cursor = manager.query(DownloadManager.Query().setFilterById(downloadId))
-                    cursor.use {
-                        if (it != null && it.moveToFirst()) {
-                            val state = it.getInt(it.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
-                            val downloaded = it.getLong(it.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
-                            val total = it.getLong(it.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
-                            if (state == DownloadManager.STATUS_RUNNING && total > 0L) {
+                val connection = (URL(apkUrl).openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 15000
+                    readTimeout = 30000
+                    requestMethod = "GET"
+                    instanceFollowRedirects = true
+                    useCaches = false
+                    setRequestProperty("User-Agent", "AUTO-MOVIE-Android")
+                    setRequestProperty("Accept", "application/vnd.android.package-archive,application/octet-stream,*/*")
+                }
+
+                val responseCode = connection.responseCode
+                if (responseCode !in 200..299) {
+                    connection.disconnect()
+                    throw IllegalStateException("ดาวน์โหลด HTTP $responseCode")
+                }
+
+                val total = connection.contentLengthLong
+                var downloaded = 0L
+                var lastPercent = -1L
+
+                connection.inputStream.use { input ->
+                    targetFile.outputStream().buffered().use { output ->
+                        val buffer = ByteArray(64 * 1024)
+                        while (true) {
+                            val count = input.read(buffer)
+                            if (count <= 0) break
+                            output.write(buffer, 0, count)
+                            downloaded += count
+
+                            if (total > 0L) {
                                 val percent = ((downloaded * 100L) / total).coerceIn(0L, 100L)
-                                runOnUiThread {
-                                    status.text = "↓ AUTO-MOVIE R$version • $percent%"
-                                }
-                            }
-                            when (state) {
-                                DownloadManager.STATUS_SUCCESSFUL -> {
-                                    finished = true
+                                if (percent != lastPercent) {
+                                    lastPercent = percent
                                     runOnUiThread {
-                                        status.text = "✓ ดาวน์โหลดเสร็จแล้ว • เปิดหน้าติดตั้ง"
-                                        installDownloadedApk(targetFile)
-                                    }
-                                }
-                                DownloadManager.STATUS_FAILED -> {
-                                    finished = true
-                                    val reason = it.getInt(it.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
-                                    runOnUiThread {
-                                        status.text = "⛔ ดาวน์โหลดไม่สำเร็จ • รหัส $reason"
-                                        AlertDialog.Builder(this)
-                                            .setTitle("ดาวน์โหลดอัปเดตไม่สำเร็จ")
-                                            .setMessage("รหัสข้อผิดพลาด $reason\\n\\nกรุณาตรวจสอบอินเทอร์เน็ตและพื้นที่ว่าง แล้วลองอีกครั้ง")
-                                            .setPositiveButton("ตกลง", null)
-                                            .show()
+                                        status.text = "↓ AUTO-MOVIE R$version • $percent%"
                                     }
                                 }
                             }
                         }
+                        output.flush()
                     }
-                    if (!finished) Thread.sleep(1000)
                 }
-            }.start()
-        } catch (e: Exception) {
-            status.text = "⛔ เริ่มดาวน์โหลดอัปเดตไม่สำเร็จ"
-        }
+                connection.disconnect()
+
+                if (!targetFile.exists() || targetFile.length() < 100_000L) {
+                    throw IllegalStateException("ไฟล์ APK ที่ดาวน์โหลดไม่สมบูรณ์")
+                }
+
+                runOnUiThread {
+                    status.text = "✓ ดาวน์โหลดเสร็จแล้ว • เปิดหน้าติดตั้ง"
+                    installDownloadedApk(targetFile)
+                }
+            } catch (e: Exception) {
+                try { if (targetFile.exists()) targetFile.delete() } catch (_: Exception) {}
+                runOnUiThread {
+                    status.text = "⛔ ดาวน์โหลดอัปเดตไม่สำเร็จ"
+                    AlertDialog.Builder(this)
+                        .setTitle("ดาวน์โหลดอัปเดตไม่สำเร็จ")
+                        .setMessage("ระบบดาวน์โหลดในแอปทำงานไม่สำเร็จ\n\n${e.message ?: e.javaClass.simpleName}")
+                        .setPositiveButton("ตกลง", null)
+                        .show()
+                }
+            }
+        }.start()
     }
 
     private fun installDownloadedApk(apkFile: File) {

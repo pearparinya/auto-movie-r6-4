@@ -1261,47 +1261,18 @@ SELF-CONTAINED RULE:
             }
         }
 
-        // เปิด ChatGPT โดยตรงก่อน เพื่อตัด Android Share Sheet ออก
-        // ไม่ใช้ resolveActivity() เพราะ Android 11+ จำกัด package visibility
-        val chatGptPackages = listOf(
-            "com.openai.chatgpt",
-            "com.openai.chatgpt.beta"
-        )
-
-        for (packageName in chatGptPackages) {
-            try {
-                val directIntent = Intent(sendIntent).apply {
-                    setPackage(packageName)
-
-                    // ใช้ ChatGPT task เดิมเมื่อมีอยู่
-                    // ห้าม MULTIPLE_TASK / NEW_DOCUMENT เพราะจะทำให้แตกเป็นหลาย ChatGPT task
-                    addFlags(
-                        Intent.FLAG_ACTIVITY_NEW_TASK or
-                            Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    )
-                }
-                startActivity(directIntent)
-                status.text = "↗ เปิด ChatGPT พร้อมคำสั่งแล้ว"
-                return
-            } catch (_: android.content.ActivityNotFoundException) {
-                // ลอง package ถัดไป
-            } catch (_: SecurityException) {
-                // ลอง package ถัดไป
-            }
-        }
-
-        // ถ้าเครื่องไม่พบ ChatGPT ให้กลับไปใช้ Share Sheet ตามเดิม
+        // Let Android route the share payload. This is more compatible with
+        // ChatGPT's current share receiver than forcing the package directly,
+        // especially when an image stream is attached.
         try {
             val chooserIntent = Intent.createChooser(
                 sendIntent,
                 "ส่งคำสั่งไปยัง ChatGPT"
-            ).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
+            )
             startActivity(chooserIntent)
-            status.text = "⚠ ไม่พบแอป ChatGPT • เลือกแอปจากเมนูแชร์"
+            status.text = "↗ เลือก ChatGPT เพื่อส่งคำสั่ง"
         } catch (_: Exception) {
-            status.text = "⛔ ไม่สามารถเปิด ChatGPT หรือเมนูแชร์ได้"
+            status.text = "⛔ ไม่สามารถเปิดเมนูส่งไป ChatGPT ได้"
         }
     }
 

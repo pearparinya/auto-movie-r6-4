@@ -597,24 +597,27 @@ class MainActivity : AppCompatActivity() {
     // The app owns the cast schedule, so it can attach only the original
     // masters that are actually allowed to appear in the current scene.
     private fun sceneCastKeys(scene: Int): List<String> = when (scene.coerceIn(1, 20)) {
+        // Balanced cast validation: every EP exercises all three fixed masters early.
+        // This prevents development from validating only Gawin while keeping the
+        // story visually varied and still deterministic for Android attachments.
         1 -> listOf("gawin")
         2 -> listOf("rinlada")
-        3 -> listOf("gawin")
-        4 -> listOf("rinlada")
-        5 -> listOf("gawin", "rinlada")
-        6 -> listOf("mind")
+        3 -> listOf("mind")
+        4 -> listOf("gawin", "rinlada")
+        5 -> listOf("rinlada")
+        6 -> listOf("gawin", "mind")
         7 -> listOf("gawin")
-        8 -> listOf("rinlada")
-        9 -> listOf("gawin", "mind")
-        10 -> listOf("rinlada")
-        11 -> listOf("gawin", "rinlada")
-        12 -> listOf("mind")
+        8 -> listOf("rinlada", "mind")
+        9 -> listOf("mind")
+        10 -> listOf("gawin", "rinlada")
+        11 -> listOf("rinlada")
+        12 -> listOf("gawin", "mind")
         13 -> listOf("gawin")
         14 -> listOf("rinlada", "mind")
-        15 -> listOf("gawin")
-        16 -> listOf("rinlada")
-        17 -> listOf("gawin", "rinlada")
-        18 -> listOf("mind")
+        15 -> listOf("mind")
+        16 -> listOf("gawin", "rinlada")
+        17 -> listOf("rinlada")
+        18 -> listOf("gawin", "mind")
         19 -> listOf("gawin")
         else -> listOf("gawin", "rinlada", "mind")
     }
@@ -1099,6 +1102,10 @@ CONTINUITY ENGINE:
 - ถ้ามี STORY/EP context เดิมให้ยึดเป็นหลัก; ถ้า context เดิมไม่อยู่ ให้ใช้ SOURCE OF TRUTH + EP/SCENE INDEX สร้างรายละเอียดขั้นต่ำที่ไม่ขัดกับ canon แล้วสร้างฉากทันที
 - SELECTIVE MASTER ENGINE = ON
 - ACTIVE CAST ของ SCENE ${fmt(currentScene)} = ${sceneCastNames(currentScene)}
+- FEMALE MASTER VALIDATION = ON: เมื่อ ACTIVE CAST มีรินลดาหรือมายด์ ต้องยึด ORIGINAL MASTER ของผู้หญิงคนนั้นแบบ 1:1 ด้วยความเข้มเท่ากวิน ห้ามใช้ generic female face, beauty-template face, face averaging หรือสลับอัตลักษณ์ระหว่างรินลดา/มายด์
+- FEMALE DISTINCTNESS GATE — HARD: รินลดาและมายด์เป็นคนละบุคคลถาวร ต้องรักษา face geometry / hair / skin tone / natural body proportions ของ MASTER ที่แนบของแต่ละคนแยกกัน ห้ามผสมใบหน้า รูปร่าง หรือทรงผมข้ามกัน
+- FEMALE WARDROBE FIREWALL — HARD: ชุดเดรส สีชุด ความเว้า/ความปิด และเครื่องประดับใน MASTER ผู้หญิงเป็นเพียงสิ่งที่อยู่ในภาพอ้างอิง ไม่ใช่ wardrobe ของฉาก ห้ามถ่ายโอน เว้นแต่ CURRENT SCENE BLUEPRINT ระบุเอง
+- FEMALE IDENTITY BEFORE BEAUTY: ห้ามทำหน้าเรียว ตาโต ผิวเนียน หน้าเด็ก หรือปรับสัดส่วนเพื่อความสวย หากทำให้อัตลักษณ์จาก ORIGINAL MASTER เปลี่ยน
 - คำสั่งนี้แนบเฉพาะ ORIGINAL MASTER ของ ACTIVE CAST จริง ตามลำดับนี้: ${sceneCastKeys(currentScene).mapIndexed { index, key -> "ATTACHMENT ${index + 1} = ${characterNames[key]}" }.joinToString(" / ")}
 - ห้ามเพิ่มตัวละครหลักคนอื่นที่ไม่ได้อยู่ใน ACTIVE CAST ของฉากนี้
 - ใช้บุคคลคนเดิมจาก ATTACHMENT ของคนนั้นโดยตรง และบรรยายเฉพาะ wardrobe/action/emotion/position/gaze

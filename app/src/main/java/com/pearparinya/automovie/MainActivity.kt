@@ -600,9 +600,9 @@ class MainActivity : AppCompatActivity() {
         // Balanced cast validation: every EP exercises all three fixed masters early.
         // This prevents development from validating only Gawin while keeping the
         // story visually varied and still deterministic for Android attachments.
-        1 -> listOf("gawin")
-        2 -> listOf("rinlada")
-        3 -> listOf("mind")
+        1 -> listOf("rinlada")
+        2 -> listOf("mind")
+        3 -> listOf("gawin")
         4 -> listOf("gawin", "rinlada")
         5 -> listOf("rinlada")
         6 -> listOf("gawin", "mind")
@@ -921,7 +921,7 @@ class MainActivity : AppCompatActivity() {
         updateUi()
         saveWorkState()
         share(buildQuickStartCommand(story, category), characterKeys = characterNames.keys.toList())
-        status.text = "⚡ FAST START • SCENE 01 กวิน • NEXT = รินลดา"
+        status.text = "⚡ FAST START • SCENE 01 รินลดา • NEXT = มายด์"
     }
 
     private fun generateNextQuickScene() {
@@ -983,18 +983,18 @@ SOURCE OF TRUTH:
 - ATTACHMENT 2 = รินลดา / MASTER 02
 - ATTACHMENT 3 = มายด์ / MASTER 03
 - ก่อนทำ STORY BIBLE ให้ตรวจว่ามองเห็นภาพแนบทั้ง 3 ภาพจริง หากไม่ครบ ให้หยุดและแจ้ง ATTACHMENT TRANSPORT FAIL ห้ามสร้างภาพโดยเดาใบหน้า
-- SCENE 01 ACTIVE CAST = กวิน เท่านั้น แม้ START จะส่ง MASTER ครบ 3 ภาพ
-- รินลดาและมายด์ใช้สำหรับ FIXED CAST REGISTRY / STORY BIBLE เท่านั้น ห้ามให้ปรากฏในภาพ SCENE 01
-- ภาพ SCENE 01 ต้องใช้ ATTACHMENT 1 เป็น ORIGINAL IDENTITY MASTER ของกวินโดยตรง ห้ามสร้างใบหน้ากวินใหม่จากข้อความ
-- FIXED CAST IDENTITY DNA — MASTER 01 กวิน: ใช้ภาพ ATTACHMENT 1 เป็นแหล่งอัตลักษณ์เพียงแหล่งเดียวตลอด EP 01–05 ทุกครั้งที่กวินปรากฏ ต้องย้อนอ้างอิง ORIGINAL MASTER นี้ใหม่ ไม่สืบทอดใบหน้าจากภาพฉากก่อนหน้า
-- ล็อกลักษณะจาก MASTER 01 เฉพาะ: facial geometry / head shape / eyes / eyebrows / nose / lips / jawline / ears / hair shape+color / moustache+beard pattern / skin tone / approximate age / natural body build+proportions
-- ห้ามเปลี่ยนกวินให้หล่อขึ้น อ่อนวัยขึ้น ผิวเนียนขึ้น หน้าเรียวขึ้น ตาโตขึ้น จมูกเปลี่ยน ทรงผมเปลี่ยน หนวดเคราหาย หรือรูปร่างเปลี่ยน แม้เพื่อ cinematic beauty
-- MASTER WARDROBE FIREWALL: เสื้อเชิ้ตสีน้ำตาล เสื้อยืดสีขาว กางเกงยีนส์ ค้อน บ้านไม้ ท่าตอกตะปู และองค์ประกอบฉากใน MASTER 01 ไม่ใช่ Identity และห้ามคัดลอกมา เว้นแต่ STORY/SCENE ระบุเอง
+- SCENE 01 ACTIVE CAST = รินลดา เท่านั้น แม้ START จะส่ง MASTER ครบ 3 ภาพ
+- กวินและมายด์ใช้สำหรับ FIXED CAST REGISTRY / STORY BIBLE เท่านั้น ห้ามให้ปรากฏในภาพ SCENE 01
+- ภาพ SCENE 01 ต้องใช้ ATTACHMENT 2 เป็น ORIGINAL IDENTITY MASTER ของรินลดาโดยตรง ห้ามสร้างใบหน้ารินลดาใหม่จากข้อความ
+- FIXED CAST IDENTITY DNA — MASTER 02 รินลดา: ใช้ภาพ ATTACHMENT 2 เป็นแหล่งอัตลักษณ์เพียงแหล่งเดียวตลอด EP 01–05 ทุกครั้งที่รินลดาปรากฏ ต้องย้อนอ้างอิง ORIGINAL MASTER นี้ใหม่ ไม่สืบทอดใบหน้าจากภาพฉากก่อนหน้า
+- ล็อกลักษณะจาก MASTER 02 เฉพาะ: facial geometry / head shape / eyes / eyebrows / nose / lips / jawline / ears / hair shape+color / skin tone / approximate age / natural body build+proportions
+- ห้ามเปลี่ยนรินลดาให้สวยขึ้น อ่อนวัยขึ้น ผิวเนียนขึ้น หน้าเรียวขึ้น ตาโตขึ้น จมูกเปลี่ยน ทรงผมเปลี่ยน หรือรูปร่าง/สัดส่วนธรรมชาติเปลี่ยน แม้เพื่อ cinematic beauty
+- MASTER WARDROBE FIREWALL: ชุดสีชมพู เครื่องประดับ ฉากหลังสีเขียว ท่ายืน และองค์ประกอบ portrait ใน MASTER 02 ไม่ใช่ Identity และห้ามคัดลอกมา เว้นแต่ STORY/SCENE ระบุเอง
 - IDENTITY SOURCE IS IMMUTABLE: ห้ามใช้ Scene Output, ภาพแต่งงาน, background photo, storyboard, generated portrait หรือคำบรรยายข้อความแทน ORIGINAL MASTER
 - IDENTITY GATE — HARD FAIL: ก่อนส่งภาพต้องตรวจตัวละครที่เห็นจริงกับ ORIGINAL MASTER ของคนนั้น หาก facial geometry / hair / facial hair / natural body proportions เปลี่ยนชัดเจน ให้ถือว่าภาพไม่ผ่านและสร้างใหม่ก่อนส่ง ห้ามยอมรับใบหน้าที่เพียงคล้าย
-- MASTER-FIRST RECONSTRUCTION: ก่อนกำหนดท่าทาง/แสง/เสื้อผ้า ให้ยึด ATTACHMENT 1 เป็นฐานใบหน้า ศีรษะ ทรงผม หนวดเครา สีผิว อายุโดยประมาณ และสัดส่วนธรรมชาติของกวินก่อน แล้วจึงเปลี่ยนเฉพาะ expression/pose/wardrobe ตามฉาก
+- MASTER-FIRST RECONSTRUCTION: ก่อนกำหนดท่าทาง/แสง/เสื้อผ้า ให้ยึด ATTACHMENT 2 เป็นฐานใบหน้า ศีรษะ ทรงผม สีผิว อายุโดยประมาณ และสัดส่วนธรรมชาติของรินลดาก่อน แล้วจึงเปลี่ยนเฉพาะ expression/pose/wardrobe ตามฉาก
 - IDENTITY CHECKPOINTS: ตรวจซ้ำ 3 จุดก่อนส่ง: (1) eyes+nose+mouth geometry (2) jaw+hairline+facial hair (3) head-to-body proportions; หากข้อใด drift ชัดเจน = INVALID OUTPUT และต้องสร้างใหม่
-- NO BEAUTY OVERRIDE: cinematic lighting, dramatic emotion, camera angle และ wardrobe ห้ามมีสิทธิ์เปลี่ยน identity geometry ของกวิน
+- NO BEAUTY OVERRIDE: cinematic lighting, dramatic emotion, camera angle และ wardrobe ห้ามมีสิทธิ์เปลี่ยน identity geometry ของรินลดา
 - LIKENESS FIDELITY MODE — MAX: เป้าหมายคือ “คนเดิมในสถานการณ์ใหม่” ไม่ใช่ “คนหน้าคล้าย”; ห้าม reinterpret ใบหน้าเป็นนักแสดงคนใหม่
 - REFERENCE-IMAGE DOMINANCE — MAX: เมื่อ ORIGINAL MASTER ถูกแนบ ให้ข้อมูลภาพจริงมีอำนาจเหนือคำบรรยายใบหน้าทั้งหมด ห้ามให้โมเดลสร้างหน้าใหม่จากคำว่า “ชายไทย/หล่อ/วัย...” แล้วค่อยทำให้คล้าย MASTER
 - FACE RECONSTRUCTION BAN: ห้าม redesign, restyle, idealize หรือสร้าง facial features ใหม่; อนุญาตเพียงคงบุคคลเดิมจาก ORIGINAL MASTER แล้วเปลี่ยนสีหน้า มุมศีรษะ และการกระทำเท่าที่ฉากต้องใช้
@@ -1006,7 +1006,7 @@ SOURCE OF TRUTH:
 - PRESERVE MICRO-IDENTITY: รักษาระยะตา ความหนา/แนวคิ้ว สันและปลายจมูก รูปริมฝีปาก แนวกราม hairline และตำแหน่ง/ความหนาหนวดเคราตาม ORIGINAL MASTER ให้ใกล้ที่สุด
 - EXPRESSION DELTA ONLY: อารมณ์ของฉากเปลี่ยนได้เฉพาะกล้ามเนื้อสีหน้า/สายตา/ท่าทาง ห้ามให้อารมณ์เปลี่ยนโครงหน้า อายุ หรือความเป็นบุคคล
 - CAMERA IDENTITY SAFETY: หลีกเลี่ยงเลนส์กว้างระยะใกล้ มุมกด/เงยจัด แสงแข็ง หรือ perspective ที่บิดรูปหน้า; ใช้มุมธรรมชาติและระยะที่ยังอ่านอัตลักษณ์จาก MASTER ได้ชัด
-- FACE VISIBILITY GATE: เมื่อกวินเป็น ACTIVE CAST ต้องเห็นใบหน้าชัดพอสำหรับตรวจ Identity; ห้ามมือ/พร็อพ/เงามืดบังจุดสำคัญของตา จมูก ปาก และกรามเกินจำเป็น
+- FACE VISIBILITY GATE: เมื่อรินลดาเป็น ACTIVE CAST ต้องเห็นใบหน้าชัดพอสำหรับตรวจ Identity; ห้ามมือ/พร็อพ/เงามืดบังจุดสำคัญของตา จมูก ปาก และกรามเกินจำเป็น
 - SCENE DIVERSITY FIREWALL: ห้ามวนภาพ “นั่งคิด/อ่านเอกสาร/โต๊ะทำงาน” ซ้ำโดยไม่มี STORY BEAT รองรับ; แต่ละฉากต้องมี ACTION + LOCATION/PROP PURPOSE ที่แตกต่างและเดินเรื่องจริง
 - STORY-BEAT MOTION GATE: ฉากใหม่ต้องเปลี่ยน “เหตุการณ์” ไม่ใช่เพียงเปลี่ยนเสื้อ/มุม/ห้อง; ต้องระบุสิ่งที่ตัวละครกำลังทำซึ่งทำให้ข้อมูล ความสัมพันธ์ หรือความขัดแย้งเดินหน้าอย่างน้อย 1 ขั้น
 - REPETITION MEMORY: ถือกิจกรรมต่อไปนี้เป็นกลุ่มเดียวกันและห้ามใช้ติดกันหรือวนซ้ำโดยไม่มีเหตุผลเรื่อง: นั่งครุ่นคิด / อ่านเอกสาร / ดูโน้ตบุ๊ก / จับกระดาษ / มือแตะหน้า-คาง-ขมับ

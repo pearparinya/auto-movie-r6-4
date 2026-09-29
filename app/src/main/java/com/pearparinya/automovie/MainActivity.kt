@@ -993,6 +993,13 @@ SOURCE OF TRUTH:
 - IDENTITY CHECKPOINTS: ตรวจซ้ำ 3 จุดก่อนส่ง: (1) eyes+nose+mouth geometry (2) jaw+hairline+facial hair (3) head-to-body proportions; หากข้อใด drift ชัดเจน = INVALID OUTPUT และต้องสร้างใหม่
 - NO BEAUTY OVERRIDE: cinematic lighting, dramatic emotion, camera angle และ wardrobe ห้ามมีสิทธิ์เปลี่ยน identity geometry ของกวิน
 - LIKENESS FIDELITY MODE — MAX: เป้าหมายคือ “คนเดิมในสถานการณ์ใหม่” ไม่ใช่ “คนหน้าคล้าย”; ห้าม reinterpret ใบหน้าเป็นนักแสดงคนใหม่
+- REFERENCE-IMAGE DOMINANCE — MAX: เมื่อ ORIGINAL MASTER ถูกแนบ ให้ข้อมูลภาพจริงมีอำนาจเหนือคำบรรยายใบหน้าทั้งหมด ห้ามให้โมเดลสร้างหน้าใหม่จากคำว่า “ชายไทย/หล่อ/วัย...” แล้วค่อยทำให้คล้าย MASTER
+- FACE RECONSTRUCTION BAN: ห้าม redesign, restyle, idealize หรือสร้าง facial features ใหม่; อนุญาตเพียงคงบุคคลเดิมจาก ORIGINAL MASTER แล้วเปลี่ยนสีหน้า มุมศีรษะ และการกระทำเท่าที่ฉากต้องใช้
+- DISTINCTIVE-TRAIT ANCHOR: ให้รักษาจุดจำเพาะที่เห็นจริงใน MASTER โดยเฉพาะ hairline, eyebrow shape, eye spacing, nose bridge+tip, lip contour, jaw width และ moustache/beard boundary พร้อมกัน ห้ามรักษาเพียงบางจุดแล้วปล่อยส่วนอื่น drift
+- NATURAL TEXTURE LOCK: ห้าม skin retouch / beauty filter / face smoothing / symmetry correction ที่ทำให้บุคคลดูเป็นคนใหม่
+- IDENTITY BEFORE CINEMA: หากความสวยของแสง มุมกล้อง depth-of-field หรืออารมณ์ขัดกับความเหมือน MASTER ให้ลดความ cinematic ลงและรักษา Identity ก่อนเสมอ
+- POSE REPETITION BLOCK: ห้ามใช้ท่าเอามือค้ำคาง/แตะปาก/แตะขมับ/นั่งครุ่นคิดซ้ำจากฉากก่อน เว้นแต่ STORY BEAT ระบุชัด; NEXT SCENE ต้องเปลี่ยน blocking และ physical action ให้เห็นความคืบหน้าของเรื่อง
+- PROP-ACTION RULE: พร็อพหลักต้องถูกใช้งานเพื่อเล่าเรื่องจริง ไม่ใช่เพียงวางประกอบฉาก; หลีกเลี่ยงการวน “เอกสาร + โต๊ะ + โน้ตบุ๊ก” หากไม่มีเหตุการณ์ใหม่รองรับ
 - PRESERVE MICRO-IDENTITY: รักษาระยะตา ความหนา/แนวคิ้ว สันและปลายจมูก รูปริมฝีปาก แนวกราม hairline และตำแหน่ง/ความหนาหนวดเคราตาม ORIGINAL MASTER ให้ใกล้ที่สุด
 - EXPRESSION DELTA ONLY: อารมณ์ของฉากเปลี่ยนได้เฉพาะกล้ามเนื้อสีหน้า/สายตา/ท่าทาง ห้ามให้อารมณ์เปลี่ยนโครงหน้า อายุ หรือความเป็นบุคคล
 - CAMERA IDENTITY SAFETY: หลีกเลี่ยงเลนส์กว้างระยะใกล้ มุมกด/เงยจัด แสงแข็ง หรือ perspective ที่บิดรูปหน้า; ใช้มุมธรรมชาติและระยะที่ยังอ่านอัตลักษณ์จาก MASTER ได้ชัด

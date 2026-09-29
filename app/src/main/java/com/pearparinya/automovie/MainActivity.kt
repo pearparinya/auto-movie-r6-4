@@ -168,7 +168,7 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "เลือกเรื่อง → START → NEXT SCENE"
+            text = "FAST FLOW • เลือกเรื่อง → START → NEXT SCENE"
             textSize = 10f
             setTextColor(ice)
             gravity = Gravity.START
@@ -318,7 +318,7 @@ class MainActivity : AppCompatActivity() {
         root.addView(characterMasterButton, full(dp(38)))
         refreshCharacterMasterButton()
 
-        root.addView(section("โหมดรวดเร็ว • QUICK FLOW").apply { gravity = Gravity.CENTER })
+        root.addView(section("⚡ FAST FLOW • ONE-TAP SCENE").apply { gravity = Gravity.CENTER })
         nextHint = TextView(this).apply {
             textSize = 11f
             setTextColor(muted)
@@ -918,7 +918,7 @@ class MainActivity : AppCompatActivity() {
         updateUi()
         saveWorkState()
         share(buildQuickStartCommand(story, category), characterKeys = characterNames.keys.toList())
-        status.text = "🚀 START • แนบ MASTER 3/3 + โครงเรื่อง + ภาพ SCENE 01"
+        status.text = "⚡ FAST START • MASTER 3/3 → SCENE 01"
     }
 
     private fun generateNextQuickScene() {
@@ -933,7 +933,7 @@ class MainActivity : AppCompatActivity() {
             updateUi()
             saveWorkState()
             share(buildQuickSceneCommand(), characterKeys = sceneCastKeys(currentScene))
-            status.text = "🚀 EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)} • ส่งแล้ว"
+            status.text = "⚡ EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)} • ส่งแล้ว"
             return
         }
 
@@ -1491,6 +1491,12 @@ QUICK FLOW SYNC:
 - NEXT SCENE ต้องสร้างภาพฉากปัจจุบันทันทีแบบ SELF-CONTAINED
 - ห้ามสั่ง Director กลับไปกด CONFIRM / QC / REPAIR / LOCK
 - QC และการแก้ข้อผิดพลาดพื้นฐานให้ทำภายในคำสั่งเดียวก่อนส่ง Output
+- FAST EXECUTION MODE = ON: อ่าน SOURCE OF TRUTH + ORIGINAL MASTER แล้วลงมือทันที ห้ามเกริ่น ห้ามทวนคำสั่ง ห้ามถามยืนยันเมื่อข้อมูลพอสร้างฉาก
+- OUTPUT MINIMAL: สำหรับ NEXT SCENE ให้ส่งเฉพาะข้อมูลฉากที่จำเป็น + ภาพ 9:16 + Flow/Veo prompt + NEXT HOOK แบบสั้น ห้ามอธิบายกฎระบบซ้ำ
+- IMAGE-FIRST PIPELINE: เตรียม continuity/identity/QC ภายใน แล้วเริ่มสร้างภาพโดยเร็วที่สุด; กฎที่ตรวจผ่านแล้วไม่ต้องพิมพ์รายงานยาว
+- SELECTIVE MASTER FAST PATH: แนบและใช้เฉพาะ ORIGINAL MASTER ของ ACTIVE CAST ใน NEXT SCENE เพื่อลด payload; START ยังคงแนบ MASTER 3/3 เพื่อสร้าง FIXED CAST REGISTRY
+- MODERN SCENE ENGINE: ทุกฉากต้องมี action verb ชัดเจน ภาพดูร่วมสมัย สมจริง มี narrative blocking และหลีกเลี่ยง portrait pose/ฉากครุ่นคิดซ้ำ
+- FAIL-SOFT CONTINUITY: ถ้ารายละเอียดย่อยไม่ชัด ให้เลือกค่าที่สอดคล้องกับ canon ล่าสุดและเดินเรื่องต่อทันที; หยุดเฉพาะกรณี ORIGINAL MASTER ที่จำเป็นต่อ ACTIVE CAST ไม่ถูกแนบจริง
 - POLICY-SAFE STORY ENGINE: ทุกฉากต้องเป็นดราม่าชีวิตคู่/ครอบครัวที่ปลอดภัย ไม่สร้างคำสั่งเชิงเพศหรือการแต่งกายที่เน้นเรือนร่างโดยไม่จำเป็นต่อเรื่อง
 - หาก Character Master มีเสื้อผ้าเปิดเผย/เซ็กซี่ ให้ถือเป็น IDENTITY DATA เท่านั้น ห้ามถ่ายโอนความโป๊ ความรัดรูป คอเสื้อลึก หรือการเน้นสัดส่วนไปยัง Scene
 - DEFAULT WARDROBE = เสื้อผ้าปกติ สุภาพ สมจริง เหมาะกับบ้าน/งาน/เวลา/เหตุการณ์ และไม่ sexualize ตัวละคร

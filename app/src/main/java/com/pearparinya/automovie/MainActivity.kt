@@ -1099,6 +1099,12 @@ CONTINUITY ENGINE:
 - BACKGROUND PORTRAIT FIREWALL: กรอบรูป/ภาพถ่าย/หน้าจอด้านหลังห้ามแสดงใบหน้าตัวละครหลักแบบละเอียด เพราะอาจสร้าง alternate identity; ให้เบลอ/หันออก/ไม่เห็นหน้าแทน
 - ทำ INTERNAL QC โดยเทียบ Face + Hair + Facial Hair + Natural Body Proportions กับ ORIGINAL MASTER; ถ้าต่างชัดเจนให้ถือเป็น IDENTITY FAIL และสร้างใหม่ก่อนส่งผลสุดท้าย
 - MASTER-FIRST RECONSTRUCTION: เริ่มจาก identity geometry ของ ORIGINAL MASTER ที่แนบในคำสั่งนี้ก่อนทุกครั้ง แล้วจึงใส่ expression / pose / wardrobe / lighting ของฉาก ห้ามเริ่มจากหน้าฉากก่อน
+- REFERENCE-IMAGE DOMINANCE — MAX: ORIGINAL MASTER ที่แนบคือ visual authority สูงสุด ห้ามสร้างหน้าใหม่จากคำบรรยายแล้วทำให้ “คล้าย”; ต้องรักษาบุคคลเดิมจากภาพจริงก่อนทุกองค์ประกอบ
+- DISTINCTIVE-TRAIT ANCHOR: รักษา hairline + eyebrow shape + eye spacing + nose bridge/tip + lip contour + jaw width + moustache/beard boundary พร้อมกัน ห้ามปล่อยบางส่วน drift
+- NATURAL TEXTURE LOCK: ห้าม beauty filter / skin smoothing / symmetry correction / face idealization ที่ทำให้ Identity เปลี่ยน
+- IDENTITY BEFORE CINEMA: หากมุมกล้อง แสง depth-of-field หรือ dramatic styling ทำให้หน้าเปลี่ยน ให้ลดความ cinematic และรักษาความเหมือน MASTER ก่อน
+- POSE REPETITION BLOCK: ห้ามวนท่าค้ำคาง แตะปาก แตะขมับ นั่งนิ่งอ่านเอกสาร หรือมองเอกสารซ้ำจากฉากก่อน เว้นแต่ BLUEPRINT ระบุโดยตรง; ให้เปลี่ยน blocking และ physical action ตาม STORY BEAT
+- PROP-ACTION RULE: พร็อพหลักต้องถูกใช้เพื่อทำให้สถานะเรื่องเปลี่ยน ไม่ใช่เพียงวางตกแต่ง; ห้ามวนโต๊ะ+เอกสาร+โน้ตบุ๊กเป็นภาพหลักหลายฉากติดกันโดยไม่มีเหตุการณ์ใหม่
 - IDENTITY CHECKPOINTS: ก่อนส่งภาพตรวจ 3 ชั้น: eyes+nose+mouth geometry → jaw+hairline+facial hair → head/body natural proportions; drift ชั้นใดชั้นหนึ่งชัดเจน = INVALID OUTPUT และสร้างใหม่
 - NO BEAUTY OVERRIDE: dramatic emotion, cinematic lighting, lens perspective และ styling ห้ามเปลี่ยน facial structure, age impression, facial hair หรือ natural build
 - MASTER ACCESSORY ZERO-TRANSFER: หาก CURRENT SCENE LEDGER ไม่ได้ระบุเครื่องประดับอย่างชัดเจน ตัวละครต้องไม่มีสร้อยคอ/โซ่/แหวน/นาฬิกา/ต่างหู/แว่น แม้ ORIGINAL MASTER จะสวมอยู่; การติดเครื่องประดับจาก MASTER โดยไม่มี Scene authority = WLF-01 และต้องแก้ก่อนส่ง

@@ -921,7 +921,7 @@ class MainActivity : AppCompatActivity() {
         updateUi()
         saveWorkState()
         share(buildQuickStartCommand(story, category), characterKeys = characterNames.keys.toList())
-        status.text = "⚡ FAST START • MASTER 3/3 → SCENE 01"
+        status.text = "⚡ FAST START • SCENE 01 กวิน • NEXT = รินลดา"
     }
 
     private fun generateNextQuickScene() {
@@ -1103,6 +1103,11 @@ CONTINUITY ENGINE:
 - SELECTIVE MASTER ENGINE = ON
 - ACTIVE CAST ของ SCENE ${fmt(currentScene)} = ${sceneCastNames(currentScene)}
 - FEMALE MASTER VALIDATION = ON: เมื่อ ACTIVE CAST มีรินลดาหรือมายด์ ต้องยึด ORIGINAL MASTER ของผู้หญิงคนนั้นแบบ 1:1 ด้วยความเข้มเท่ากวิน ห้ามใช้ generic female face, beauty-template face, face averaging หรือสลับอัตลักษณ์ระหว่างรินลดา/มายด์
+- FEMALE EARLY VALIDATION: SCENE 02 = รินลดาเท่านั้น และ SCENE 03 = มายด์เท่านั้น เพื่อบังคับตรวจ ORIGINAL MASTER ผู้หญิงทั้งสองตั้งแต่ต้น EP; ห้ามแทนด้วยกวิน ห้ามเพิ่มผู้หญิงอีกคน และห้ามสร้างหน้าผู้หญิงจากคำบรรยาย
+- FEMALE FACE PRIORITY — MAX: สำหรับรินลดา/มายด์ ให้ใบหน้า ทรงผม hairline ระยะตา รูปคิ้ว จมูก ริมฝีปาก กราม สีผิว อายุโดยประมาณ และสัดส่วนธรรมชาติจาก ATTACHMENT ของคนนั้นมีอำนาจเหนือ cinematic beauty และ generic Thai female styling
+- FEMALE BODY ZERO-RESHAPE: ห้ามเพิ่ม/ลดหน้าอก เอว สะโพก ความผอม ความสูง หรือปรับสัดส่วนเพื่อให้เข้ากับชุด; รักษา natural body proportions จาก ORIGINAL MASTER แล้วเลือก wardrobe ให้เข้ากับร่างกายแทน
+- FEMALE HAIR IDENTITY LOCK: ทรงผม ความยาว แนวผม และสีผมเป็นส่วน Identity ของผู้หญิง ห้ามเปลี่ยนเป็นผมยาว/สั้น/ลอน/ตรงแบบอื่นเพียงเพื่อความสวย เว้นแต่ STORY ระบุการเปลี่ยนทรงผมอย่างชัดเจนและยังต้องคงใบหน้าเดิม
+- FEMALE CROSS-CONTAMINATION BLOCK: ห้ามใช้คุณลักษณะจาก MASTER ผู้หญิงอีกคนมาช่วยเติมส่วนที่ไม่ชัด และห้ามใช้ภาพผู้หญิงจาก Scene Output ก่อนหน้าเป็น reference; ทุกฉากต้องย้อนกลับ ORIGINAL MASTER ที่แนบในคำสั่งปัจจุบัน
 - FEMALE DISTINCTNESS GATE — HARD: รินลดาและมายด์เป็นคนละบุคคลถาวร ต้องรักษา face geometry / hair / skin tone / natural body proportions ของ MASTER ที่แนบของแต่ละคนแยกกัน ห้ามผสมใบหน้า รูปร่าง หรือทรงผมข้ามกัน
 - FEMALE WARDROBE FIREWALL — HARD: ชุดเดรส สีชุด ความเว้า/ความปิด และเครื่องประดับใน MASTER ผู้หญิงเป็นเพียงสิ่งที่อยู่ในภาพอ้างอิง ไม่ใช่ wardrobe ของฉาก ห้ามถ่ายโอน เว้นแต่ CURRENT SCENE BLUEPRINT ระบุเอง
 - FEMALE IDENTITY BEFORE BEAUTY: ห้ามทำหน้าเรียว ตาโต ผิวเนียน หน้าเด็ก หรือปรับสัดส่วนเพื่อความสวย หากทำให้อัตลักษณ์จาก ORIGINAL MASTER เปลี่ยน

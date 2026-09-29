@@ -10,6 +10,13 @@ permissions:
   contents: write
   actions: write
 
+# Only the newest main-branch build may publish the in-app update.
+# This prevents an older overlapping run from finishing later and
+# incorrectly becoming GitHub's "latest" release.
+concurrency:
+  group: auto-movie-release-main
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest

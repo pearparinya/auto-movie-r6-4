@@ -1119,6 +1119,12 @@ CONTINUITY ENGINE:
 - NATURAL TEXTURE LOCK: ห้าม beauty filter / skin smoothing / symmetry correction / face idealization ที่ทำให้ Identity เปลี่ยน
 - IDENTITY BEFORE CINEMA: หากมุมกล้อง แสง depth-of-field หรือ dramatic styling ทำให้หน้าเปลี่ยน ให้ลดความ cinematic และรักษาความเหมือน MASTER ก่อน
 - POSE REPETITION BLOCK: ห้ามวนท่าค้ำคาง แตะปาก แตะขมับ นั่งนิ่งอ่านเอกสาร หรือมองเอกสารซ้ำจากฉากก่อน เว้นแต่ BLUEPRINT ระบุโดยตรง; ให้เปลี่ยน blocking และ physical action ตาม STORY BEAT
+- RECENT-SCENE VISUAL MEMORY — HARD: ก่อนสร้างภาพ ให้ตรวจภาพ/เหตุการณ์อย่างน้อย 3 ฉากล่าสุดในบทสนทนาปัจจุบัน แล้วทำรายการภายในว่าเคยใช้ LOCATION / BODY POSE / ACTION / HERO PROP / WARDROBE SILHOUETTE อะไรไปแล้ว ห้ามทำภาพใหม่ที่ให้ความรู้สึกเป็นภาพเดิมเปลี่ยนเสื้อหรือเปลี่ยนมุม
+- DOCUMENT MOTIF COOLDOWN — HARD: ถ้า 1 ใน 3 ฉากล่าสุดมีการอ่าน/ถือ/ดูเอกสาร ใบแจ้งหนี้ กระดาษ แฟ้ม หรือหน้าจอเพื่อรับข้อมูล ฉากปัจจุบันห้ามใช้สิ่งเหล่านี้เป็น HERO ACTION หรือ HERO PROP อีก เว้นแต่ CURRENT STORY BEAT จำเป็นอย่างหลีกเลี่ยงไม่ได้; หากจำเป็นต้องต่อข้อมูลเดิม ให้แสดง “ผลจากข้อมูล” ผ่านการกระทำใหม่แทนการอ่านซ้ำ
+- THINKING-POSE COOLDOWN — HARD: ถ้า 1 ใน 3 ฉากล่าสุดมีมือแตะคาง/ปาก/ขมับ นั่งก้มหน้า หรือสีหน้าครุ่นคิดนิ่ง ฉากปัจจุบันต้องใช้ body blocking และ hand action คนละแบบอย่างชัดเจน เช่น ลุกเดิน เก็บของ เปิดประตู โทรหาใคร ส่งวัตถุ เผชิญหน้า หรือทำงานทางกายภาพที่ตรง STORY BEAT
+- VISUAL CONSEQUENCE FIRST: หลังฉากค้นพบข้อมูล ฉากถัดไปต้องแสดง “การตัดสินใจหรือผลลัพธ์” เป็นภาพก่อน ห้ามย้อนกลับไปแสดงการอ่านข้อมูลเดิมซ้ำ
+- THREE-SCENE NOVELTY GATE: เปรียบเทียบ CURRENT กับ 3 ฉากล่าสุดใน 5 แกน ACTION / BODY BLOCKING / LOCATION / HERO PROP / COMPOSITION; ต้องต่างอย่างมีนัยสำคัญอย่างน้อย 3 แกนจากทุกฉากที่เทียบ หากไม่ถึงให้ redesign ก่อนสร้างภาพ
+- DEFAULT FALLBACK BAN: เมื่อ context ไม่ชัด ห้าม fallback เป็น “ผู้ชายนั่งอ่านกระดาษที่โต๊ะ/บนเตียง” หรือ “ผู้ชายนั่งครุ่นคิด”; ให้ยึด STORY BEAT และเลือกการกระทำที่เกิดผลต่อเรื่องแทน
 - PROP-ACTION RULE: พร็อพหลักต้องถูกใช้เพื่อทำให้สถานะเรื่องเปลี่ยน ไม่ใช่เพียงวางตกแต่ง; ห้ามวนโต๊ะ+เอกสาร+โน้ตบุ๊กเป็นภาพหลักหลายฉากติดกันโดยไม่มีเหตุการณ์ใหม่
 - IDENTITY CHECKPOINTS: ก่อนส่งภาพตรวจ 3 ชั้น: eyes+nose+mouth geometry → jaw+hairline+facial hair → head/body natural proportions; drift ชั้นใดชั้นหนึ่งชัดเจน = INVALID OUTPUT และสร้างใหม่
 - NO BEAUTY OVERRIDE: dramatic emotion, cinematic lighting, lens perspective และ styling ห้ามเปลี่ยน facial structure, age impression, facial hair หรือ natural build

@@ -1301,6 +1301,13 @@ $ledger
             type = if (masterUris.isNotEmpty()) "image/*" else "text/plain"
             putExtra(Intent.EXTRA_TEXT, text)
 
+            // BUILD 702 RETURN-FLOW FIX:
+            // Keep ChatGPT in its own Android task. This prevents the AUTO-MOVIE
+            // Recents card from turning into a ChatGPT screen and preserves the
+            // AUTO-MOVIE activity/state underneath as a separate task.
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+
             when (masterUris.size) {
                 0 -> Unit
                 1 -> {
@@ -2340,6 +2347,16 @@ CHARACTER MASTER
             } else {
                 "🕐 $dateText   •   ⏱ STORY --:--:--"
             }
+    }
+
+    override fun onPause() {
+        if (::input.isInitialized) saveWorkState()
+        super.onPause()
+    }
+
+    override fun onStop() {
+        if (::input.isInitialized) saveWorkState()
+        super.onStop()
     }
 
     override fun onDestroy() {

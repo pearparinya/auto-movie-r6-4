@@ -970,14 +970,16 @@ SOURCE OF TRUTH:
 - TRIPLE CHARACTER COMPOSER = HARD REQUIREMENT: ห้ามลดเหลือ 1 หรือ 2 คน ห้ามเพิ่มคนที่ 4 ห้ามสร้างคนซ้ำ
 - แต่ละคนต้องรักษา ORIGINAL IDENTITY MASTER ของตนเองโดยตรง ห้ามผสมใบหน้า/ทรงผม/รูปร่างระหว่างกัน
 - COMPOSITION SAFE MODE: ใช้ภาพครึ่งตัวหรือเต็มตัวตามธรรมชาติ เสื้อผ้าปกติสุภาพ และหลีกเลี่ยง framing/คำบรรยายที่เน้นสัดส่วนทางเพศ
-- CHARACTER COUNT QC: ก่อนส่งภาพให้นับคนที่เห็นจริง หากไม่เท่ากับ 3 ให้ถือว่า INVALID OUTPUT และสร้างใหม่ภายในคำสั่งเดียวก่อนส่ง
-- TRIPLE IDENTITY CONTINUITY V2: ล็อก CHARACTER SLOT ถาวรตลอด STORY — CHAR_01=กวิน/MASTER 01, CHAR_02=รินลดา/MASTER 02, CHAR_03=มายด์/MASTER 03; ห้ามสลับชื่อ สลับใบหน้า หรือสลับตำแหน่งอัตลักษณ์ระหว่าง slot
-- CROSS-SCENE MASTER RESET: ทุก NEXT SCENE ให้ย้อนอ่าน ORIGINAL MASTER ของทั้ง 3 คนใหม่ก่อนสร้างภาพ ห้ามใช้ใบหน้าจาก Scene Output ก่อนหน้าเป็น identity source
-- PER-CHARACTER FACE GATE: ตรวจ CHAR_01/02/03 แยกคน โดยเทียบ eyes+eyebrows+nose+lips+jaw+hairline/hair กับ MASTER ของคนนั้น หากคนใด drift ชัดเจนให้ regenerate ทั้งฉากก่อนส่ง
-- IDENTITY/WARDROBE DECOUPLING: ใบหน้า ทรงผม สีผิว อายุโดยประมาณ และ natural build มาจาก MASTER; เสื้อผ้า สีชุด เครื่องประดับ pose และ background มาจาก STORY CONTINUITY เท่านั้น
-- CONTINUITY LEDGER V2: NEXT SCENE ต้องรักษาสถานะจากฉากก่อนเฉพาะสิ่งที่ควรต่อเนื่อง เช่น wardrobe เมื่อยังเป็นเหตุการณ์เดียวกัน, hero props, location state และความสัมพันธ์เชิงพื้นที่ แต่ action ใหม่ต้องเดินเรื่องต่อ
-- THREE-PERSON OCCLUSION GATE: เมื่อ ACTIVE CAST = 3 ต้องเห็นใบหน้าของทั้งสามชัดพอตรวจ identity; ห้ามคนหนึ่งบังใบหน้าอีกคนหรือถูกตัดออกจากเฟรม
-- SAFE RETRY: หากการสร้างภาพครั้งแรกติดข้อจำกัด ให้ลดเฉพาะคำบรรยายรูปร่าง/เสื้อผ้าที่ไม่จำเป็น คง identity + story beat + exactly 3 people แล้วลองสร้างใหม่หนึ่งครั้ง
+- FAST TRIPLE IDENTITY V1: สร้าง FINAL IMAGE โดยตรงใน single pass; ห้าม draft loop, internal retry loop หรือ regenerate วนซ้ำ
+- CHARACTER COUNT PRIORITY: เป้าหมาย EXACTLY 3 PEOPLE — CHAR_01=กวิน/MASTER 01, CHAR_02=รินลดา/MASTER 02, CHAR_03=มายด์/MASTER 03; ห้ามเพิ่มคนที่ 4 และห้ามสร้างคนซ้ำ
+- MASTER-FIRST SINGLE PASS: ใช้ ORIGINAL MASTER ทั้ง 3 เป็น identity source โดยตรง แล้วสร้างฉากทันที; ห้ามใช้ Scene Output ก่อนหน้าเป็นแหล่งใบหน้า
+- IDENTITY PRIORITY ORDER: MASTER 01/02/03 → EXACTLY 3 PEOPLE → identity → story action → wardrobe/continuity → cinematic styling
+- LIGHTWEIGHT FACE CHECK: รักษาโครงหน้า ทรงผม สีผิว และลักษณะจำเพาะของแต่ละคนให้ใกล้ MASTER โดยไม่สั่งตรวจซ้ำหรือสร้างใหม่อัตโนมัติ
+- IDENTITY/WARDROBE DECOUPLING: Identity มาจาก MASTER; เสื้อผ้า เครื่องประดับ pose และ background มาจาก STORY CONTINUITY เท่านั้น
+- CONTINUITY FAST PATH: รักษาเฉพาะ wardrobe/hero props/location state ที่จำเป็นต่อเหตุการณ์ต่อเนื่อง แล้วเดิน action ใหม่ทันที
+- FACE VISIBILITY: จัด blocking ให้เห็นทั้ง 3 คนชัดพอ โดยไม่บังคับ composition ซับซ้อนจนชะลอการสร้าง
+- NO AUTO-RETRY: หากรายละเอียดเล็กน้อยไม่สมบูรณ์ ให้ส่งผลลัพธ์ single-pass ก่อน ห้ามวนสร้างภาพภายในคำสั่งเดียว
+- NO DRAFT STAGE: ห้ามหยุดที่ข้อความ “ลองร่างภาพคร่าวๆ” หรือ planning placeholder; เมื่อข้อมูลครบให้เรียกสร้าง FINAL IMAGE ทันที
 - FIXED CAST IDENTITY DNA — MASTER 02 รินลดา: ใช้ภาพ ATTACHMENT 2 เป็นแหล่งอัตลักษณ์เพียงแหล่งเดียวตลอด EP 01–05 ทุกครั้งที่รินลดาปรากฏ ต้องย้อนอ้างอิง ORIGINAL MASTER นี้ใหม่ ไม่สืบทอดใบหน้าจากภาพฉากก่อนหน้า
 - ล็อกลักษณะจาก MASTER 02 เฉพาะ: facial geometry / head shape / eyes / eyebrows / nose / lips / jawline / ears / hair shape+color / skin tone / approximate age / natural body build+proportions
 - ห้ามเปลี่ยนรินลดาให้สวยขึ้น อ่อนวัยขึ้น ผิวเนียนขึ้น หน้าเรียวขึ้น ตาโตขึ้น จมูกเปลี่ยน ทรงผมเปลี่ยน หรือรูปร่าง/สัดส่วนธรรมชาติเปลี่ยน แม้เพื่อ cinematic beauty

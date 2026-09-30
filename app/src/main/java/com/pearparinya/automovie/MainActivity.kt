@@ -980,6 +980,13 @@ SOURCE OF TRUTH:
 - FACE VISIBILITY: จัด blocking ให้เห็นทั้ง 3 คนชัดพอ โดยไม่บังคับ composition ซับซ้อนจนชะลอการสร้าง
 - NO AUTO-RETRY: หากรายละเอียดเล็กน้อยไม่สมบูรณ์ ให้ส่งผลลัพธ์ single-pass ก่อน ห้ามวนสร้างภาพภายในคำสั่งเดียว
 - NO DRAFT STAGE: ห้ามหยุดที่ข้อความ “ลองร่างภาพคร่าวๆ” หรือ planning placeholder; เมื่อข้อมูลครบให้เรียกสร้าง FINAL IMAGE ทันที
+- SAFE PROMPT AUTO-RECOVERY V1: ก่อนเรียกสร้างภาพ ให้ทำ preflight rewrite ภายในครั้งเดียว โดยตัด/ทำให้เป็นกลางเฉพาะคำบรรยายรูปร่าง สัดส่วน หน้าอก ความเซ็กซี่ หรือ framing ที่ไม่จำเป็นต่อเนื้อเรื่อง
+- SAFE IDENTITY PRESERVATION: การ rewrite ห้ามเปลี่ยน CHARACTER ID, ORIGINAL MASTER mapping, จำนวนตัวละคร, อายุผู้ใหญ่, story beat, action หลัก หรือ continuity
+- SAFE WARDROBE NORMALIZER: หากคำบรรยายชุดเสี่ยงหรือเน้นสรีระ ให้เปลี่ยนเป็น “ordinary appropriate everyday clothing consistent with the scene” โดยอัตโนมัติ และคงสี/ประเภทชุดเฉพาะเมื่อจำเป็นต่อ continuity
+- SAFE CAMERA NORMALIZER: ใช้ neutral eye-level medium/wide composition เห็นตัวละครครบ ห้ามเน้นหน้าอก สะโพก เป้า หรือส่วนร่างกายเชิงทางเพศ
+- SAFE MULTI-CAST PROMPT: เมื่อมี 3 MASTER ให้ระบุเพียง “three distinct adult characters, one man and two women, exactly three people in frame” แล้วผูก CHAR_01/02/03 กับ MASTER ตาม registry; ห้ามบรรยายสัดส่วนของแต่ละคน
+- POLICY-SAFE SINGLE PASS: หลัง preflight ให้สร้าง FINAL IMAGE ทันทีเพียงหนึ่งครั้ง ห้ามวน retry และห้ามเพิ่มข้อความ workaround เพื่อหลบข้อจำกัด
+- SAFE FALLBACK OUTPUT: หากระบบสร้างภาพยังไม่สามารถดำเนินการได้ ให้ตอบสั้นเฉพาะสาเหตุที่จำเป็นและเสนอ scene-safe wording ที่รักษาเนื้อเรื่องเดิม ห้ามค้างหรือวนสร้างซ้ำ
 - FIXED CAST IDENTITY DNA — MASTER 02 รินลดา: ใช้ภาพ ATTACHMENT 2 เป็นแหล่งอัตลักษณ์เพียงแหล่งเดียวตลอด EP 01–05 ทุกครั้งที่รินลดาปรากฏ ต้องย้อนอ้างอิง ORIGINAL MASTER นี้ใหม่ ไม่สืบทอดใบหน้าจากภาพฉากก่อนหน้า
 - ล็อกลักษณะจาก MASTER 02 เฉพาะ: facial geometry / head shape / eyes / eyebrows / nose / lips / jawline / ears / hair shape+color / skin tone / approximate age / natural body build+proportions
 - ห้ามเปลี่ยนรินลดาให้สวยขึ้น อ่อนวัยขึ้น ผิวเนียนขึ้น หน้าเรียวขึ้น ตาโตขึ้น จมูกเปลี่ยน ทรงผมเปลี่ยน หรือรูปร่าง/สัดส่วนธรรมชาติเปลี่ยน แม้เพื่อ cinematic beauty

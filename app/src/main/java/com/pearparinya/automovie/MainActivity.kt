@@ -970,23 +970,13 @@ SOURCE OF TRUTH:
 - TRIPLE CHARACTER COMPOSER = HARD REQUIREMENT: ห้ามลดเหลือ 1 หรือ 2 คน ห้ามเพิ่มคนที่ 4 ห้ามสร้างคนซ้ำ
 - แต่ละคนต้องรักษา ORIGINAL IDENTITY MASTER ของตนเองโดยตรง ห้ามผสมใบหน้า/ทรงผม/รูปร่างระหว่างกัน
 - COMPOSITION SAFE MODE: ใช้ภาพครึ่งตัวหรือเต็มตัวตามธรรมชาติ เสื้อผ้าปกติสุภาพ และหลีกเลี่ยง framing/คำบรรยายที่เน้นสัดส่วนทางเพศ
-- FAST TRIPLE IDENTITY V1: สร้าง FINAL IMAGE โดยตรงใน single pass; ห้าม draft loop, internal retry loop หรือ regenerate วนซ้ำ
-- CHARACTER COUNT PRIORITY: เป้าหมาย EXACTLY 3 PEOPLE — CHAR_01=กวิน/MASTER 01, CHAR_02=รินลดา/MASTER 02, CHAR_03=มายด์/MASTER 03; ห้ามเพิ่มคนที่ 4 และห้ามสร้างคนซ้ำ
-- MASTER-FIRST SINGLE PASS: ใช้ ORIGINAL MASTER ทั้ง 3 เป็น identity source โดยตรง แล้วสร้างฉากทันที; ห้ามใช้ Scene Output ก่อนหน้าเป็นแหล่งใบหน้า
-- IDENTITY PRIORITY ORDER: MASTER 01/02/03 → EXACTLY 3 PEOPLE → identity → story action → wardrobe/continuity → cinematic styling
-- LIGHTWEIGHT FACE CHECK: รักษาโครงหน้า ทรงผม สีผิว และลักษณะจำเพาะของแต่ละคนให้ใกล้ MASTER โดยไม่สั่งตรวจซ้ำหรือสร้างใหม่อัตโนมัติ
-- IDENTITY/WARDROBE DECOUPLING: Identity มาจาก MASTER; เสื้อผ้า เครื่องประดับ pose และ background มาจาก STORY CONTINUITY เท่านั้น
-- CONTINUITY FAST PATH: รักษาเฉพาะ wardrobe/hero props/location state ที่จำเป็นต่อเหตุการณ์ต่อเนื่อง แล้วเดิน action ใหม่ทันที
-- FACE VISIBILITY: จัด blocking ให้เห็นทั้ง 3 คนชัดพอ โดยไม่บังคับ composition ซับซ้อนจนชะลอการสร้าง
-- NO AUTO-RETRY: หากรายละเอียดเล็กน้อยไม่สมบูรณ์ ให้ส่งผลลัพธ์ single-pass ก่อน ห้ามวนสร้างภาพภายในคำสั่งเดียว
-- NO DRAFT STAGE: ห้ามหยุดที่ข้อความ “ลองร่างภาพคร่าวๆ” หรือ planning placeholder; เมื่อข้อมูลครบให้เรียกสร้าง FINAL IMAGE ทันที
-- SAFE PROMPT AUTO-RECOVERY V1: ก่อนเรียกสร้างภาพ ให้ทำ preflight rewrite ภายในครั้งเดียว โดยตัด/ทำให้เป็นกลางเฉพาะคำบรรยายรูปร่าง สัดส่วน หน้าอก ความเซ็กซี่ หรือ framing ที่ไม่จำเป็นต่อเนื้อเรื่อง
-- SAFE IDENTITY PRESERVATION: การ rewrite ห้ามเปลี่ยน CHARACTER ID, ORIGINAL MASTER mapping, จำนวนตัวละคร, อายุผู้ใหญ่, story beat, action หลัก หรือ continuity
-- SAFE WARDROBE NORMALIZER: หากคำบรรยายชุดเสี่ยงหรือเน้นสรีระ ให้เปลี่ยนเป็น “ordinary appropriate everyday clothing consistent with the scene” โดยอัตโนมัติ และคงสี/ประเภทชุดเฉพาะเมื่อจำเป็นต่อ continuity
-- SAFE CAMERA NORMALIZER: ใช้ neutral eye-level medium/wide composition เห็นตัวละครครบ ห้ามเน้นหน้าอก สะโพก เป้า หรือส่วนร่างกายเชิงทางเพศ
-- SAFE MULTI-CAST PROMPT: เมื่อมี 3 MASTER ให้ระบุเพียง “three distinct adult characters, one man and two women, exactly three people in frame” แล้วผูก CHAR_01/02/03 กับ MASTER ตาม registry; ห้ามบรรยายสัดส่วนของแต่ละคน
-- POLICY-SAFE SINGLE PASS: หลัง preflight ให้สร้าง FINAL IMAGE ทันทีเพียงหนึ่งครั้ง ห้ามวน retry และห้ามเพิ่มข้อความ workaround เพื่อหลบข้อจำกัด
-- SAFE FALLBACK OUTPUT: หากระบบสร้างภาพยังไม่สามารถดำเนินการได้ ให้ตอบสั้นเฉพาะสาเหตุที่จำเป็นและเสนอ scene-safe wording ที่รักษาเนื้อเรื่องเดิม ห้ามค้างหรือวนสร้างซ้ำ
+- LEAN IMAGE PIPELINE V1: ใช้ ORIGINAL MASTER ทั้ง 3 ภาพเป็นตัวอ้างอิงตัวละครผู้ใหญ่โดยตรง แล้วสร้าง FINAL IMAGE ทันที
+- EXACT CAST: ภาพต้องมีตัวละครผู้ใหญ่ 3 คนพอดี — CHAR_01 กวิน, CHAR_02 รินลดา, CHAR_03 มายด์ — ห้ามเพิ่มคน ห้ามทำคนซ้ำ
+- IDENTITY CORE: รักษาใบหน้าและทรงผมของแต่ละคนให้ใกล้ ORIGINAL MASTER และห้ามสลับ identity ระหว่างกัน
+- SCENE CORE: ใช้เฉพาะ story beat, action, location และ continuity ที่จำเป็นต่อฉากปัจจุบัน
+- NORMAL WARDROBE: ใช้เสื้อผ้าปกติที่เหมาะกับฉากและ continuity โดยไม่บรรยายสรีระหรือรายละเอียดทางเพศ
+- SIMPLE CAMERA: realistic Thai family drama, neutral eye-level medium/wide composition, vertical 9:16, เห็นตัวละครครบทั้ง 3 คน
+- DIRECT FINAL IMAGE: ห้าม draft, planning placeholder, face-gate loop, policy commentary, auto-rewrite loop หรือ auto-regenerate; เมื่อข้อมูลครบให้สร้างภาพทันทีแบบ single pass
 - FIXED CAST IDENTITY DNA — MASTER 02 รินลดา: ใช้ภาพ ATTACHMENT 2 เป็นแหล่งอัตลักษณ์เพียงแหล่งเดียวตลอด EP 01–05 ทุกครั้งที่รินลดาปรากฏ ต้องย้อนอ้างอิง ORIGINAL MASTER นี้ใหม่ ไม่สืบทอดใบหน้าจากภาพฉากก่อนหน้า
 - ล็อกลักษณะจาก MASTER 02 เฉพาะ: facial geometry / head shape / eyes / eyebrows / nose / lips / jawline / ears / hair shape+color / skin tone / approximate age / natural body build+proportions
 - ห้ามเปลี่ยนรินลดาให้สวยขึ้น อ่อนวัยขึ้น ผิวเนียนขึ้น หน้าเรียวขึ้น ตาโตขึ้น จมูกเปลี่ยน ทรงผมเปลี่ยน หรือรูปร่าง/สัดส่วนธรรมชาติเปลี่ยน แม้เพื่อ cinematic beauty

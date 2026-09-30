@@ -977,12 +977,7 @@ SOURCE OF TRUTH:
 - MASTER FIDELITY PRIORITY V2: ลำดับความสำคัญของภาพต้องเป็น ORIGINAL MASTER identity/overall appearance → story continuity → wardrobe → cinematic styling; งานจัดแสงและความสวยงามห้ามกลบเอกลักษณ์ของ MASTER
 - NO BEAUTY NORMALIZATION: ห้ามทำให้ตัวละครทั้งสามเข้าหา face/beauty template เดียวกัน ห้ามทำให้ใบหน้าคล้ายกัน และห้ามเปลี่ยนลักษณะเฉพาะของแต่ละ MASTER เพียงเพื่อความ cinematic
 - WARDROBE CONTINUITY LOCK: หากยังเป็นเหตุการณ์ต่อเนื่องเดียวกัน ให้คงเสื้อผ้าของ CHAR_01/02/03 จากฉากก่อนตาม STORY CONTINUITY; เปลี่ยนชุดเฉพาะเมื่อเรื่องระบุการเปลี่ยนเวลา สถานที่ หรือมี wardrobe event ชัดเจน
-- SCENE CONTINUITY ENGINE V1: ทุก NEXT SCENE ให้สืบทอดสถานะที่ยังไม่จบจากฉากก่อน ได้แก่ HERO PROP, LOCATION STATE, SPATIAL STATE และ ACTION STATE แล้วเปลี่ยนเฉพาะสิ่งที่ story beat ใหม่สั่ง
-- HERO PROP PERSISTENCE: วัตถุสำคัญต่อเรื่อง เช่น กระเป๋าเดินทาง โทรศัพท์ เอกสาร กุญแจ รถ หรือของที่ตัวละครกำลังใช้งาน ต้องยังอยู่ในฉากและอยู่ในสถานะต่อเนื่อง จนกว่าเรื่องจะระบุว่าถูกเก็บ ย้าย ส่งต่อ ทิ้ง หรือออกจากสถานที่
-- ACTION BRIDGE: NEXT SCENE ต้องเริ่มจากผลของ action ก่อนหน้า เช่น “กำลังจัดกระเป๋า” → “หยุดจัดและหันมาคุย” โดยกระเป๋ายังคงปรากฏ; ห้ามรีเซ็ตเป็น pose ใหม่ที่ไม่เชื่อมกับเหตุการณ์
-- SPATIAL CONTINUITY: หากยังอยู่สถานที่เดิม ให้รักษาตำแหน่งเชิงสัมพันธ์ของตัวละครและ hero prop อย่างสมเหตุผล แต่อนุญาตให้ขยับตาม action ใหม่
-- CONTINUITY CHANGE GATE: เปลี่ยน location, wardrobe, hero prop state หรือ time-of-day เฉพาะเมื่อ STORY ระบุ transition ชัดเจน; ห้ามเปลี่ยนเองเพื่อความสวยงามของภาพ
-- CINEMATIC STORY PRIORITY: ให้ความต่อเนื่องของเหตุการณ์และวัตถุสำคัญมาก่อนการจัด pose สวยงาม; ภาพแต่ละ NEXT SCENE ต้องดูเป็นเฟรมถัดไปของเรื่องเดียวกัน ไม่ใช่ภาพโปรโมตแยกกัน
+- LEAN CONTINUITY V1: NEXT SCENE ให้ต่อจากฉากก่อนโดยตรง และคงเฉพาะสถานที่ เสื้อผ้า และวัตถุสำคัญที่ยังเกี่ยวข้องกับเหตุการณ์ จากนั้นดำเนิน action ใหม่ตาม story beat ทันที
 - CHARACTER DISTINCTNESS: รักษาความแตกต่างของ CHAR_01/02/03 ทั้งใบหน้า ทรงผม และภาพลักษณ์โดยรวมตาม MASTER โดยไม่เพิ่มคำบรรยายทางกายภาพที่ไม่จำเป็น
 - SCENE CORE: ใช้เฉพาะ story beat, action, location และ continuity ที่จำเป็นต่อฉากปัจจุบัน
 - NORMAL WARDROBE: ใช้เสื้อผ้าปกติที่เหมาะกับฉากและ continuity โดยไม่บรรยายสรีระหรือรายละเอียดทางเพศ

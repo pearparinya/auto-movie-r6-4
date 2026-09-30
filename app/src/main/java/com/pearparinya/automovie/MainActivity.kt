@@ -40,6 +40,8 @@ class MainActivity : AppCompatActivity() {
     private var storyEndTimeMs = 0L
     private var soundEnabled = true
     private var lastSoundStep = 0
+    private var shareInProgress = false
+    private var lastShareAtMs = 0L
     private lateinit var timeLabel: TextView
     private val clockHandler = Handler(Looper.getMainLooper())
     private val stepButtons = mutableMapOf<Int, Button>()
@@ -1370,6 +1372,17 @@ CONTINUITY ENGINE:
 
         hideKeyboard()
 
+        // BUILD 693 — SEND RELIABILITY GUARD
+        // Prevent accidental double-dispatch while Android/ChatGPT is still
+        // consuming a multi-attachment share payload.
+        val nowMs = System.currentTimeMillis()
+        if (shareInProgress || nowMs - lastShareAtMs < 1800L) {
+            status.text = "⏳ กำลังส่งคำสั่งเดิม • กรุณารอสักครู่"
+            return
+        }
+        shareInProgress = true
+        lastShareAtMs = nowMs
+
         // Diagnostic/fail-safe: attachment preparation must never make START
         // fail silently. If PNG export/FileProvider fails, show the real error
         // and still allow the text payload to reach Android's share UI.
@@ -1380,6 +1393,7 @@ CONTINUITY ENGINE:
                 else -> arrayListOf()
             }
         } catch (e: Exception) {
+            shareInProgress = false
             status.text = "⚠ CHARACTER MASTER แนบไม่สำเร็จ: ${e.javaClass.simpleName}"
             Toast.makeText(
                 this,
@@ -1387,6 +1401,27 @@ CONTINUITY ENGINE:
                 Toast.LENGTH_LONG
             ).show()
             arrayListOf()
+        }
+
+        // Validate every prepared URI before dispatch. A stale/unreadable master
+        // must not be sent as a partially broken 3-image payload.
+        if ((includeCharacterMasters || characterKeys != null) && masterUris.isEmpty()) {
+            shareInProgress = false
+            status.text = "⚠ MASTER ยังไม่พร้อม • กรุณาเลือกภาพต้นฉบับใหม่"
+            return
+        }
+        val unreadableMaster = masterUris.firstOrNull { uri ->
+            try {
+                contentResolver.openInputStream(uri)?.use { it.read() } == null
+            } catch (_: Exception) {
+                true
+            }
+        }
+        if (unreadableMaster != null) {
+            shareInProgress = false
+            status.text = "⚠ พบ MASTER ที่อ่านไม่ได้ • เลือกภาพต้นฉบับใหม่แล้วลองอีกครั้ง"
+            Toast.makeText(this, "CHARACTER MASTER บางภาพอ่านไม่ได้", Toast.LENGTH_LONG).show()
+            return
         }
 
         // START now sends all three original masters in one payload so ChatGPT
@@ -1442,18 +1477,18 @@ CONTINUITY ENGINE:
 
             if (directIntent.resolveActivity(packageManager) != null) {
                 startActivity(directIntent)
-                status.text =
-                    if (masterUris.isEmpty() && (includeCharacterMasters || characterKeys != null))
-                        "⚠ เปิด ChatGPT แล้ว • แต่ CHARACTER MASTER แนบไม่สำเร็จ"
-                    else
-                        "↗ เปิด ChatGPT โดยตรงแล้ว"
+                status.text = "↗ ส่งคำสั่งไป ChatGPT แล้ว • หากเครือข่ายสะดุดให้กด Retry ใน ChatGPT"
+                Handler(Looper.getMainLooper()).postDelayed({
+                    shareInProgress = false
+                }, 2200L)
             } else {
                 val chooserIntent = Intent.createChooser(
                     sendIntent,
                     "ส่งคำสั่งไปยัง ChatGPT"
                 )
                 startActivity(chooserIntent)
-                status.text = "↗ ไม่พบตัวรับแชร์ ChatGPT โดยตรง • เลือก ChatGPT จากเมนูแชร์"
+                status.text = "↗ เปิดเมนูแชร์สำรอง • เลือก ChatGPT"
+                Handler(Looper.getMainLooper()).postDelayed({ shareInProgress = false }, 2200L)
             }
         } catch (directError: Exception) {
             try {
@@ -1463,7 +1498,9 @@ CONTINUITY ENGINE:
                 )
                 startActivity(chooserIntent)
                 status.text = "↗ เปิด ChatGPT โดยตรงไม่ได้ • ใช้เมนูแชร์สำรอง"
+                Handler(Looper.getMainLooper()).postDelayed({ shareInProgress = false }, 2200L)
             } catch (fallbackError: Exception) {
+                shareInProgress = false
                 status.text = "⛔ เปิด ChatGPT/เมนูแชร์ไม่สำเร็จ: ${fallbackError.javaClass.simpleName}"
                 Toast.makeText(
                     this,

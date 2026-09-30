@@ -974,6 +974,10 @@ SOURCE OF TRUTH:
 - EXACT CAST: ภาพต้องมีตัวละครผู้ใหญ่ 3 คนพอดี — CHAR_01 กวิน, CHAR_02 รินลดา, CHAR_03 มายด์ — ห้ามเพิ่มคน ห้ามทำคนซ้ำ
 - IDENTITY CORE: รักษาใบหน้าและทรงผมของแต่ละคนให้ใกล้ ORIGINAL MASTER และห้ามสลับ identity ระหว่างกัน
 - MASTER VISUAL FIDELITY V1: ใช้ ORIGINAL MASTER ของแต่ละคนเป็น visual reference หลักและรักษาภาพลักษณ์โดยรวมของตัวละครให้เป็นธรรมชาติและสอดคล้องกับ MASTER โดยไม่แจกแจงลักษณะทางกายภาพที่ไม่จำเป็น
+- MASTER FIDELITY PRIORITY V2: ลำดับความสำคัญของภาพต้องเป็น ORIGINAL MASTER identity/overall appearance → story continuity → wardrobe → cinematic styling; งานจัดแสงและความสวยงามห้ามกลบเอกลักษณ์ของ MASTER
+- NO BEAUTY NORMALIZATION: ห้ามทำให้ตัวละครทั้งสามเข้าหา face/beauty template เดียวกัน ห้ามทำให้ใบหน้าคล้ายกัน และห้ามเปลี่ยนลักษณะเฉพาะของแต่ละ MASTER เพียงเพื่อความ cinematic
+- WARDROBE CONTINUITY LOCK: หากยังเป็นเหตุการณ์ต่อเนื่องเดียวกัน ให้คงเสื้อผ้าของ CHAR_01/02/03 จากฉากก่อนตาม STORY CONTINUITY; เปลี่ยนชุดเฉพาะเมื่อเรื่องระบุการเปลี่ยนเวลา สถานที่ หรือมี wardrobe event ชัดเจน
+- CHARACTER DISTINCTNESS: รักษาความแตกต่างของ CHAR_01/02/03 ทั้งใบหน้า ทรงผม และภาพลักษณ์โดยรวมตาม MASTER โดยไม่เพิ่มคำบรรยายทางกายภาพที่ไม่จำเป็น
 - SCENE CORE: ใช้เฉพาะ story beat, action, location และ continuity ที่จำเป็นต่อฉากปัจจุบัน
 - NORMAL WARDROBE: ใช้เสื้อผ้าปกติที่เหมาะกับฉากและ continuity โดยไม่บรรยายสรีระหรือรายละเอียดทางเพศ
 - SIMPLE CAMERA: realistic Thai family drama, neutral eye-level medium/wide composition, vertical 9:16, เห็นตัวละครครบทั้ง 3 คน

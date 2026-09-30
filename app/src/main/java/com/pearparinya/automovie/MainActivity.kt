@@ -170,7 +170,7 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "SAFE EXECUTION • AUTO-CONTEXT • WARDROBE FIREWALL"
+            text = "MASTER FIDELITY • MODERN CINEMA • SAFE EXECUTION"
             textSize = 10f
             setTextColor(ice)
             gravity = Gravity.START
@@ -1123,6 +1123,14 @@ CONTINUITY ENGINE:
 - OUTPUT CONTRACT: ส่งตามลำดับ SCENE STATE (ข้อความสั้น) → IMAGE 9:16 → FLOW/VEO 3.1 PROMPT 8 SEC → NEXT HOOK (1 บรรทัด) เพื่อให้ฉากถัดไปมีจุดต่อที่แน่นอน
 - SCENE STATE ต้องบันทึกเฉพาะสิ่งที่เห็น/เกิดขึ้นจริงในฉากนี้: END TIME, END LOCATION, ACTIVE CAST, WARDROBE, PROPS, KNOWLEDGE CHANGE, EMOTION/RELATIONSHIP CHANGE, LAST ACTION
 - ถ้ามี STORY/EP context เดิมให้ยึดเป็นหลัก; ถ้า context เดิมไม่อยู่ ให้ใช้ SOURCE OF TRUTH + EP/SCENE INDEX สร้างรายละเอียดขั้นต่ำที่ไม่ขัดกับ canon แล้วสร้างฉากทันที
+- BUILD 696 MASTER FIDELITY CINEMA ENGINE = ON: ORIGINAL MASTER เป็น visual identity authority ของตัวละครผู้ใหญ่แต่ละคน ใช้เพื่อรักษาคนเดิมโดยไม่เพิ่มคำบรรยายรูปร่างหรือรายละเอียดทางเพศที่ไม่จำเป็น
+- IDENTITY MINIMALISM = ON: ส่งคำสั่งอัตลักษณ์แบบสั้นและเป็นกลาง — same adult person, same recognizable face, hairstyle, approximate age and overall natural appearance — แล้วให้ภาพอ้างอิงทำหน้าที่หลัก
+- NO TEXT-BASED FACE REDESIGN: ห้ามสร้างใบหน้าใหม่จากคำว่า หล่อ/สวย/ดารา/นางแบบ/cinematic beauty แล้วค่อยทำให้คล้าย MASTER; เริ่มจากบุคคลใน MASTER ก่อน
+- MODERN CINEMA BLOCKING = ON: จัดตำแหน่งตัวละครตามการกระทำและระยะความสัมพันธ์ ใช้ foreground/midground/background ได้ ห้ามยืนเรียงหน้ากล้องเป็นค่าเริ่มต้น
+- ACTION OVER POSE = ON: ทุกฉากต้องมี physical action ที่อ่านได้ทันที เช่น เดินออก หยิบของ วางของ เปิดประตู ส่งของ ถอยห่าง หรือเข้าหา ตาม STORY BEAT; ห้ามใช้เพียง pose แสดงอารมณ์
+- WARDROBE EVENT GATE = ON: ถ้า END TIME/LOCATION ต่อเนื่องจากฉากก่อน ห้ามเปลี่ยนชุด; เปลี่ยนได้เฉพาะเมื่อมี time jump, location/context change หรือ wardrobe event ที่เรื่องรองรับ
+- SAFE VISUAL LANGUAGE = ON: ใช้คำบรรยายเสื้อผ้า/รูปลักษณ์ที่เป็นกลาง เหมาะกับฉาก และไม่เน้นส่วนร่างกาย; หากรายละเอียดใดไม่จำเป็นต่อ identity หรือ continuity ให้ตัดออก
+- CINEMA PRIORITY STACK: ORIGINAL MASTER identity → STORY CONSEQUENCE → continuity → action/blocking → wardrobe → lighting/style
 - BUILD 695 DYNAMIC ACTIVE CAST = ON: ใช้จำนวนตัวละครเท่าที่ STORY BEAT ปัจจุบันต้องใช้จริง ห้ามบังคับสามคนทุกฉาก และห้ามเพิ่มตัวละครที่ไม่อยู่ใน ACTIVE CAST
 - STORY CONSEQUENCE ENGINE = ON: ฉากใหม่ต้องแสดงผลจาก LAST ACTION ของฉากก่อนอย่างมองเห็นได้ และต้องเปลี่ยนสถานการณ์อย่างน้อย 1 อย่างก่อนจบฉาก
 - COMPOSITION ROTATION = ON: ห้ามใช้ตำแหน่งยืน/นั่งและการจัดซ้าย-กลาง-ขวาซ้ำเป็นค่าเริ่มต้น ให้ blocking เกิดจาก action และความสัมพันธ์ของฉาก

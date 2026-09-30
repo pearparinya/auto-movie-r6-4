@@ -277,11 +277,21 @@ jobs:
 
           cp "$APK" "$PUBLISH_APK"
 
-          # A build release is immutable. Re-running the same commit first
-          # removes only that build tag/release, never another build.
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Recreating existing build release $TAG."
-            gh release delete "$TAG" --yes --cleanup-tag
+          # Clean up every prior release record for this exact build tag,
+          # including orphaned DRAFT releases left by a failed asset upload.
+          # "gh release view" can miss drafts, which caused BUILD 683 to fail
+          # with ReleaseAsset.name already exists.
+          RELEASE_IDS="$(gh api --paginate \
+            "/repos/${{ github.repository }}/releases?per_page=100" \
+            --jq '.[] | select(.tag_name == "'"$TAG"'") | .id')"
+          for RELEASE_ID in $RELEASE_IDS; do
+            echo "Deleting stale release record $RELEASE_ID for $TAG."
+            gh api --method DELETE "/repos/${{ github.repository }}/releases/$RELEASE_ID" || true
+          done
+
+          # Remove a stale tag independently from the release record.
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            gh api --method DELETE "/repos/${{ github.repository }}/git/refs/tags/$TAG" || true
           fi
 
           gh release create "$TAG" "$PUBLISH_APK" \

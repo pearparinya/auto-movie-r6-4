@@ -1008,35 +1008,19 @@ AUTO-MOVIE • START
 
     private fun buildQuickSceneCommand(): String {
         val cast = sceneCastNames(currentScene)
-        val ledger = currentSceneLedger().ifBlank {
+        val scene = currentSceneLedger().ifBlank {
             "ต่อจากเหตุการณ์ล่าสุดของเรื่องเดิม"
         }
 
-        // BUILD 704: WARDROBE DIRECTOR.
-        // Character references define identity, not clothing. The image model must
-        // actively dress the cast for the current story event instead of copying
-        // wardrobe from CHARACTER MASTER.
+        // BUILD 705: LEAN SCENE PROMPT.
+        // Tell the image model only: reference person, wardrobe, place/action, format.
+        // Story/EP/continuity rules stay inside AUTO-MOVIE instead of bloating the prompt.
         return """
-AUTO-MOVIE • NEXT SCENE
-
-สร้างภาพฉากถัดไปของเรื่อง “${input.text.toString().trim()}”
-ตัวละครในฉาก: $cast
-
-ใช้บุคคลผู้ใหญ่จากรูปที่แนบเป็นตัวละครเดิม
-รูปแนบใช้เป็น CHARACTER MASTER สำหรับใบหน้า ทรงผม และรูปร่างโดยรวมเท่านั้น ไม่ใช้เสื้อผ้าในรูปแนบเป็นชุดของฉาก
-
-เหตุการณ์ต่อจากฉากก่อน: $ledger
-ให้ตัวละครกำลังทำสิ่งที่ทำให้เรื่องเดินหน้าตามเหตุการณ์
-
-WARDROBE DIRECTOR:
-กำหนดเสื้อผ้าของตัวละครทุกคนในฉากให้ชัดเจนจากเวลา สถานที่ การกระทำ และเหตุการณ์ของฉาก
-ถ้าเป็นเหตุการณ์ต่อเนื่องในช่วงเวลาเดียวกัน ให้คงชุดจากฉากก่อน
-ถ้าเวลา สถานการณ์ หรือกิจกรรมเปลี่ยน ให้เปลี่ยนเป็นชุดใหม่ที่เหมาะกับเหตุการณ์
-ห้ามคัดลอกเสื้อผ้าจาก CHARACTER MASTER เพียงเพราะปรากฏอยู่ในรูปอ้างอิง
-การเปลี่ยนเสื้อผ้าต้องไม่เปลี่ยนตัวละครเดิม
-
-ภาพแนวตั้ง 9:16 ละครไทยสมจริง กล้องนิ่ง
-สร้างภาพทันที
+สร้างรูปจากไฟล์ที่แนบ
+ตัวละคร: $cast
+ฉาก: $scene
+ใส่ชุดที่เหมาะกับฉากและเหตุการณ์นี้
+ภาพแนวตั้ง 9:16 ละครไทยสมจริง
         """.trimIndent()
     }
 

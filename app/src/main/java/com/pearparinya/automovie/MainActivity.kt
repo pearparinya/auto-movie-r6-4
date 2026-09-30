@@ -170,7 +170,7 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "FAST FLOW • เลือกเรื่อง → START → NEXT SCENE"
+            text = "SAFE EXECUTION • AUTO-CONTEXT • WARDROBE FIREWALL"
             textSize = 10f
             setTextColor(ice)
             gravity = Gravity.START
@@ -904,7 +904,7 @@ class MainActivity : AppCompatActivity() {
         saveSceneLedger(currentEp, currentScene)
         updateUi()
         saveWorkState()
-        share(buildQuickStartCommand(story, category), characterKeys = characterNames.keys.toList())
+        share(safeNormalizePrompt(buildQuickStartCommand(story, category)), characterKeys = characterNames.keys.toList())
         status.text = "⚡ FAST START • SCENE 01 • 3 CAST LOCKED"
     }
 
@@ -919,7 +919,7 @@ class MainActivity : AppCompatActivity() {
             saveSceneLedger(currentEp, currentScene)
             updateUi()
             saveWorkState()
-            share(buildQuickSceneCommand(), characterKeys = sceneCastKeys(currentScene))
+            share(safeNormalizePrompt(buildQuickSceneCommand()), characterKeys = sceneCastKeys(currentScene))
             status.text = "⚡ EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)} • ส่งแล้ว"
             return
         }
@@ -939,8 +939,22 @@ class MainActivity : AppCompatActivity() {
         saveSceneLedger(currentEp, currentScene)
         updateUi()
         saveWorkState()
-        share(buildQuickSceneCommand(), characterKeys = sceneCastKeys(currentScene))
+        share(safeNormalizePrompt(buildQuickSceneCommand()), characterKeys = sceneCastKeys(currentScene))
         status.text = "🎬 HANDOFF → EP ${fmt(currentEp)} • SCENE 01"
+    }
+
+    // BUILD 694: normalize generated instructions before sharing to ChatGPT.
+    // This keeps identity/continuity requirements while removing unnecessary
+    // body-focused wording that is not needed to create the scene.
+    private fun safeNormalizePrompt(command: String): String {
+        return command
+            .replace("natural body build+proportions", "overall natural appearance")
+            .replace("natural body proportions", "overall natural appearance")
+            .replace("รูปร่าง/สัดส่วนธรรมชาติ", "ภาพลักษณ์โดยรวมตามธรรมชาติ")
+            .replace("สัดส่วนธรรมชาติ", "ภาพลักษณ์โดยรวม")
+            .replace("รูปร่างระหว่างกัน", "ภาพลักษณ์ระหว่างกัน")
+            .replace("รูปร่าง/สัดส่วน", "ภาพลักษณ์โดยรวม")
+            .replace("เน้นสัดส่วนทางเพศ", "เน้นรายละเอียดทางกายภาพที่ไม่จำเป็น")
     }
 
     private fun buildQuickStartCommand(story: String, category: String): String {

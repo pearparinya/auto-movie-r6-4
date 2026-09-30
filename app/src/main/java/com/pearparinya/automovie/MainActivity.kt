@@ -1956,6 +1956,14 @@ APP ↔ CHATGPT SYNC RULE:
     3. STORY CONTEXT
     4. DIRECTOR COMMAND
 
+    SCENE STATE SNAPSHOT — BUILD 692:
+    ให้แปลงข้อมูลที่มีอยู่แล้วใน CURRENT SCENE MASTER / EP MASTER เป็นข้อเท็จจริงของฉากปัจจุบันแบบสั้นเท่านั้น:
+    - CURRENT_LOCATION = สถานที่ของ Scene นี้
+    - CURRENT_WARDROBE = ชุดของตัวละครแต่ละคนตาม Scene/continuity
+    - ACTIVE_PROP = วัตถุสำคัญที่ Scene นี้ระบุว่ากำลังใช้อยู่
+    - CURRENT_ACTION = การกระทำหลักของ Scene นี้
+    ใช้ Snapshot นี้เป็นข้อมูลฉากธรรมดาสำหรับการสร้างภาพ ไม่ต้องเพิ่มคำสั่ง continuity, validation หรือ repair loop ใหม่ และห้ามเดาข้อมูลที่ EP MASTER ไม่ได้ระบุ
+
     ถ้าชุดในภาพที่จะสร้างเหมือนชุดจาก ORIGINAL IDENTITY MASTER
     โดยไม่มีแหล่งข้อมูลข้างต้นรองรับ ต้องเปลี่ยนเป็นชุดที่ถูกต้องก่อนสร้าง Output
 

@@ -186,7 +186,7 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "LEAN MASTER • SESSION RESUME • MODERN CINEMA"
+            text = "LEAN EXECUTION • SESSION RESUME • PRODUCTION TEST"
             textSize = 10f
             setTextColor(ice)
             gravity = Gravity.START
@@ -985,251 +985,54 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun buildQuickStartCommand(story: String, category: String): String {
-        return rules() + """
+        return """
+AUTO-MOVIE • START
 
-QUICK FLOW COMMAND:
-START STORY + BUILD STORY BIBLE + GENERATE EP 01 SCENE 01 NOW
+สร้างละครเรื่อง “$story” หมวด “$category” จำนวน 5 EP โดย EP ละ 20 ฉาก ฉากละประมาณ 8 วินาที
 
-SOURCE OF TRUTH:
-ชื่อเรื่อง: $story
-หมวดเรื่อง: $category
-ตอน: EP 01 / 05
-ฉากปัจจุบัน: SCENE 01 / 20
-ความยาว: 8 วินาที
-รูปแบบ: 9:16 • One Scene / One Image • Flow/Veo 3.1
-กล้อง: Locked-off static camera
+ใช้บุคคลผู้ใหญ่จากรูปที่แนบเป็นตัวละครเดิม:
+รูป 1 = กวิน
+รูป 2 = รินลดา
+รูป 3 = มายด์
 
-คำสั่งบังคับ:
-- ภายในคำตอบเดียว สร้าง STORY BIBLE แบบกระชับ วางเส้นเรื่อง EP 01–05 และแผน EP 01 จำนวน 20 ฉาก
-- จากนั้นสร้างภาพ SCENE 01 ทันที ห้ามหยุดรอ CONFIRM
-- START ATTACHMENT HANDSHAKE = REQUIRED
-- คำสั่ง START นี้ต้องมี ORIGINAL CHARACTER MASTER ครบ 3 ภาพแนบมาพร้อมข้อความใน Android share payload เดียวกัน
-- ATTACHMENT 1 = กวิน / MASTER 01
-- ATTACHMENT 2 = รินลดา / MASTER 02
-- ATTACHMENT 3 = มายด์ / MASTER 03
-- ก่อนทำ STORY BIBLE ให้ตรวจว่ามองเห็นภาพแนบทั้ง 3 ภาพจริง หากไม่ครบ ให้หยุดและแจ้ง ATTACHMENT TRANSPORT FAIL ห้ามสร้างภาพโดยเดาใบหน้า
-- SCENE 01 ACTIVE CAST = กวิน + รินลดา + มายด์ พร้อมกัน EXACTLY 3 PEOPLE
-- ภาพ SCENE 01 ต้องมีตัวละครหลักครบ 3 คนในเฟรมเดียว: ATTACHMENT 1 = กวิน, ATTACHMENT 2 = รินลดา, ATTACHMENT 3 = มายด์
-- TRIPLE CHARACTER COMPOSER = HARD REQUIREMENT: ห้ามลดเหลือ 1 หรือ 2 คน ห้ามเพิ่มคนที่ 4 ห้ามสร้างคนซ้ำ
-- แต่ละคนต้องรักษา ORIGINAL IDENTITY MASTER ของตนเองโดยตรง ห้ามผสมใบหน้า/ทรงผม/รูปร่างระหว่างกัน
-- COMPOSITION SAFE MODE: ใช้ภาพครึ่งตัวหรือเต็มตัวตามธรรมชาติ เสื้อผ้าปกติสุภาพ และหลีกเลี่ยง framing/คำบรรยายที่เน้นสัดส่วนทางเพศ
-- LEAN IMAGE PIPELINE V1: ใช้ ORIGINAL MASTER ทั้ง 3 ภาพเป็นตัวอ้างอิงตัวละครผู้ใหญ่โดยตรง แล้วสร้าง FINAL IMAGE ทันที
-- EXACT CAST: ภาพต้องมีตัวละครผู้ใหญ่ 3 คนพอดี — CHAR_01 กวิน, CHAR_02 รินลดา, CHAR_03 มายด์ — ห้ามเพิ่มคน ห้ามทำคนซ้ำ
-- IDENTITY CORE: รักษาใบหน้าและทรงผมของแต่ละคนให้ใกล้ ORIGINAL MASTER และห้ามสลับ identity ระหว่างกัน
-- MASTER VISUAL FIDELITY V1: ใช้ ORIGINAL MASTER ของแต่ละคนเป็น visual reference หลักและรักษาภาพลักษณ์โดยรวมของตัวละครให้เป็นธรรมชาติและสอดคล้องกับ MASTER โดยไม่แจกแจงลักษณะทางกายภาพที่ไม่จำเป็น
-- MASTER FIDELITY PRIORITY V2: ลำดับความสำคัญของภาพต้องเป็น ORIGINAL MASTER identity/overall appearance → story continuity → wardrobe → cinematic styling; งานจัดแสงและความสวยงามห้ามกลบเอกลักษณ์ของ MASTER
-- NO BEAUTY NORMALIZATION: ห้ามทำให้ตัวละครทั้งสามเข้าหา face/beauty template เดียวกัน ห้ามทำให้ใบหน้าคล้ายกัน และห้ามเปลี่ยนลักษณะเฉพาะของแต่ละ MASTER เพียงเพื่อความ cinematic
-- WARDROBE CONTINUITY LOCK: หากยังเป็นเหตุการณ์ต่อเนื่องเดียวกัน ให้คงเสื้อผ้าของ CHAR_01/02/03 จากฉากก่อนตาม STORY CONTINUITY; เปลี่ยนชุดเฉพาะเมื่อเรื่องระบุการเปลี่ยนเวลา สถานที่ หรือมี wardrobe event ชัดเจน
-- CHARACTER DISTINCTNESS: รักษาความแตกต่างของ CHAR_01/02/03 ทั้งใบหน้า ทรงผม และภาพลักษณ์โดยรวมตาม MASTER โดยไม่เพิ่มคำบรรยายทางกายภาพที่ไม่จำเป็น
-- SCENE CORE: ใช้เฉพาะ story beat, action, location และ continuity ที่จำเป็นต่อฉากปัจจุบัน
-- NORMAL WARDROBE: ใช้เสื้อผ้าปกติที่เหมาะกับฉากและ continuity โดยไม่บรรยายสรีระหรือรายละเอียดทางเพศ
-- SIMPLE CAMERA: realistic Thai family drama, neutral eye-level medium/wide composition, vertical 9:16, เห็นตัวละครครบทั้ง 3 คน
-- DIRECT FINAL IMAGE: ห้าม draft, planning placeholder, face-gate loop, policy commentary, auto-rewrite loop หรือ auto-regenerate; เมื่อข้อมูลครบให้สร้างภาพทันทีแบบ single pass
-- FIXED CAST IDENTITY DNA — MASTER 02 รินลดา: ใช้ภาพ ATTACHMENT 2 เป็นแหล่งอัตลักษณ์เพียงแหล่งเดียวตลอด EP 01–05 ทุกครั้งที่รินลดาปรากฏ ต้องย้อนอ้างอิง ORIGINAL MASTER นี้ใหม่ ไม่สืบทอดใบหน้าจากภาพฉากก่อนหน้า
-- ล็อกลักษณะจาก MASTER 02 เฉพาะ: facial geometry / head shape / eyes / eyebrows / nose / lips / jawline / ears / hair shape+color / skin tone / approximate age / natural body build+proportions
-- ห้ามเปลี่ยนรินลดาให้สวยขึ้น อ่อนวัยขึ้น ผิวเนียนขึ้น หน้าเรียวขึ้น ตาโตขึ้น จมูกเปลี่ยน ทรงผมเปลี่ยน หรือรูปร่าง/สัดส่วนธรรมชาติเปลี่ยน แม้เพื่อ cinematic beauty
-- MASTER WARDROBE FIREWALL: ชุดสีชมพู เครื่องประดับ ฉากหลังสีเขียว ท่ายืน และองค์ประกอบ portrait ใน MASTER 02 ไม่ใช่ Identity และห้ามคัดลอกมา เว้นแต่ STORY/SCENE ระบุเอง
-- IDENTITY SOURCE IS IMMUTABLE: ห้ามใช้ Scene Output, ภาพแต่งงาน, background photo, storyboard, generated portrait หรือคำบรรยายข้อความแทน ORIGINAL MASTER
-- IDENTITY GATE — HARD FAIL: ก่อนส่งภาพต้องตรวจตัวละครที่เห็นจริงกับ ORIGINAL MASTER ของคนนั้น หาก facial geometry / hair / facial hair / natural body proportions เปลี่ยนชัดเจน ให้ถือว่าภาพไม่ผ่านและสร้างใหม่ก่อนส่ง ห้ามยอมรับใบหน้าที่เพียงคล้าย
-- MASTER-FIRST RECONSTRUCTION: ก่อนกำหนดท่าทาง/แสง/เสื้อผ้า ให้ยึด ATTACHMENT 2 เป็นฐานใบหน้า ศีรษะ ทรงผม สีผิว อายุโดยประมาณ และสัดส่วนธรรมชาติของรินลดาก่อน แล้วจึงเปลี่ยนเฉพาะ expression/pose/wardrobe ตามฉาก
-- IDENTITY CHECKPOINTS: ตรวจซ้ำ 3 จุดก่อนส่ง: (1) eyes+nose+mouth geometry (2) jaw+hairline+facial hair (3) head-to-body proportions; หากข้อใด drift ชัดเจน = INVALID OUTPUT และต้องสร้างใหม่
-- NO BEAUTY OVERRIDE: cinematic lighting, dramatic emotion, camera angle และ wardrobe ห้ามมีสิทธิ์เปลี่ยน identity geometry ของรินลดา
-- LIKENESS FIDELITY MODE — MAX: เป้าหมายคือ “คนเดิมในสถานการณ์ใหม่” ไม่ใช่ “คนหน้าคล้าย”; ห้าม reinterpret ใบหน้าเป็นนักแสดงคนใหม่
-- REFERENCE-IMAGE DOMINANCE — MAX: เมื่อ ORIGINAL MASTER ถูกแนบ ให้ข้อมูลภาพจริงมีอำนาจเหนือคำบรรยายใบหน้าทั้งหมด ห้ามให้โมเดลสร้างหน้าใหม่จากคำว่า “ชายไทย/หล่อ/วัย...” แล้วค่อยทำให้คล้าย MASTER
-- FACE RECONSTRUCTION BAN: ห้าม redesign, restyle, idealize หรือสร้าง facial features ใหม่; อนุญาตเพียงคงบุคคลเดิมจาก ORIGINAL MASTER แล้วเปลี่ยนสีหน้า มุมศีรษะ และการกระทำเท่าที่ฉากต้องใช้
-- DISTINCTIVE-TRAIT ANCHOR: ให้รักษาจุดจำเพาะที่เห็นจริงใน MASTER โดยเฉพาะ hairline, eyebrow shape, eye spacing, nose bridge+tip, lip contour, jaw width และ moustache/beard boundary พร้อมกัน ห้ามรักษาเพียงบางจุดแล้วปล่อยส่วนอื่น drift
-- NATURAL TEXTURE LOCK: ห้าม skin retouch / beauty filter / face smoothing / symmetry correction ที่ทำให้บุคคลดูเป็นคนใหม่
-- IDENTITY BEFORE CINEMA: หากความสวยของแสง มุมกล้อง depth-of-field หรืออารมณ์ขัดกับความเหมือน MASTER ให้ลดความ cinematic ลงและรักษา Identity ก่อนเสมอ
-- POSE REPETITION BLOCK: ห้ามใช้ท่าเอามือค้ำคาง/แตะปาก/แตะขมับ/นั่งครุ่นคิดซ้ำจากฉากก่อน เว้นแต่ STORY BEAT ระบุชัด; NEXT SCENE ต้องเปลี่ยน blocking และ physical action ให้เห็นความคืบหน้าของเรื่อง
-- PROP-ACTION RULE: พร็อพหลักต้องถูกใช้งานเพื่อเล่าเรื่องจริง ไม่ใช่เพียงวางประกอบฉาก; หลีกเลี่ยงการวน “เอกสาร + โต๊ะ + โน้ตบุ๊ก” หากไม่มีเหตุการณ์ใหม่รองรับ
-- PRESERVE MICRO-IDENTITY: รักษาระยะตา ความหนา/แนวคิ้ว สันและปลายจมูก รูปริมฝีปาก แนวกราม hairline และตำแหน่ง/ความหนาหนวดเคราตาม ORIGINAL MASTER ให้ใกล้ที่สุด
-- EXPRESSION DELTA ONLY: อารมณ์ของฉากเปลี่ยนได้เฉพาะกล้ามเนื้อสีหน้า/สายตา/ท่าทาง ห้ามให้อารมณ์เปลี่ยนโครงหน้า อายุ หรือความเป็นบุคคล
-- CAMERA IDENTITY SAFETY: หลีกเลี่ยงเลนส์กว้างระยะใกล้ มุมกด/เงยจัด แสงแข็ง หรือ perspective ที่บิดรูปหน้า; ใช้มุมธรรมชาติและระยะที่ยังอ่านอัตลักษณ์จาก MASTER ได้ชัด
-- FACE VISIBILITY GATE: เมื่อรินลดาเป็น ACTIVE CAST ต้องเห็นใบหน้าชัดพอสำหรับตรวจ Identity; ห้ามมือ/พร็อพ/เงามืดบังจุดสำคัญของตา จมูก ปาก และกรามเกินจำเป็น
-- SCENE DIVERSITY FIREWALL: ห้ามวนภาพ “นั่งคิด/อ่านเอกสาร/โต๊ะทำงาน” ซ้ำโดยไม่มี STORY BEAT รองรับ; แต่ละฉากต้องมี ACTION + LOCATION/PROP PURPOSE ที่แตกต่างและเดินเรื่องจริง
-- STORY-BEAT MOTION GATE: ฉากใหม่ต้องเปลี่ยน “เหตุการณ์” ไม่ใช่เพียงเปลี่ยนเสื้อ/มุม/ห้อง; ต้องระบุสิ่งที่ตัวละครกำลังทำซึ่งทำให้ข้อมูล ความสัมพันธ์ หรือความขัดแย้งเดินหน้าอย่างน้อย 1 ขั้น
-- REPETITION MEMORY: ถือกิจกรรมต่อไปนี้เป็นกลุ่มเดียวกันและห้ามใช้ติดกันหรือวนซ้ำโดยไม่มีเหตุผลเรื่อง: นั่งครุ่นคิด / อ่านเอกสาร / ดูโน้ตบุ๊ก / จับกระดาษ / มือแตะหน้า-คาง-ขมับ
-- ACTION-FIRST COMPOSITION: ให้เลือก physical action จาก STORY BEAT ก่อน แล้วค่อยกำหนด location, prop, wardrobe, expression และ framing; ห้ามเริ่มจาก pose หล่อ/portrait แล้วแต่งเรื่องตามภาพ
-- LOCATION ROTATION: หาก STORY รองรับ ให้สลับพื้นที่ใช้งานจริง เช่น ห้องนอน ห้องนั่งเล่น ห้องครัว หน้าบ้าน ที่ทำงาน รถ ร้าน/สถานที่นัดหมาย แทนการวนโต๊ะเดิม; ห้ามย้ายสถานที่แบบไร้เหตุผลเพียงเพื่อความต่าง
-- PROP CONTINUITY: พร็อพที่เคยเปิดเผยข้อมูลแล้วต้องไม่ถูกนำกลับมาเป็นจุดเด่นซ้ำ เว้นแต่มีข้อมูลใหม่หรือการกระทำใหม่ที่เปลี่ยนสถานการณ์
-- VISUAL DELTA CHECK: ก่อนส่งภาพ เปรียบเทียบกับฉากก่อนในด้าน ACTION / BODY BLOCKING / LOCATION / HERO PROP; หากเหมือนกันตั้งแต่ 2 ด้านขึ้นไป ให้ปรับฉากใหม่ก่อนส่ง โดยยังรักษา STORY CONTINUITY และ ORIGINAL IDENTITY MASTER
-- IDENTITY STABLE, SCENE VARIABLE: ล็อกเฉพาะอัตลักษณ์ธรรมชาติของตัวละคร; เสื้อผ้า ท่าทาง พร็อพ แสง และสถานที่ต้องเปลี่ยนตามเวลา/เหตุการณ์อย่างสมเหตุผล ห้ามใช้ความเหมือน MASTER เป็นข้ออ้างให้สร้าง composition ซ้ำ
-- CINEMATIC ≠ PORTRAIT: ห้ามสร้างภาพเหมือนถ่ายโปรไฟล์; ตัวละครต้องกำลังกระทำสิ่งที่สัมพันธ์กับ STORY BEAT และสภาพแวดล้อมต้องมีข้อมูลเรื่องราว
-- SCENE NOVELTY MATRIX — HARD GATE: ก่อนสร้างภาพให้กำหนด 5 ค่า ACTION / BODY POSITION / LOCATION / HERO PROP / EMOTIONAL EVENT แล้วเทียบกับฉากก่อนหน้า; ฉากใหม่ต้องต่างอย่างมีนัยสำคัญอย่างน้อย 3 จาก 5 ค่า มิฉะนั้นให้ redesign scene ก่อนสร้างภาพ
-- NO COSMETIC VARIATION: การเปลี่ยนเพียงสีเสื้อ แสง มุมเฟรม หรือชนิดกระดาษ ไม่ถือว่าเป็นฉากใหม่ หากเหตุการณ์และการกระทำยังเหมือนเดิม
-- ACTION VERB LOCK: ทุกฉากต้องมีคำกริยาการกระทำหลักที่ต่างจากฉากก่อน เช่น เดินออกจากห้อง / เปิดประตู / โทรศัพท์ / เก็บกระเป๋า / เผชิญหน้า / ซ่อนของ / ส่งของ / ขับรถ / พบใครบางคน; ห้ามใช้ “นั่งอ่าน/นั่งคิด/มองเอกสาร” เป็นค่าเริ่มต้น
-- STORY CONSEQUENCE GATE: ภาพต้องแสดงผลของ STORY BEAT ที่เปลี่ยนสถานการณ์ให้มองเห็นได้ ไม่ใช่เพียงอารมณ์ครุ่นคิด; ถ้าเอาภาพฉากก่อนมาเปลี่ยนเสื้อแล้วเรื่องยังสื่อเหมือนเดิม = INVALID OUTPUT
-- SAME-ROOM LIMIT: ห้ามใช้ห้องเดิมเกิน 2 ฉากติดกัน เว้นแต่เป็นเหตุการณ์ต่อเนื่องโดยตรง; หากต่อเนื่องในห้องเดิมต้องเปลี่ยน blocking, action และ hero prop อย่างชัดเจน
-- REPEATED-PAPER FIREWALL: หลังฉากที่ใช้เอกสาร/ใบแจ้งหนี้/กระดาษเป็น HERO PROP แล้ว ห้ามใช้กระดาษหรือหน้าจอเป็น HERO PROP ซ้ำใน 2 ฉากถัดไป เว้นแต่ข้อมูลใหม่จากพร็อพนั้นเป็น turning point โดยตรง
-- READING/THINKING POSE COOLDOWN — HARD: หลังฉากที่ตัวละคร “นั่งอ่านเอกสาร / ถือกระดาษ / นั่งครุ่นคิด / มือแตะคาง” ห้ามใช้ action หรือ pose กลุ่มนี้ซ้ำอีกอย่างน้อย 3 ฉาก แม้จะเปลี่ยนเสื้อผ้า ห้อง หรือมุมภาพ
-- PROP EXIT RULE: เมื่อข้อมูลจากเอกสารถูกอ่านและรับรู้แล้ว ให้ลดเอกสารเป็น background/วางทิ้ง/เก็บเข้าที่ และเปลี่ยน HERO PROP ไปเป็นสิ่งที่เกิดจากผลของข้อมูล เช่น โทรศัพท์ กุญแจ กระเป๋า ประตู รถ หรือบุคคลที่ต้องเผชิญหน้า
-- EVENT-FIRST COMPOSITION: ออกแบบภาพจาก “สิ่งที่กำลังเกิดขึ้น” ก่อนเลือก pose; อย่างน้อยหนึ่งการกระทำต้องมีผลทางกายภาพที่มองเห็นได้ เช่น ลุกขึ้น เดินออก เปิดประตู โทรหา เก็บของ ส่งของ ซ่อนของ เผชิญหน้า หรือออกจากสถานที่
-- SCENE PURPOSE TEST — HARD FAIL: ถ้าตัดใบหน้าตัวละครออกแล้วภาพปัจจุบันยังสื่อเหตุการณ์แทบเหมือนฉากก่อน แสดงว่าฉากซ้ำ ให้ redesign ACTION + BLOCKING + HERO PROP ก่อนสร้าง
-- THREE-SCENE MEMORY: เปรียบเทียบฉากปัจจุบันกับ 3 ฉากล่าสุด ไม่ใช่เฉพาะฉากก่อนหน้า; ห้ามวนกลับไปใช้ composition/action/hero prop เดิมในช่วง 3 ฉากนี้
-- STORY ESCALATION: ทุก 2–3 ฉากต้องเกิดการเปลี่ยนสถานะที่มองเห็นได้อย่างน้อยหนึ่งอย่าง: สถานที่ใหม่ การตัดสินใจใหม่ การเผชิญหน้า การเดินทาง การเปิดเผยข้อมูล หรือความสัมพันธ์เปลี่ยน; ห้ามวนอยู่กับภาพคนเดียวครุ่นคิดโดยไม่มีผลลัพธ์
-- FULL-BODY STORYTELLING PRIORITY: เมื่อ STORY BEAT มีการเคลื่อนไหว ให้จัดเฟรมเห็นการกระทำและสภาพแวดล้อมมากพอ หลีกเลี่ยง close portrait ครึ่งตัวที่ทำให้ทุกฉากดูซ้ำ
-- CONTINUITY ≠ REPETITION: รักษา identity, knowledge, wardrobe continuity ตามเวลา และพร็อพที่จำเป็น แต่ห้ามรักษา pose/composition/action ซ้ำเพียงเพื่อความต่อเนื่อง
-- OUTPUT CLEAN FRAME: ภาพฉากสุดท้ายต้องไม่มีข้อความ โลโก้ UI contact sheet หรือภาพ Master แทรกในเฟรม
-- STORY BIBLE ต้องออกแบบเหตุการณ์ให้สอดคล้องกับ CAST PLAN ที่ AUTO-MOVIE กำหนดด้านล่าง ห้ามเปลี่ยนรายชื่อตัวละครหลักของแต่ละฉาก:
-${sceneCastPlan()}
-- สร้าง EP 01 SCENE BLUEPRINT ครบ 20 ฉาก โดยแต่ละฉากล็อก 8 ช่อง: TIME, LOCATION, ACTIVE CAST, WARDROBE, PROPS, KNOWLEDGE, EMOTION, STORY BEAT
-- ทุก SCENE ต้องมี CONTINUITY FROM SCENE ก่อนหน้าแบบสั้น ห้ามเวลา/สถานที่/เสื้อผ้า/ของประกอบ/ความรู้/อารมณ์กระโดดโดยไม่มีเหตุผล
-- STORY BEAT แต่ละฉากต้องไม่ซ้ำและต้องเดินเรื่องไปข้างหน้าภายใน 8 วินาที
-- TURNING POINT = SCENE 05 / 10 / 15 และ SCENE 20 = EP CLIFFHANGER + EP01_HANDOFF
-- EP01_HANDOFF ต้องเก็บ unresolved conflict, time/location, wardrobe, props, character knowledge, relationship/emotion state และ hook สำหรับ EP 02
-- SECONDARY CAST REGISTRY: ตัวละครรองต้องมีชื่อ/บทบาท/ลักษณะคงที่ เมื่อกลับมาอีกต้องเป็นคนเดิม
-- ในแต่ละฉากอนาคต AUTO-MOVIE จะส่งเฉพาะ ORIGINAL MASTER ของ ACTIVE CAST จริง เพื่อลด identity contamination
-- ห้าม recast / substitute / face blend / face average / beautify / age shift และห้ามใช้ Scene Output เป็น Identity
-- ORIGINAL MASTER RE-ANCHOR: ทุก NEXT SCENE ให้ใช้เฉพาะ ORIGINAL MASTER ที่แนบของ ACTIVE CAST เป็น Identity authority ใหม่อีกครั้ง ห้ามใช้หน้าจากฉากก่อนเป็น reference แม้ฉากก่อนจะดูถูกต้อง
-- WARDROBE IS SCENE DATA, NOT IDENTITY: เสื้อผ้า รองเท้า เครื่องประดับ อุปกรณ์ ท่าทาง สถานที่ และแสงของ MASTER ห้ามติดตามตัวละครไปฉากใหม่; ให้ใช้ CURRENT SCENE LEDGER / continuity เท่านั้น
-- ACCESSORY FIREWALL — HARD: สร้อยคอ แหวน นาฬิกา ต่างหู แว่น กระดุม/ปกเสื้อ และเครื่องประดับทุกชนิดที่เห็นใน ORIGINAL MASTER เป็นเพียงข้อมูลของภาพอ้างอิง ห้ามคัดลอกติดตัวละครในฉาก เว้นแต่ CURRENT SCENE LEDGER ระบุเครื่องประดับชิ้นนั้นอย่างชัดเจน
-- MASTER POSE/COMPOSITION FIREWALL: ห้ามคัดลอกท่ายืน มุมหน้า ระยะครึ่งตัว ฉากหลังสีเขียว หรือองค์ประกอบ portrait จาก MASTER; ภาพฉากต้องจัดองค์ประกอบใหม่ตาม STORY BEAT และการกระทำของฉากเท่านั้น
-- NARRATIVE FRAMING: ให้เลือก medium / medium-wide / full-body ตามการกระทำ เพื่อเห็นตัวละครกำลังทำสิ่งที่เดินเรื่องจริง หลีกเลี่ยงภาพ portrait โพสกล้องหรือจ้องกล้องโดยไม่มีเหตุผลในเนื้อเรื่อง
-- BACKGROUND FACE FIREWALL: ห้ามสร้างรูปถ่าย/กรอบรูป/จอมือถือที่มีใบหน้าทางเลือกของตัวละครหลัก ถ้าจำเป็นต้องมี ให้ไม่เห็นรายละเอียดใบหน้าหรือใช้ Identity เดียวกับ ORIGINAL MASTER
-- PRIORITY: ATTACHED ORIGINAL MASTER > Natural Face/Hair/Body > Story Action > Emotion > Pose > Wardrobe > Cinematic Beauty
-- ตัวละครรองสร้างอัตโนมัติและล็อกลักษณะเมื่อปรากฏครั้งแรก
-- Identity Master ใช้เฉพาะ Face / Skin / Natural Body / Hair / Approximate Age / Identity ห้ามใช้เสื้อผ้าจากภาพ Master
-- STORY BIBLE ให้เป็นข้อความ/แผนเรื่อง ห้ามสร้าง portrait หรือ contact sheet ใหม่ของ MASTER 01/02/03
-- หลัง STORY BIBLE ให้สร้างเฉพาะภาพ SCENE 01 แบบ 9:16 เต็มฉาก ห้ามทำ collage/infographic และห้ามใส่ตารางหรือข้อความลงในภาพ
-- ก่อนส่งภาพ ให้เทียบ Face + Hair + Natural Body Proportions ของตัวละครหลักทุกคนกับ ORIGINAL MASTER ที่แนบมาโดยตรง
-- ถ้าใบหน้า/รูปร่างไม่ใกล้ ORIGINAL MASTER ให้ INTERNAL QC = FAIL และสร้างใหม่ก่อนส่งผลสุดท้าย
-- ทำ INTERNAL QC ก่อนส่งภาพ หากมีข้อผิดพลาดที่แก้ได้ให้แก้ก่อนส่งผลสุดท้าย
-- ห้ามตอบ EP MASTER อย่างเดียว ต้องสร้างภาพ SCENE 01 ด้วย
-- ไม่ต้องสั่ง Director กด CONFIRM / QC / REPAIR / LOCK
-- ตอนท้ายใช้: EP 01 • SCENE 01 READY
+สร้างโครงเรื่องแบบกระชับสำหรับทั้งเรื่องและ EP 01 แล้วสร้างภาพ SCENE 01 ทันที
+ให้เหตุการณ์ของฉากเป็นตัวกำหนดว่าใครต้องอยู่ในภาพ การกระทำ สถานที่ อารมณ์ และเสื้อผ้า
+ใช้ภาพแนบเป็นหลักสำหรับลักษณะของตัวละคร ไม่ต้องบรรยายใบหน้าหรือรูปร่างขึ้นใหม่
+เสื้อผ้าเปลี่ยนได้ตามเรื่อง โดยสิ่งที่ไม่ได้สั่งให้เปลี่ยนให้คงความต่อเนื่องจากตัวละครและเรื่องเดิม
+จัดฉากแบบละครไทยสมจริง ให้ตัวละครกำลังทำสิ่งที่ทำให้เรื่องเดินหน้า ไม่ใช่เพียงยืนโพส
+ภาพแนวตั้ง 9:16 กล้องนิ่ง
+
+หลังภาพ ให้ระบุสั้น ๆ ว่า SCENE 01 จบด้วยเหตุการณ์อะไร เพื่อใช้ต่อ SCENE 02
         """.trimIndent()
     }
 
     private fun buildQuickSceneCommand(): String {
-        return rules() + """
+        val cast = sceneCastNames(currentScene)
+        val ledger = currentSceneLedger().ifBlank {
+            "ต่อจากเหตุการณ์ล่าสุดของเรื่องเดิม"
+        }
+        return """
+AUTO-MOVIE • NEXT SCENE
 
-QUICK FLOW COMMAND:
-GENERATE EXACT CURRENT SCENE NOW — SELF-CONTAINED MODE
+เรื่อง: ${input.text.toString().trim()}
+EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)} / 20
+ตัวละครที่ใช้ในฉากนี้: $cast
 
-SOURCE OF TRUTH:
-ชื่อเรื่อง: ${input.text.toString().trim()}
-หมวดเรื่อง: ${selectedCategory ?: storyCategories[categoryIndex]}
-ตอน: EP ${fmt(currentEp)} / 05
-ฉาก: SCENE ${fmt(currentScene)} / 20
-ความยาว: 8 วินาที
-รูปแบบ: 9:16 • One Scene / One Image • Flow/Veo 3.1
-กล้อง: Locked-off static camera
+สร้างฉากถัดไปจากเรื่องเดิม โดยใช้บุคคลผู้ใหญ่จากรูปที่แนบเป็นตัวละครเดิม
+ให้เหตุการณ์ต่อจากฉากก่อนอย่างเป็นธรรมชาติ และให้มีการกระทำที่ทำให้เรื่องเดินหน้า
+เปลี่ยนเฉพาะสิ่งที่ฉากต้องเปลี่ยน เช่น การกระทำ สีหน้า เสื้อผ้า สถานที่ หรือเวลา
+สิ่งที่ไม่ได้เปลี่ยนให้รักษาความต่อเนื่องเดิม
+ใช้รูปที่แนบเป็นหลักสำหรับลักษณะของตัวละคร ไม่ต้องเขียนคำบรรยายใบหน้าหรือรูปร่างขึ้นใหม่
+เสื้อผ้าเป็นของฉากและเปลี่ยนได้ตามเนื้อเรื่อง
+ใช้เฉพาะตัวละครที่จำเป็นต่อฉาก ไม่เพิ่มคนโดยไม่จำเป็น
+ภาพแนวตั้ง 9:16 แบบละครไทยสมจริง กล้องนิ่ง
 
-AUTO-MOVIE SCENE LEDGER:
-${currentSceneLedger().ifBlank { "CURRENT=EP ${fmt(currentEp)} SCENE ${fmt(currentScene)}; PREVIOUS=derive from current conversation; STORY=${input.text.toString().trim()}; CATEGORY=${selectedCategory.orEmpty()}" }}
+บริบทล่าสุด:
+$ledger
 
-CONTINUITY ENGINE:
-- ห้ามตอบ EP MASTER NOT FOUND และห้ามบังคับ Director กลับไปบทสนทนาเก่า
-- ใช้ STORY BIBLE + แผน EP + เหตุการณ์ที่เกิดขึ้นจริงในฉากก่อนหน้าเป็น CANON ต่อเนื่อง ห้ามเขียนทับข้อเท็จจริงเดิม
-- ก่อนสร้างฉาก ให้สรุป CONTINUITY STATE ภายในแบบไม่ต้องถามผู้ใช้: เวลา/วัน, สถานที่, ตัวละครที่อยู่ในพื้นที่, เสื้อผ้าปัจจุบัน, อุปกรณ์/ของที่ถือ, ความสัมพันธ์, ข้อมูลที่แต่ละคนรู้, บาดแผลหรือสภาพร่างกาย, และเหตุการณ์ค้างจากฉากก่อน
-- SAME-DAY WARDROBE LOCK: ถ้ายังเป็นวัน/ช่วงเหตุการณ์เดียวกัน เสื้อผ้าของตัวละครต้องต่อเนื่อง ห้ามเปลี่ยนชุดเอง; เปลี่ยนได้เมื่อ STORY ระบุการเปลี่ยนเวลา/สถานการณ์อย่างมีเหตุผล
-- LOCATION LOCK: ประตู หน้าต่าง เตียง โต๊ะ เฟอร์นิเจอร์ และทิศทางพื้นที่หลักต้องต่อเนื่องเมื่อยังอยู่สถานที่เดิม
-- PROP LOCK: โทรศัพท์ กระเป๋า เอกสาร รถ กุญแจ แหวน และวัตถุสำคัญต้องอยู่กับผู้ถือ/ตำแหน่งตามเหตุการณ์ล่าสุด ห้ามหายหรือเพิ่มเอง
-- KNOWLEDGE LOCK: ตัวละครห้ามรู้ความลับ/เหตุการณ์ที่ยังไม่เห็น ไม่ได้ยิน หรือไม่มีผู้บอก
-- EMOTION ARC: อารมณ์ต้องพัฒนาจากเหตุการณ์ก่อนหน้า ไม่รีเซ็ตกลับเป็นกลางโดยไม่มีเหตุผล
-- DIALOGUE/NARRATION: ถ้ามีผู้พูด ให้มีเฉพาะผู้พูดที่กำหนดขยับปาก; ถ้าเป็น voice-over ทุกคนในภาพปิดปากตามธรรมชาติและห้าม lip-sync
-- SCENE TRANSITION CONTRACT: เปิดฉากจากผลลัพธ์/อารมณ์/ตำแหน่งที่ฉากก่อนหน้าทิ้งไว้ แล้วเปลี่ยนสถานะของเรื่องอย่างน้อย 1 อย่างก่อนจบฉาก
-- NO RESET / NO REPLAY: ห้ามย้อนเล่นเหตุการณ์เดิม ห้ามเริ่มบทสนทนาเดิมซ้ำ ห้ามรีเซ็ตตัวละครกลับจุดก่อนหน้า
-- NO RANDOM JUMP: ห้ามข้ามเวลา/สถานที่แบบไม่มีเหตุผลเชื่อม ถ้าจำเป็นต้องข้าม ให้มี visual/narrative cue ที่เข้าใจได้
-- ฉากต้องทำหน้าที่เดินเรื่องเพียงหนึ่ง beat ชัดเจนภายใน 8 วินาที และต้องมีเหตุผลส่งต่อไปฉากถัดไป
-- SCENE BLUEPRINT LOCK: ใช้ TIME / LOCATION / ACTIVE CAST / WARDROBE / PROPS / KNOWLEDGE / EMOTION / STORY BEAT ของเลขฉากปัจจุบันจาก EP PLAN เป็น authority ห้ามสุ่มเปลี่ยนเอง
-- PREVIOUS→CURRENT CHECK: ตรวจฉากปัจจุบันกับ SCENE STATE ล่าสุดก่อนสร้าง ถ้าขัดกันให้แก้รายละเอียดฉากปัจจุบันโดยคง STORY BEAT เดิม
-- NO RESET RULE: NEXT SCENE ห้ามรีเซ็ตเสื้อผ้า อารมณ์ ของประกอบ ความสัมพันธ์ หรือข้อมูลที่ตัวละครรู้
-- CAUSAL LINK: การกระทำแรกต้องต่อเหตุผลจากฉากก่อน และตอนจบต้องสร้างเหตุผลไปฉากถัดไป
-- OUTPUT CONTRACT: ส่งตามลำดับ SCENE STATE (ข้อความสั้น) → IMAGE 9:16 → FLOW/VEO 3.1 PROMPT 8 SEC → NEXT HOOK (1 บรรทัด) เพื่อให้ฉากถัดไปมีจุดต่อที่แน่นอน
-- SCENE STATE ต้องบันทึกเฉพาะสิ่งที่เห็น/เกิดขึ้นจริงในฉากนี้: END TIME, END LOCATION, ACTIVE CAST, WARDROBE, PROPS, KNOWLEDGE CHANGE, EMOTION/RELATIONSHIP CHANGE, LAST ACTION
-- ถ้ามี STORY/EP context เดิมให้ยึดเป็นหลัก; ถ้า context เดิมไม่อยู่ ให้ใช้ SOURCE OF TRUTH + EP/SCENE INDEX สร้างรายละเอียดขั้นต่ำที่ไม่ขัดกับ canon แล้วสร้างฉากทันที
-- BUILD 698 MASTER SILHOUETTE FIDELITY = ON: แก้ regression จากการแยก wardrobe โดยให้ ORIGINAL MASTER ยังคงเป็น visual reference ของ overall silhouette / frame / shoulder-to-torso balance / natural stance ของตัวละครผู้ใหญ่ แต่ไม่คัดลอกเสื้อผ้า
-- SILHOUETTE BEFORE WARDROBE = ON: กำหนดคนเดิมและ overall silhouette จาก MASTER ก่อน แล้วจึงสวมชุดของฉากเป็นชั้น wardrobe; ห้ามให้ทรง/ความหลวม/ความรัดของเสื้อผ้าใหม่เปลี่ยนภาพลักษณ์โดยรวมของบุคคล
-- NO GENERIC BODY TEMPLATE = HARD: ห้าม normalize ตัวละครเป็นรูปร่างมาตรฐานของนายแบบ/นางแบบหรือ generic cinematic actor; ใช้ ORIGINAL MASTER เป็น visual authority ของ overall appearance
-- WARDROBE IS OVERLAY, NOT RESHAPE: เสื้อผ้าเปลี่ยนได้เต็มชุด แต่ต้องทำหน้าที่เป็นเสื้อผ้าบนบุคคลเดิม ไม่ใช่เหตุผลในการ redesign บุคคล
-- FULL-FIGURE REFERENCE BALANCE = ON: เมื่อภาพ MASTER แสดงข้อมูลช่วงตัวที่เพียงพอ ให้รักษาความสัมพันธ์โดยรวมของศีรษะ ไหล่ ลำตัว และท่ายืนตามธรรมชาติ โดยไม่แจกแจงหรือเน้นส่วนร่างกายเชิงเพศ
-- BUILD 697 IDENTITY / WARDROBE DECOUPLING = ON: แยก CHARACTER IDENTITY ออกจากเสื้อผ้าใน ORIGINAL MASTER อย่างเด็ดขาด; เสื้อผ้าใน MASTER เป็น reference context ไม่ใช่ส่วนของ identity
-- BODY SILHOUETTE CONTINUITY = ON: เมื่อเปลี่ยนเสื้อผ้า ให้รักษาภาพลักษณ์โดยรวมและโครงร่างตามธรรมชาติของตัวละครผู้ใหญ่จาก ORIGINAL MASTER โดยไม่เพิ่ม ลด หรือเน้นส่วนร่างกายเพื่อให้เข้ากับชุด
-- WARDROBE OVERRIDE = STORY AUTHORITY: ถ้า STORY/SCENE ระบุชุดใหม่ ให้ใช้ชุดใหม่ครบทั้งชุดตามบริบททันที ห้ามดึงสี ทรง หรือรายละเอียดชุดจาก MASTER กลับมา เว้นแต่เรื่องระบุให้ใช้
-- PROFESSIONAL OUTFIT INTERPRETER = ON: คำว่า “ชุดทำงาน” ให้ตีความเป็นเสื้อผ้าทำงานสุภาพที่เหมาะกับสถานที่/อาชีพ เช่น blazer, blouse/shirt, trousers หรือ skirt ตาม continuity โดยไม่คัดลอกชุด MASTER
-- CLOTHING FIT RULE = NATURAL: เสื้อผ้าใหม่ต้องพอดีและตกทิ้งตามธรรมชาติของบุคคลเดิม ห้ามใช้ wardrobe เพื่อ reshape, exaggerate หรือ idealize รูปลักษณ์
-- MASTER CLOTHING EXCLUSION = HARD: สีชุด neckline straps hem slit accessories และ styling ของภาพ MASTER ห้ามถือเป็น identity token; CHARACTER MASTER ใช้สำหรับบุคคล ไม่ใช่ costume template
-- BUILD 696 MASTER FIDELITY CINEMA ENGINE = ON: ORIGINAL MASTER เป็น visual identity authority ของตัวละครผู้ใหญ่แต่ละคน ใช้เพื่อรักษาคนเดิมโดยไม่เพิ่มคำบรรยายรูปร่างหรือรายละเอียดทางเพศที่ไม่จำเป็น
-- IDENTITY MINIMALISM = ON: ส่งคำสั่งอัตลักษณ์แบบสั้นและเป็นกลาง — same adult person, same recognizable face, hairstyle, approximate age and overall natural appearance — แล้วให้ภาพอ้างอิงทำหน้าที่หลัก
-- NO TEXT-BASED FACE REDESIGN: ห้ามสร้างใบหน้าใหม่จากคำว่า หล่อ/สวย/ดารา/นางแบบ/cinematic beauty แล้วค่อยทำให้คล้าย MASTER; เริ่มจากบุคคลใน MASTER ก่อน
-- MODERN CINEMA BLOCKING = ON: จัดตำแหน่งตัวละครตามการกระทำและระยะความสัมพันธ์ ใช้ foreground/midground/background ได้ ห้ามยืนเรียงหน้ากล้องเป็นค่าเริ่มต้น
-- ACTION OVER POSE = ON: ทุกฉากต้องมี physical action ที่อ่านได้ทันที เช่น เดินออก หยิบของ วางของ เปิดประตู ส่งของ ถอยห่าง หรือเข้าหา ตาม STORY BEAT; ห้ามใช้เพียง pose แสดงอารมณ์
-- WARDROBE EVENT GATE = ON: ถ้า END TIME/LOCATION ต่อเนื่องจากฉากก่อน ห้ามเปลี่ยนชุด; เปลี่ยนได้เฉพาะเมื่อมี time jump, location/context change หรือ wardrobe event ที่เรื่องรองรับ
-- SAFE VISUAL LANGUAGE = ON: ใช้คำบรรยายเสื้อผ้า/รูปลักษณ์ที่เป็นกลาง เหมาะกับฉาก และไม่เน้นส่วนร่างกาย; หากรายละเอียดใดไม่จำเป็นต่อ identity หรือ continuity ให้ตัดออก
-- CINEMA PRIORITY STACK: ORIGINAL MASTER identity → STORY CONSEQUENCE → continuity → action/blocking → wardrobe → lighting/style
-- BUILD 695 DYNAMIC ACTIVE CAST = ON: ใช้จำนวนตัวละครเท่าที่ STORY BEAT ปัจจุบันต้องใช้จริง ห้ามบังคับสามคนทุกฉาก และห้ามเพิ่มตัวละครที่ไม่อยู่ใน ACTIVE CAST
-- STORY CONSEQUENCE ENGINE = ON: ฉากใหม่ต้องแสดงผลจาก LAST ACTION ของฉากก่อนอย่างมองเห็นได้ และต้องเปลี่ยนสถานการณ์อย่างน้อย 1 อย่างก่อนจบฉาก
-- COMPOSITION ROTATION = ON: ห้ามใช้ตำแหน่งยืน/นั่งและการจัดซ้าย-กลาง-ขวาซ้ำเป็นค่าเริ่มต้น ให้ blocking เกิดจาก action และความสัมพันธ์ของฉาก
-- MINIMUM CAST RULE: ถ้า beat ใช้คนเดียวได้ให้ใช้ 1 คน; ถ้าต้องเผชิญหน้าจึงใช้ 2 คน; ใช้ 3 คนเมื่อเหตุการณ์ต้องมีทั้งสามจริง
-- SELECTIVE MASTER ENGINE = ON
-- ACTIVE CAST ของ SCENE ${fmt(currentScene)} = ${sceneCastNames(currentScene)}
-- FEMALE MASTER VALIDATION = ON: เมื่อ ACTIVE CAST มีรินลดาหรือมายด์ ต้องยึด ORIGINAL MASTER ของผู้หญิงคนนั้นแบบ 1:1 ด้วยความเข้มเท่ากวิน ห้ามใช้ generic female face, beauty-template face, face averaging หรือสลับอัตลักษณ์ระหว่างรินลดา/มายด์
-- FEMALE EARLY VALIDATION: SCENE 02 = รินลดาเท่านั้น และ SCENE 03 = มายด์เท่านั้น เพื่อบังคับตรวจ ORIGINAL MASTER ผู้หญิงทั้งสองตั้งแต่ต้น EP; ห้ามแทนด้วยกวิน ห้ามเพิ่มผู้หญิงอีกคน และห้ามสร้างหน้าผู้หญิงจากคำบรรยาย
-- FEMALE FACE PRIORITY — MAX: สำหรับรินลดา/มายด์ ให้ใบหน้า ทรงผม hairline ระยะตา รูปคิ้ว จมูก ริมฝีปาก กราม สีผิว อายุโดยประมาณ และสัดส่วนธรรมชาติจาก ATTACHMENT ของคนนั้นมีอำนาจเหนือ cinematic beauty และ generic Thai female styling
-- FEMALE BODY ZERO-RESHAPE: ห้ามเพิ่ม/ลดหน้าอก เอว สะโพก ความผอม ความสูง หรือปรับสัดส่วนเพื่อให้เข้ากับชุด; รักษา natural body proportions จาก ORIGINAL MASTER แล้วเลือก wardrobe ให้เข้ากับร่างกายแทน
-- FEMALE HAIR IDENTITY LOCK: ทรงผม ความยาว แนวผม และสีผมเป็นส่วน Identity ของผู้หญิง ห้ามเปลี่ยนเป็นผมยาว/สั้น/ลอน/ตรงแบบอื่นเพียงเพื่อความสวย เว้นแต่ STORY ระบุการเปลี่ยนทรงผมอย่างชัดเจนและยังต้องคงใบหน้าเดิม
-- FEMALE CROSS-CONTAMINATION BLOCK: ห้ามใช้คุณลักษณะจาก MASTER ผู้หญิงอีกคนมาช่วยเติมส่วนที่ไม่ชัด และห้ามใช้ภาพผู้หญิงจาก Scene Output ก่อนหน้าเป็น reference; ทุกฉากต้องย้อนกลับ ORIGINAL MASTER ที่แนบในคำสั่งปัจจุบัน
-- FEMALE DISTINCTNESS GATE — HARD: รินลดาและมายด์เป็นคนละบุคคลถาวร ต้องรักษา face geometry / hair / skin tone / natural body proportions ของ MASTER ที่แนบของแต่ละคนแยกกัน ห้ามผสมใบหน้า รูปร่าง หรือทรงผมข้ามกัน
-- FEMALE WARDROBE FIREWALL — HARD: ชุดเดรส สีชุด ความเว้า/ความปิด และเครื่องประดับใน MASTER ผู้หญิงเป็นเพียงสิ่งที่อยู่ในภาพอ้างอิง ไม่ใช่ wardrobe ของฉาก ห้ามถ่ายโอน เว้นแต่ CURRENT SCENE BLUEPRINT ระบุเอง
-- FEMALE IDENTITY BEFORE BEAUTY: ห้ามทำหน้าเรียว ตาโต ผิวเนียน หน้าเด็ก หรือปรับสัดส่วนเพื่อความสวย หากทำให้อัตลักษณ์จาก ORIGINAL MASTER เปลี่ยน
-- คำสั่งนี้แนบเฉพาะ ORIGINAL MASTER ของ ACTIVE CAST จริง ตามลำดับนี้: ${sceneCastKeys(currentScene).mapIndexed { index, key -> "ATTACHMENT ${index + 1} = ${characterNames[key]}" }.joinToString(" / ")}
-- ห้ามเพิ่มตัวละครหลักคนอื่นที่ไม่ได้อยู่ใน ACTIVE CAST ของฉากนี้
-- ใช้บุคคลคนเดิมจาก ATTACHMENT ของคนนั้นโดยตรง และบรรยายเฉพาะ wardrobe/action/emotion/position/gaze
-- ห้ามสร้างคำบรรยายโครงหน้า ตา จมูก ปาก ความหล่อ/สวย หรือรูปลักษณ์ใหม่เพื่อแทน ATTACHMENT
-- ห้าม cross-reference / face averaging / face blending / recast / substitute actor / beautify / age shift
-- ทุก Scene ใช้ ORIGINAL MASTER ที่ AUTO-MOVIE แนบในคำสั่งปัจจุบัน ห้ามใช้ Scene Output ก่อนหน้าเป็น Identity Source
-- PRIORITY: ATTACHED ORIGINAL MASTER > Natural Face/Hair/Body > Story Action > Emotion > Pose > Wardrobe > Cinematic Beauty
-- ใช้เฉพาะตัวละครที่เหมาะกับฉาก ตัวละครรองสร้างอัตโนมัติ
-- ตัวละครหลักทุกคนที่ปรากฏต้องอ้างอิง ORIGINAL MASTER ที่แนบมาโดยตรง ห้ามอ้างอิง portrait/Scene Output ที่ AI เคยสร้าง
-- Identity Master ห้ามเป็นแหล่งเสื้อผ้า ใช้ Wardrobe Firewall
-- ACCESSORY FIREWALL — HARD: สร้อยคอ แหวน นาฬิกา ต่างหู แว่น และเครื่องประดับทุกชนิดจาก ORIGINAL MASTER ห้ามติดตามมาที่ฉากใหม่ เว้นแต่ CURRENT SCENE LEDGER ระบุชิ้นนั้นอย่างชัดเจน; หาก Ledger ไม่ระบุ = ไม่ใส่
-- MASTER POSE/COMPOSITION FIREWALL: ห้ามคัดลอกท่ายืน มุมหน้า ระยะ portrait ฉากหลังสีเขียว หรือองค์ประกอบจาก MASTER; ใช้ MASTER เฉพาะ Identity เท่านั้น
-- NARRATIVE FRAMING: ภาพต้องแสดง STORY BEAT ผ่านการกระทำจริง เลือก medium / medium-wide / full-body ตามฉาก หลีกเลี่ยง portrait pose และการจ้องกล้องโดยไม่มีเหตุผล
-- ภาพ Output ต้องเป็นภาพฉาก 9:16 เต็มฉาก ห้าม collage/infographic/ตาราง/character card/ข้อความทับภาพ
-- IDENTITY MATCH MODE = STRUCTURE-FIRST: ให้คง facial geometry, head width/length, eye spacing, eyebrow shape, nose bridge/tip, lips, jaw/chin, ears, hairline/hairstyle, moustache+beard pattern, skin tone, approximate age และ natural body proportions จาก ORIGINAL MASTER ก่อนอารมณ์/แสง/ความสวยงาม
-- EXPRESSION DELTA ONLY: เปลี่ยนได้เฉพาะกล้ามเนื้อสีหน้าที่จำเป็นต่ออารมณ์ของฉาก เช่น ขมวดคิ้ว/สายตา/มุมปาก แต่ห้ามให้อารมณ์เปลี่ยนโครงหน้า อายุ หนวดเครา ทรงผม หรือสัดส่วนศีรษะ
-- NO IDENTITY DRIFT: ห้ามเพิ่มความคมของกราม/คิ้ว/จมูก ห้ามทำหน้าผอม/กว้างขึ้น ห้ามเพิ่มหรือลดหนวดเครา และห้าม stylize ใบหน้าเพราะ dramatic lighting
-- CAMERA IDENTITY SAFETY: หลีกเลี่ยงเลนส์กว้างใกล้ใบหน้าและมุมที่บิดสัดส่วน; ใช้มุม/ระยะธรรมชาติที่ยังเห็นอัตลักษณ์ชัด เว้นแต่ STORY บังคับ
-- BACKGROUND PORTRAIT FIREWALL: กรอบรูป/ภาพถ่าย/หน้าจอด้านหลังห้ามแสดงใบหน้าตัวละครหลักแบบละเอียด เพราะอาจสร้าง alternate identity; ให้เบลอ/หันออก/ไม่เห็นหน้าแทน
-- ทำ INTERNAL QC โดยเทียบ Face + Hair + Facial Hair + Natural Body Proportions กับ ORIGINAL MASTER; ถ้าต่างชัดเจนให้ถือเป็น IDENTITY FAIL และสร้างใหม่ก่อนส่งผลสุดท้าย
-- MASTER-FIRST RECONSTRUCTION: เริ่มจาก identity geometry ของ ORIGINAL MASTER ที่แนบในคำสั่งนี้ก่อนทุกครั้ง แล้วจึงใส่ expression / pose / wardrobe / lighting ของฉาก ห้ามเริ่มจากหน้าฉากก่อน
-- REFERENCE-IMAGE DOMINANCE — MAX: ORIGINAL MASTER ที่แนบคือ visual authority สูงสุด ห้ามสร้างหน้าใหม่จากคำบรรยายแล้วทำให้ “คล้าย”; ต้องรักษาบุคคลเดิมจากภาพจริงก่อนทุกองค์ประกอบ
-- DISTINCTIVE-TRAIT ANCHOR: รักษา hairline + eyebrow shape + eye spacing + nose bridge/tip + lip contour + jaw width + moustache/beard boundary พร้อมกัน ห้ามปล่อยบางส่วน drift
-- NATURAL TEXTURE LOCK: ห้าม beauty filter / skin smoothing / symmetry correction / face idealization ที่ทำให้ Identity เปลี่ยน
-- IDENTITY BEFORE CINEMA: หากมุมกล้อง แสง depth-of-field หรือ dramatic styling ทำให้หน้าเปลี่ยน ให้ลดความ cinematic และรักษาความเหมือน MASTER ก่อน
-- POSE REPETITION BLOCK: ห้ามวนท่าค้ำคาง แตะปาก แตะขมับ นั่งนิ่งอ่านเอกสาร หรือมองเอกสารซ้ำจากฉากก่อน เว้นแต่ BLUEPRINT ระบุโดยตรง; ให้เปลี่ยน blocking และ physical action ตาม STORY BEAT
-- RECENT-SCENE VISUAL MEMORY — HARD: ก่อนสร้างภาพ ให้ตรวจภาพ/เหตุการณ์อย่างน้อย 3 ฉากล่าสุดในบทสนทนาปัจจุบัน แล้วทำรายการภายในว่าเคยใช้ LOCATION / BODY POSE / ACTION / HERO PROP / WARDROBE SILHOUETTE อะไรไปแล้ว ห้ามทำภาพใหม่ที่ให้ความรู้สึกเป็นภาพเดิมเปลี่ยนเสื้อหรือเปลี่ยนมุม
-- DOCUMENT MOTIF COOLDOWN — HARD: ถ้า 1 ใน 3 ฉากล่าสุดมีการอ่าน/ถือ/ดูเอกสาร ใบแจ้งหนี้ กระดาษ แฟ้ม หรือหน้าจอเพื่อรับข้อมูล ฉากปัจจุบันห้ามใช้สิ่งเหล่านี้เป็น HERO ACTION หรือ HERO PROP อีก เว้นแต่ CURRENT STORY BEAT จำเป็นอย่างหลีกเลี่ยงไม่ได้; หากจำเป็นต้องต่อข้อมูลเดิม ให้แสดง “ผลจากข้อมูล” ผ่านการกระทำใหม่แทนการอ่านซ้ำ
-- THINKING-POSE COOLDOWN — HARD: ถ้า 1 ใน 3 ฉากล่าสุดมีมือแตะคาง/ปาก/ขมับ นั่งก้มหน้า หรือสีหน้าครุ่นคิดนิ่ง ฉากปัจจุบันต้องใช้ body blocking และ hand action คนละแบบอย่างชัดเจน เช่น ลุกเดิน เก็บของ เปิดประตู โทรหาใคร ส่งวัตถุ เผชิญหน้า หรือทำงานทางกายภาพที่ตรง STORY BEAT
-- VISUAL CONSEQUENCE FIRST: หลังฉากค้นพบข้อมูล ฉากถัดไปต้องแสดง “การตัดสินใจหรือผลลัพธ์” เป็นภาพก่อน ห้ามย้อนกลับไปแสดงการอ่านข้อมูลเดิมซ้ำ
-- THREE-SCENE NOVELTY GATE: เปรียบเทียบ CURRENT กับ 3 ฉากล่าสุดใน 5 แกน ACTION / BODY BLOCKING / LOCATION / HERO PROP / COMPOSITION; ต้องต่างอย่างมีนัยสำคัญอย่างน้อย 3 แกนจากทุกฉากที่เทียบ หากไม่ถึงให้ redesign ก่อนสร้างภาพ
-- DEFAULT FALLBACK BAN: เมื่อ context ไม่ชัด ห้าม fallback เป็น “ผู้ชายนั่งอ่านกระดาษที่โต๊ะ/บนเตียง” หรือ “ผู้ชายนั่งครุ่นคิด”; ให้ยึด STORY BEAT และเลือกการกระทำที่เกิดผลต่อเรื่องแทน
-- ANTI-LOOP OVERRIDE — HARD: หาก 2 ฉากล่าสุดมีภาพคนเดียวกันนั่ง + กระดาษ/เอกสาร + สีหน้าครุ่นคิด ไม่ว่าชุดหรือห้องต่างกัน ให้ถือว่า VISUAL LOOP เกิดขึ้น ฉากปัจจุบันห้ามมีการนั่งอ่าน/ถือเอกสาร ห้ามมือแตะคาง/ขมับ และห้ามใช้เตียง/โต๊ะเป็น blocking หลัก
-- CONSEQUENCE ACTION — REQUIRED AFTER DISCOVERY: หลังตัวละครอ่าน/พบข้อมูลแล้ว ฉากถัดไปต้องแสดงสิ่งที่เขา “ทำเพราะข้อมูลนั้น” เช่น ลุกออกจากพื้นที่ โทรหา/ไปหาใคร เก็บของ เปิดตู้/ประตู ซ่อนหรือส่งวัตถุ เผชิญหน้า เดินทาง หรือเริ่มภารกิจที่ตรงกับ STORY BIBLE; ห้ามแสดงการอ่านหรือคิดซ้ำ
-- ACTIVE-BODY GATE: อย่างน้อย 1 การกระทำหลักของฉากต้องเปลี่ยนตำแหน่งร่างกายหรือสถานะวัตถุอย่างเห็นได้ชัด เช่น ยืนขึ้น เดิน เปิด ปิด หยิบ วาง ส่ง เก็บ ดึง ผลัก หรือออกจากเฟรม; “มอง/คิด/อ่าน/นั่ง” อย่างเดียวไม่ผ่าน
-- DRAMA ESCALATION LADDER: เลือก beat จาก EP PLAN ที่เพิ่มเดิมพันหรือเปลี่ยนความสัมพันธ์/ข้อมูล/เป้าหมายจริง ถ้า blueprint ปัจจุบันเป็นเพียง reaction ซ้ำ ให้คง CANON แต่แปลง reaction เป็นการตัดสินใจและการกระทำที่มองเห็นได้
-- VISUAL RESET BAN: การเปลี่ยนเสื้อ สีเสื้อ ห้อง แสง หรือมุมกล้อง โดยยังคงคนเดิม+ท่านั่ง+กระดาษ+สีหน้าคิด ไม่ถือเป็นความต่อเนื่องใหม่และต้อง redesign
-- PROP-ACTION RULE: พร็อพหลักต้องถูกใช้เพื่อทำให้สถานะเรื่องเปลี่ยน ไม่ใช่เพียงวางตกแต่ง; ห้ามวนโต๊ะ+เอกสาร+โน้ตบุ๊กเป็นภาพหลักหลายฉากติดกันโดยไม่มีเหตุการณ์ใหม่
-- IDENTITY CHECKPOINTS: ก่อนส่งภาพตรวจ 3 ชั้น: eyes+nose+mouth geometry → jaw+hairline+facial hair → head/body natural proportions; drift ชั้นใดชั้นหนึ่งชัดเจน = INVALID OUTPUT และสร้างใหม่
-- NO BEAUTY OVERRIDE: dramatic emotion, cinematic lighting, lens perspective และ styling ห้ามเปลี่ยน facial structure, age impression, facial hair หรือ natural build
-- MASTER ACCESSORY ZERO-TRANSFER: หาก CURRENT SCENE LEDGER ไม่ได้ระบุเครื่องประดับอย่างชัดเจน ตัวละครต้องไม่มีสร้อยคอ/โซ่/แหวน/นาฬิกา/ต่างหู/แว่น แม้ ORIGINAL MASTER จะสวมอยู่; การติดเครื่องประดับจาก MASTER โดยไม่มี Scene authority = WLF-01 และต้องแก้ก่อนส่ง
-- MASTER CLOTHING ZERO-TRANSFER: สี/คอเสื้อ/สูท/เสื้อเชิ้ต/ชุดเดรสและรายละเอียดการแต่งกายใน MASTER ต้องไม่ถูกนำมาเป็นค่าเริ่มต้นของฉาก ให้สร้าง wardrobe จาก SCENE BLUEPRINT เท่านั้น
-- GAZE STORY LOCK: สายตาต้องมองบุคคล/วัตถุ/จุดที่สัมพันธ์กับ STORY BEAT ห้ามมองกล้องหรือโพสเหมือน portrait เว้นแต่เหตุการณ์ระบุโดยตรง
-- ACTION-FIRST FRAME: ภาพต้องจับช่วงที่ตัวละครกำลังกระทำ STORY BEAT จริง มือ/อุปกรณ์/ตำแหน่งร่างกายต้องเล่าเหตุการณ์ ไม่ใช่เพียงนั่งหรือยืนแสดงอารมณ์
-- FINAL VISUAL GATE: ก่อนส่งตรวจ 4 ข้อพร้อมกัน — (1) Identity ตรง ORIGINAL MASTER (2) ไม่มี wardrobe/accessory leakage (3) gaze/action ตรง STORY BEAT (4) ไม่มี alternate face ใน background; ข้อใดผิดให้ถือ OUTPUT INVALID และแก้เฉพาะข้อผิดพลาดก่อนส่ง
-- ห้ามขอ CONFIRM / QC / REPAIR / LOCK
-- ห้ามสร้างฉากอื่นนอกจาก SCENE ${fmt(currentScene)}
-- ถ้า SCENE ${fmt(currentScene)} = SCENE 20: หลังสร้างฉาก ให้สร้าง EP${fmt(currentEp)}_HANDOFF แบบข้อความสั้นเก็บ CANON ที่ต้องส่งต่อ ได้แก่ unresolved conflict, location/time, wardrobe, props, character knowledge, relationship/emotion state และ hook ของ EP ถัดไป; จากนั้น STOP ห้ามเริ่ม EP ถัดไปเอง
-- ถ้า SCENE ${fmt(currentScene)} = SCENE 01 และ EP มากกว่า 01: ให้ถือ HANDOFF จาก EP ก่อนหน้าเป็น continuity authority และเปิด EP ใหม่โดยไม่รีเซ็ตความสัมพันธ์/ความรู้/props
-- ถ้า EP 05 • SCENE 20: ปิดเส้นเรื่องหลักและใช้สถานะ STORY COMPLETE หลังภาพและ HANDOFF สุดท้าย
-- ตอนท้ายใช้: EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)} READY
+สร้างภาพฉากนี้ทันที แล้วสรุป NEXT HOOK สั้น ๆ 1 บรรทัด
         """.trimIndent()
     }
-
-    // ============================================================
-    // CREATE EP
-    // ============================================================
 
     private fun createEp() {
 

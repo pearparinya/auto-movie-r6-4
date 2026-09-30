@@ -971,6 +971,12 @@ SOURCE OF TRUTH:
 - แต่ละคนต้องรักษา ORIGINAL IDENTITY MASTER ของตนเองโดยตรง ห้ามผสมใบหน้า/ทรงผม/รูปร่างระหว่างกัน
 - COMPOSITION SAFE MODE: ใช้ภาพครึ่งตัวหรือเต็มตัวตามธรรมชาติ เสื้อผ้าปกติสุภาพ และหลีกเลี่ยง framing/คำบรรยายที่เน้นสัดส่วนทางเพศ
 - CHARACTER COUNT QC: ก่อนส่งภาพให้นับคนที่เห็นจริง หากไม่เท่ากับ 3 ให้ถือว่า INVALID OUTPUT และสร้างใหม่ภายในคำสั่งเดียวก่อนส่ง
+- TRIPLE IDENTITY CONTINUITY V2: ล็อก CHARACTER SLOT ถาวรตลอด STORY — CHAR_01=กวิน/MASTER 01, CHAR_02=รินลดา/MASTER 02, CHAR_03=มายด์/MASTER 03; ห้ามสลับชื่อ สลับใบหน้า หรือสลับตำแหน่งอัตลักษณ์ระหว่าง slot
+- CROSS-SCENE MASTER RESET: ทุก NEXT SCENE ให้ย้อนอ่าน ORIGINAL MASTER ของทั้ง 3 คนใหม่ก่อนสร้างภาพ ห้ามใช้ใบหน้าจาก Scene Output ก่อนหน้าเป็น identity source
+- PER-CHARACTER FACE GATE: ตรวจ CHAR_01/02/03 แยกคน โดยเทียบ eyes+eyebrows+nose+lips+jaw+hairline/hair กับ MASTER ของคนนั้น หากคนใด drift ชัดเจนให้ regenerate ทั้งฉากก่อนส่ง
+- IDENTITY/WARDROBE DECOUPLING: ใบหน้า ทรงผม สีผิว อายุโดยประมาณ และ natural build มาจาก MASTER; เสื้อผ้า สีชุด เครื่องประดับ pose และ background มาจาก STORY CONTINUITY เท่านั้น
+- CONTINUITY LEDGER V2: NEXT SCENE ต้องรักษาสถานะจากฉากก่อนเฉพาะสิ่งที่ควรต่อเนื่อง เช่น wardrobe เมื่อยังเป็นเหตุการณ์เดียวกัน, hero props, location state และความสัมพันธ์เชิงพื้นที่ แต่ action ใหม่ต้องเดินเรื่องต่อ
+- THREE-PERSON OCCLUSION GATE: เมื่อ ACTIVE CAST = 3 ต้องเห็นใบหน้าของทั้งสามชัดพอตรวจ identity; ห้ามคนหนึ่งบังใบหน้าอีกคนหรือถูกตัดออกจากเฟรม
 - SAFE RETRY: หากการสร้างภาพครั้งแรกติดข้อจำกัด ให้ลดเฉพาะคำบรรยายรูปร่าง/เสื้อผ้าที่ไม่จำเป็น คง identity + story beat + exactly 3 people แล้วลองสร้างใหม่หนึ่งครั้ง
 - FIXED CAST IDENTITY DNA — MASTER 02 รินลดา: ใช้ภาพ ATTACHMENT 2 เป็นแหล่งอัตลักษณ์เพียงแหล่งเดียวตลอด EP 01–05 ทุกครั้งที่รินลดาปรากฏ ต้องย้อนอ้างอิง ORIGINAL MASTER นี้ใหม่ ไม่สืบทอดใบหน้าจากภาพฉากก่อนหน้า
 - ล็อกลักษณะจาก MASTER 02 เฉพาะ: facial geometry / head shape / eyes / eyebrows / nose / lips / jawline / ears / hair shape+color / skin tone / approximate age / natural body build+proportions

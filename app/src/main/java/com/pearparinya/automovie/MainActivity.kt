@@ -599,11 +599,20 @@ class MainActivity : AppCompatActivity() {
     // The app owns the cast schedule, so it can attach only the original
     // masters that are actually allowed to appear in the current scene.
     private fun sceneCastKeys(scene: Int): List<String> {
-        // BUILD 681: Triple Character Composer.
-        // Every production scene carries all three ORIGINAL MASTER files so
-        // ChatGPT receives one deterministic 3-person cast registry.
-        scene.coerceIn(1, 20)
-        return listOf("gawin", "rinlada", "mind")
+        // BUILD 695: Dynamic Active Cast.
+        // START establishes all three masters. NEXT SCENE rotates the minimum
+        // useful cast so scenes do not default to the same 3-person composition.
+        // The story engine may keep continuity, but only these masters are sent.
+        return when (scene.coerceIn(1, 20)) {
+            1 -> listOf("gawin", "rinlada", "mind")
+            2 -> listOf("rinlada")
+            3 -> listOf("mind")
+            4 -> listOf("gawin")
+            5, 9, 13, 17 -> listOf("gawin", "rinlada")
+            6, 10, 14, 18 -> listOf("rinlada", "mind")
+            7, 11, 15, 19 -> listOf("gawin", "mind")
+            else -> listOf("gawin", "rinlada", "mind")
+        }
     }
 
     private fun sceneCastNames(scene: Int): String =
@@ -955,6 +964,8 @@ class MainActivity : AppCompatActivity() {
             .replace("รูปร่างระหว่างกัน", "ภาพลักษณ์ระหว่างกัน")
             .replace("รูปร่าง/สัดส่วน", "ภาพลักษณ์โดยรวม")
             .replace("เน้นสัดส่วนทางเพศ", "เน้นรายละเอียดทางกายภาพที่ไม่จำเป็น")
+            .replace(Regex("(?i)FEMALE BODY ZERO-RESHAPE:[^\\n]*"), "CHARACTER APPEARANCE LOCK: preserve the same adult character identity and overall natural appearance from the attached ORIGINAL MASTER.")
+            .replace(Regex("(?i)FEMALE FACE PRIORITY[^\\n]*"), "FEMALE IDENTITY PRIORITY: preserve face, hairstyle, approximate age and overall appearance from that character's ORIGINAL MASTER.")
     }
 
     private fun buildQuickStartCommand(story: String, category: String): String {
@@ -1112,6 +1123,10 @@ CONTINUITY ENGINE:
 - OUTPUT CONTRACT: ส่งตามลำดับ SCENE STATE (ข้อความสั้น) → IMAGE 9:16 → FLOW/VEO 3.1 PROMPT 8 SEC → NEXT HOOK (1 บรรทัด) เพื่อให้ฉากถัดไปมีจุดต่อที่แน่นอน
 - SCENE STATE ต้องบันทึกเฉพาะสิ่งที่เห็น/เกิดขึ้นจริงในฉากนี้: END TIME, END LOCATION, ACTIVE CAST, WARDROBE, PROPS, KNOWLEDGE CHANGE, EMOTION/RELATIONSHIP CHANGE, LAST ACTION
 - ถ้ามี STORY/EP context เดิมให้ยึดเป็นหลัก; ถ้า context เดิมไม่อยู่ ให้ใช้ SOURCE OF TRUTH + EP/SCENE INDEX สร้างรายละเอียดขั้นต่ำที่ไม่ขัดกับ canon แล้วสร้างฉากทันที
+- BUILD 695 DYNAMIC ACTIVE CAST = ON: ใช้จำนวนตัวละครเท่าที่ STORY BEAT ปัจจุบันต้องใช้จริง ห้ามบังคับสามคนทุกฉาก และห้ามเพิ่มตัวละครที่ไม่อยู่ใน ACTIVE CAST
+- STORY CONSEQUENCE ENGINE = ON: ฉากใหม่ต้องแสดงผลจาก LAST ACTION ของฉากก่อนอย่างมองเห็นได้ และต้องเปลี่ยนสถานการณ์อย่างน้อย 1 อย่างก่อนจบฉาก
+- COMPOSITION ROTATION = ON: ห้ามใช้ตำแหน่งยืน/นั่งและการจัดซ้าย-กลาง-ขวาซ้ำเป็นค่าเริ่มต้น ให้ blocking เกิดจาก action และความสัมพันธ์ของฉาก
+- MINIMUM CAST RULE: ถ้า beat ใช้คนเดียวได้ให้ใช้ 1 คน; ถ้าต้องเผชิญหน้าจึงใช้ 2 คน; ใช้ 3 คนเมื่อเหตุการณ์ต้องมีทั้งสามจริง
 - SELECTIVE MASTER ENGINE = ON
 - ACTIVE CAST ของ SCENE ${fmt(currentScene)} = ${sceneCastNames(currentScene)}
 - FEMALE MASTER VALIDATION = ON: เมื่อ ACTIVE CAST มีรินลดาหรือมายด์ ต้องยึด ORIGINAL MASTER ของผู้หญิงคนนั้นแบบ 1:1 ด้วยความเข้มเท่ากวิน ห้ามใช้ generic female face, beauty-template face, face averaging หรือสลับอัตลักษณ์ระหว่างรินลดา/มายด์

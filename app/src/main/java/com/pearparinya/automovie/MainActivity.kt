@@ -42,6 +42,7 @@ class MainActivity : AppCompatActivity() {
     private var lastSoundStep = 0
     private var shareInProgress = false
     private var lastShareAtMs = 0L
+    private var awaitingChatGptReturn = false
     private lateinit var timeLabel: TextView
     private val clockHandler = Handler(Looper.getMainLooper())
     private val stepButtons = mutableMapOf<Int, Button>()
@@ -80,6 +81,21 @@ class MainActivity : AppCompatActivity() {
     private val muted = Color.rgb(196, 193, 222)
     private val success = Color.rgb(83, 224, 210)
     private val activeGreen = Color.rgb(46, 204, 113)
+
+    override fun onResume() {
+        super.onResume()
+        if (awaitingChatGptReturn || statePrefs.getBoolean("awaitingChatGptReturn", false)) {
+            awaitingChatGptReturn = false
+            statePrefs.edit().putBoolean("awaitingChatGptReturn", false).apply()
+            if (::status.isInitialized) {
+                status.text = "✓ กลับสู่ AUTO-MOVIE แล้ว • EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)} • พร้อมทำฉากถัดไป"
+            }
+            if (::nextHint.isInitialized) {
+                nextHint.text = "งานเดิมยังอยู่ • ตรวจภาพใน ChatGPT แล้วกด NEXT SCENE เพื่อทำต่อ"
+            }
+            saveWorkState()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -170,7 +186,7 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "LEAN MASTER • AUTO-CONTEXT • MODERN CINEMA"
+            text = "LEAN MASTER • SESSION RESUME • MODERN CINEMA"
             textSize = 10f
             setTextColor(ice)
             gravity = Gravity.START
@@ -1524,6 +1540,9 @@ CONTINUITY ENGINE:
             }
 
             if (directIntent.resolveActivity(packageManager) != null) {
+                saveWorkState()
+                awaitingChatGptReturn = true
+                statePrefs.edit().putBoolean("awaitingChatGptReturn", true).apply()
                 startActivity(directIntent)
                 status.text = "↗ ส่งคำสั่งไป ChatGPT แล้ว • หากเครือข่ายสะดุดให้กด Retry ใน ChatGPT"
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -1534,6 +1553,9 @@ CONTINUITY ENGINE:
                     sendIntent,
                     "ส่งคำสั่งไปยัง ChatGPT"
                 )
+                saveWorkState()
+                awaitingChatGptReturn = true
+                statePrefs.edit().putBoolean("awaitingChatGptReturn", true).apply()
                 startActivity(chooserIntent)
                 status.text = "↗ เปิดเมนูแชร์สำรอง • เลือก ChatGPT"
                 Handler(Looper.getMainLooper()).postDelayed({ shareInProgress = false }, 2200L)
@@ -1544,6 +1566,9 @@ CONTINUITY ENGINE:
                     sendIntent,
                     "ส่งคำสั่งไปยัง ChatGPT"
                 )
+                saveWorkState()
+                awaitingChatGptReturn = true
+                statePrefs.edit().putBoolean("awaitingChatGptReturn", true).apply()
                 startActivity(chooserIntent)
                 status.text = "↗ เปิด ChatGPT โดยตรงไม่ได้ • ใช้เมนูแชร์สำรอง"
                 Handler(Looper.getMainLooper()).postDelayed({ shareInProgress = false }, 2200L)
@@ -1576,6 +1601,12 @@ CHANNEL:
 SYSTEM MODE:
 LEAN MASTER PROMPT = ON
 AUTO-CONTEXT = ON
+SESSION RESUME = ON
+
+RETURN FLOW:
+- ก่อนส่งงานไป ChatGPT ให้บันทึก EP / SCENE / STORY / workflow state ใน AUTO-MOVIE
+- เมื่อผู้ใช้กลับเข้า AUTO-MOVIE ให้คืนสถานะงานเดิมและพร้อมกด NEXT SCENE
+- ห้ามรีเซ็ตเรื่องหรือ CHARACTER MASTER เพียงเพราะมีการสลับไป ChatGPT
 
 QUICK FLOW:
 ① NEW STORY → ② START → ③ NEXT SCENE

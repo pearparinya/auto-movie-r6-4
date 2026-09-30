@@ -170,7 +170,7 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "MASTER FIDELITY • MODERN CINEMA • SAFE EXECUTION"
+            text = "MASTER FIDELITY • WARDROBE DECOUPLED • MODERN CINEMA"
             textSize = 10f
             setTextColor(ice)
             gravity = Gravity.START
@@ -1123,6 +1123,12 @@ CONTINUITY ENGINE:
 - OUTPUT CONTRACT: ส่งตามลำดับ SCENE STATE (ข้อความสั้น) → IMAGE 9:16 → FLOW/VEO 3.1 PROMPT 8 SEC → NEXT HOOK (1 บรรทัด) เพื่อให้ฉากถัดไปมีจุดต่อที่แน่นอน
 - SCENE STATE ต้องบันทึกเฉพาะสิ่งที่เห็น/เกิดขึ้นจริงในฉากนี้: END TIME, END LOCATION, ACTIVE CAST, WARDROBE, PROPS, KNOWLEDGE CHANGE, EMOTION/RELATIONSHIP CHANGE, LAST ACTION
 - ถ้ามี STORY/EP context เดิมให้ยึดเป็นหลัก; ถ้า context เดิมไม่อยู่ ให้ใช้ SOURCE OF TRUTH + EP/SCENE INDEX สร้างรายละเอียดขั้นต่ำที่ไม่ขัดกับ canon แล้วสร้างฉากทันที
+- BUILD 697 IDENTITY / WARDROBE DECOUPLING = ON: แยก CHARACTER IDENTITY ออกจากเสื้อผ้าใน ORIGINAL MASTER อย่างเด็ดขาด; เสื้อผ้าใน MASTER เป็น reference context ไม่ใช่ส่วนของ identity
+- BODY SILHOUETTE CONTINUITY = ON: เมื่อเปลี่ยนเสื้อผ้า ให้รักษาภาพลักษณ์โดยรวมและโครงร่างตามธรรมชาติของตัวละครผู้ใหญ่จาก ORIGINAL MASTER โดยไม่เพิ่ม ลด หรือเน้นส่วนร่างกายเพื่อให้เข้ากับชุด
+- WARDROBE OVERRIDE = STORY AUTHORITY: ถ้า STORY/SCENE ระบุชุดใหม่ ให้ใช้ชุดใหม่ครบทั้งชุดตามบริบททันที ห้ามดึงสี ทรง หรือรายละเอียดชุดจาก MASTER กลับมา เว้นแต่เรื่องระบุให้ใช้
+- PROFESSIONAL OUTFIT INTERPRETER = ON: คำว่า “ชุดทำงาน” ให้ตีความเป็นเสื้อผ้าทำงานสุภาพที่เหมาะกับสถานที่/อาชีพ เช่น blazer, blouse/shirt, trousers หรือ skirt ตาม continuity โดยไม่คัดลอกชุด MASTER
+- CLOTHING FIT RULE = NATURAL: เสื้อผ้าใหม่ต้องพอดีและตกทิ้งตามธรรมชาติของบุคคลเดิม ห้ามใช้ wardrobe เพื่อ reshape, exaggerate หรือ idealize รูปลักษณ์
+- MASTER CLOTHING EXCLUSION = HARD: สีชุด neckline straps hem slit accessories และ styling ของภาพ MASTER ห้ามถือเป็น identity token; CHARACTER MASTER ใช้สำหรับบุคคล ไม่ใช่ costume template
 - BUILD 696 MASTER FIDELITY CINEMA ENGINE = ON: ORIGINAL MASTER เป็น visual identity authority ของตัวละครผู้ใหญ่แต่ละคน ใช้เพื่อรักษาคนเดิมโดยไม่เพิ่มคำบรรยายรูปร่างหรือรายละเอียดทางเพศที่ไม่จำเป็น
 - IDENTITY MINIMALISM = ON: ส่งคำสั่งอัตลักษณ์แบบสั้นและเป็นกลาง — same adult person, same recognizable face, hairstyle, approximate age and overall natural appearance — แล้วให้ภาพอ้างอิงทำหน้าที่หลัก
 - NO TEXT-BASED FACE REDESIGN: ห้ามสร้างใบหน้าใหม่จากคำว่า หล่อ/สวย/ดารา/นางแบบ/cinematic beauty แล้วค่อยทำให้คล้าย MASTER; เริ่มจากบุคคลใน MASTER ก่อน

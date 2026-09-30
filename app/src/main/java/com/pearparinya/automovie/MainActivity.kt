@@ -170,7 +170,7 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "MASTER FIDELITY • WARDROBE DECOUPLED • MODERN CINEMA"
+            text = "MASTER SILHOUETTE • WARDROBE DECOUPLED • MODERN CINEMA"
             textSize = 10f
             setTextColor(ice)
             gravity = Gravity.START
@@ -1123,6 +1123,11 @@ CONTINUITY ENGINE:
 - OUTPUT CONTRACT: ส่งตามลำดับ SCENE STATE (ข้อความสั้น) → IMAGE 9:16 → FLOW/VEO 3.1 PROMPT 8 SEC → NEXT HOOK (1 บรรทัด) เพื่อให้ฉากถัดไปมีจุดต่อที่แน่นอน
 - SCENE STATE ต้องบันทึกเฉพาะสิ่งที่เห็น/เกิดขึ้นจริงในฉากนี้: END TIME, END LOCATION, ACTIVE CAST, WARDROBE, PROPS, KNOWLEDGE CHANGE, EMOTION/RELATIONSHIP CHANGE, LAST ACTION
 - ถ้ามี STORY/EP context เดิมให้ยึดเป็นหลัก; ถ้า context เดิมไม่อยู่ ให้ใช้ SOURCE OF TRUTH + EP/SCENE INDEX สร้างรายละเอียดขั้นต่ำที่ไม่ขัดกับ canon แล้วสร้างฉากทันที
+- BUILD 698 MASTER SILHOUETTE FIDELITY = ON: แก้ regression จากการแยก wardrobe โดยให้ ORIGINAL MASTER ยังคงเป็น visual reference ของ overall silhouette / frame / shoulder-to-torso balance / natural stance ของตัวละครผู้ใหญ่ แต่ไม่คัดลอกเสื้อผ้า
+- SILHOUETTE BEFORE WARDROBE = ON: กำหนดคนเดิมและ overall silhouette จาก MASTER ก่อน แล้วจึงสวมชุดของฉากเป็นชั้น wardrobe; ห้ามให้ทรง/ความหลวม/ความรัดของเสื้อผ้าใหม่เปลี่ยนภาพลักษณ์โดยรวมของบุคคล
+- NO GENERIC BODY TEMPLATE = HARD: ห้าม normalize ตัวละครเป็นรูปร่างมาตรฐานของนายแบบ/นางแบบหรือ generic cinematic actor; ใช้ ORIGINAL MASTER เป็น visual authority ของ overall appearance
+- WARDROBE IS OVERLAY, NOT RESHAPE: เสื้อผ้าเปลี่ยนได้เต็มชุด แต่ต้องทำหน้าที่เป็นเสื้อผ้าบนบุคคลเดิม ไม่ใช่เหตุผลในการ redesign บุคคล
+- FULL-FIGURE REFERENCE BALANCE = ON: เมื่อภาพ MASTER แสดงข้อมูลช่วงตัวที่เพียงพอ ให้รักษาความสัมพันธ์โดยรวมของศีรษะ ไหล่ ลำตัว และท่ายืนตามธรรมชาติ โดยไม่แจกแจงหรือเน้นส่วนร่างกายเชิงเพศ
 - BUILD 697 IDENTITY / WARDROBE DECOUPLING = ON: แยก CHARACTER IDENTITY ออกจากเสื้อผ้าใน ORIGINAL MASTER อย่างเด็ดขาด; เสื้อผ้าใน MASTER เป็น reference context ไม่ใช่ส่วนของ identity
 - BODY SILHOUETTE CONTINUITY = ON: เมื่อเปลี่ยนเสื้อผ้า ให้รักษาภาพลักษณ์โดยรวมและโครงร่างตามธรรมชาติของตัวละครผู้ใหญ่จาก ORIGINAL MASTER โดยไม่เพิ่ม ลด หรือเน้นส่วนร่างกายเพื่อให้เข้ากับชุด
 - WARDROBE OVERRIDE = STORY AUTHORITY: ถ้า STORY/SCENE ระบุชุดใหม่ ให้ใช้ชุดใหม่ครบทั้งชุดตามบริบททันที ห้ามดึงสี ทรง หรือรายละเอียดชุดจาก MASTER กลับมา เว้นแต่เรื่องระบุให้ใช้

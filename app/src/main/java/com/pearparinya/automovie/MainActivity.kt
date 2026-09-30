@@ -596,30 +596,12 @@ class MainActivity : AppCompatActivity() {
     // Identity-safe selective master engine.
     // The app owns the cast schedule, so it can attach only the original
     // masters that are actually allowed to appear in the current scene.
-    private fun sceneCastKeys(scene: Int): List<String> = when (scene.coerceIn(1, 20)) {
-        // Balanced cast validation: every EP exercises all three fixed masters early.
-        // This prevents development from validating only Gawin while keeping the
-        // story visually varied and still deterministic for Android attachments.
-        1 -> listOf("rinlada")
-        2 -> listOf("mind")
-        3 -> listOf("gawin")
-        4 -> listOf("gawin", "rinlada")
-        5 -> listOf("rinlada")
-        6 -> listOf("gawin", "mind")
-        7 -> listOf("gawin")
-        8 -> listOf("rinlada", "mind")
-        9 -> listOf("mind")
-        10 -> listOf("gawin", "rinlada")
-        11 -> listOf("rinlada")
-        12 -> listOf("gawin", "mind")
-        13 -> listOf("gawin")
-        14 -> listOf("rinlada", "mind")
-        15 -> listOf("mind")
-        16 -> listOf("gawin", "rinlada")
-        17 -> listOf("rinlada")
-        18 -> listOf("gawin", "mind")
-        19 -> listOf("gawin")
-        else -> listOf("gawin", "rinlada", "mind")
+    private fun sceneCastKeys(scene: Int): List<String> {
+        // BUILD 681: Triple Character Composer.
+        // Every production scene carries all three ORIGINAL MASTER files so
+        // ChatGPT receives one deterministic 3-person cast registry.
+        scene.coerceIn(1, 20)
+        return listOf("gawin", "rinlada", "mind")
     }
 
     private fun sceneCastNames(scene: Int): String =
@@ -921,7 +903,7 @@ class MainActivity : AppCompatActivity() {
         updateUi()
         saveWorkState()
         share(buildQuickStartCommand(story, category), characterKeys = characterNames.keys.toList())
-        status.text = "⚡ FAST START • SCENE 01 รินลดา • NEXT = มายด์"
+        status.text = "⚡ FAST START • SCENE 01 • 3 CAST LOCKED"
     }
 
     private fun generateNextQuickScene() {
@@ -983,9 +965,13 @@ SOURCE OF TRUTH:
 - ATTACHMENT 2 = รินลดา / MASTER 02
 - ATTACHMENT 3 = มายด์ / MASTER 03
 - ก่อนทำ STORY BIBLE ให้ตรวจว่ามองเห็นภาพแนบทั้ง 3 ภาพจริง หากไม่ครบ ให้หยุดและแจ้ง ATTACHMENT TRANSPORT FAIL ห้ามสร้างภาพโดยเดาใบหน้า
-- SCENE 01 ACTIVE CAST = รินลดา เท่านั้น แม้ START จะส่ง MASTER ครบ 3 ภาพ
-- กวินและมายด์ใช้สำหรับ FIXED CAST REGISTRY / STORY BIBLE เท่านั้น ห้ามให้ปรากฏในภาพ SCENE 01
-- ภาพ SCENE 01 ต้องใช้ ATTACHMENT 2 เป็น ORIGINAL IDENTITY MASTER ของรินลดาโดยตรง ห้ามสร้างใบหน้ารินลดาใหม่จากข้อความ
+- SCENE 01 ACTIVE CAST = กวิน + รินลดา + มายด์ พร้อมกัน EXACTLY 3 PEOPLE
+- ภาพ SCENE 01 ต้องมีตัวละครหลักครบ 3 คนในเฟรมเดียว: ATTACHMENT 1 = กวิน, ATTACHMENT 2 = รินลดา, ATTACHMENT 3 = มายด์
+- TRIPLE CHARACTER COMPOSER = HARD REQUIREMENT: ห้ามลดเหลือ 1 หรือ 2 คน ห้ามเพิ่มคนที่ 4 ห้ามสร้างคนซ้ำ
+- แต่ละคนต้องรักษา ORIGINAL IDENTITY MASTER ของตนเองโดยตรง ห้ามผสมใบหน้า/ทรงผม/รูปร่างระหว่างกัน
+- COMPOSITION SAFE MODE: ใช้ภาพครึ่งตัวหรือเต็มตัวตามธรรมชาติ เสื้อผ้าปกติสุภาพ และหลีกเลี่ยง framing/คำบรรยายที่เน้นสัดส่วนทางเพศ
+- CHARACTER COUNT QC: ก่อนส่งภาพให้นับคนที่เห็นจริง หากไม่เท่ากับ 3 ให้ถือว่า INVALID OUTPUT และสร้างใหม่ภายในคำสั่งเดียวก่อนส่ง
+- SAFE RETRY: หากการสร้างภาพครั้งแรกติดข้อจำกัด ให้ลดเฉพาะคำบรรยายรูปร่าง/เสื้อผ้าที่ไม่จำเป็น คง identity + story beat + exactly 3 people แล้วลองสร้างใหม่หนึ่งครั้ง
 - FIXED CAST IDENTITY DNA — MASTER 02 รินลดา: ใช้ภาพ ATTACHMENT 2 เป็นแหล่งอัตลักษณ์เพียงแหล่งเดียวตลอด EP 01–05 ทุกครั้งที่รินลดาปรากฏ ต้องย้อนอ้างอิง ORIGINAL MASTER นี้ใหม่ ไม่สืบทอดใบหน้าจากภาพฉากก่อนหน้า
 - ล็อกลักษณะจาก MASTER 02 เฉพาะ: facial geometry / head shape / eyes / eyebrows / nose / lips / jawline / ears / hair shape+color / skin tone / approximate age / natural body build+proportions
 - ห้ามเปลี่ยนรินลดาให้สวยขึ้น อ่อนวัยขึ้น ผิวเนียนขึ้น หน้าเรียวขึ้น ตาโตขึ้น จมูกเปลี่ยน ทรงผมเปลี่ยน หรือรูปร่าง/สัดส่วนธรรมชาติเปลี่ยน แม้เพื่อ cinematic beauty

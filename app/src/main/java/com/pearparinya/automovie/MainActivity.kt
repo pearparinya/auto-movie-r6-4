@@ -170,7 +170,7 @@ class MainActivity : AppCompatActivity() {
         }, full())
 
         headerText.addView(TextView(this).apply {
-            text = "MASTER SILHOUETTE • WARDROBE DECOUPLED • MODERN CINEMA"
+            text = "LEAN MASTER • AUTO-CONTEXT • MODERN CINEMA"
             textSize = 10f
             setTextColor(ice)
             gravity = Gravity.START
@@ -1564,276 +1564,56 @@ CONTINUITY ENGINE:
     // ============================================================
 
     private fun rules(): String {
-
         return """
 AUTO-MOVIE ENGINE 2.0
 R${appVersion()} • BUILD เวอร์ชั่น ${packageManager.getPackageInfo(packageName, 0).versionCode}
 พัฒนาโดย : นายปริญญา จันทร์จักษุ
-ANDROID PROFESSIONAL • AUTO-CONTEXT
-WARDROBE FIREWALL
+ANDROID PROFESSIONAL • LEAN MASTER • AUTO-CONTEXT
 
 CHANNEL:
 สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย
 
 SYSTEM MODE:
+LEAN MASTER PROMPT = ON
 AUTO-CONTEXT = ON
 
-QUICK FLOW SYNC:
-- Workflow ใหม่มีเพียง 3 ขั้นตอน: ① NEW STORY → ② START → ③ NEXT SCENE
-- START ต้องสร้างโครงเรื่องและภาพ SCENE 01 ในคำสั่งเดียว
-- NEXT SCENE ต้องสร้างภาพฉากปัจจุบันทันทีแบบ SELF-CONTAINED
-- ห้ามสั่ง Director กลับไปกด CONFIRM / QC / REPAIR / LOCK
-- QC และการแก้ข้อผิดพลาดพื้นฐานให้ทำภายในคำสั่งเดียวก่อนส่ง Output
-- FAST EXECUTION MODE = ON: อ่าน SOURCE OF TRUTH + ORIGINAL MASTER แล้วลงมือทันที ห้ามเกริ่น ห้ามทวนคำสั่ง ห้ามถามยืนยันเมื่อข้อมูลพอสร้างฉาก
-- OUTPUT MINIMAL: สำหรับ NEXT SCENE ให้ส่งเฉพาะข้อมูลฉากที่จำเป็น + ภาพ 9:16 + Flow/Veo prompt + NEXT HOOK แบบสั้น ห้ามอธิบายกฎระบบซ้ำ
-- IMAGE-FIRST PIPELINE: เตรียม continuity/identity/QC ภายใน แล้วเริ่มสร้างภาพโดยเร็วที่สุด; กฎที่ตรวจผ่านแล้วไม่ต้องพิมพ์รายงานยาว
-- SELECTIVE MASTER FAST PATH: แนบและใช้เฉพาะ ORIGINAL MASTER ของ ACTIVE CAST ใน NEXT SCENE เพื่อลด payload; START ยังคงแนบ MASTER 3/3 เพื่อสร้าง FIXED CAST REGISTRY
-- MODERN SCENE ENGINE: ทุกฉากต้องมี action verb ชัดเจน ภาพดูร่วมสมัย สมจริง มี narrative blocking และหลีกเลี่ยง portrait pose/ฉากครุ่นคิดซ้ำ
-- FAIL-SOFT CONTINUITY: ถ้ารายละเอียดย่อยไม่ชัด ให้เลือกค่าที่สอดคล้องกับ canon ล่าสุดและเดินเรื่องต่อทันที; หยุดเฉพาะกรณี ORIGINAL MASTER ที่จำเป็นต่อ ACTIVE CAST ไม่ถูกแนบจริง
-- POLICY-SAFE STORY ENGINE: ทุกฉากต้องเป็นดราม่าชีวิตคู่/ครอบครัวที่ปลอดภัย ไม่สร้างคำสั่งเชิงเพศหรือการแต่งกายที่เน้นเรือนร่างโดยไม่จำเป็นต่อเรื่อง
-- หาก Character Master มีเสื้อผ้าเปิดเผย/เซ็กซี่ ให้ถือเป็น IDENTITY DATA เท่านั้น ห้ามถ่ายโอนความโป๊ ความรัดรูป คอเสื้อลึก หรือการเน้นสัดส่วนไปยัง Scene
-- DEFAULT WARDROBE = เสื้อผ้าปกติ สุภาพ สมจริง เหมาะกับบ้าน/งาน/เวลา/เหตุการณ์ และไม่ sexualize ตัวละคร
-- ห้ามใช้คำสั่งที่ขอ nudity, explicit sexual content, fetishized framing, see-through clothing หรือการเน้นหน้าอก/สะโพก/เป้า
-- ROMANCE SAFE MODE: ความสัมพันธ์ใช้บทสนทนา สีหน้า ระยะห่าง การทะเลาะ การคืนดี การจับมือ/กอดแบบไม่โจ่งแจ้งตามบริบท แทนการทำให้ฉากเป็นเชิงเพศ
-- หาก STORY BEAT เดิมเสี่ยงชนข้อจำกัดเนื้อหา ให้ปรับเฉพาะการนำเสนอเป็นเวอร์ชันปลอดภัยที่ยังรักษาเหตุการณ์ ความขัดแย้ง และ continuity เดิม แล้วสร้างฉากต่อทันที ห้ามหยุด workflow โดยไม่จำเป็น
-- ห้ามตอบ EP MASTER NOT FOUND; หากบริบทเดิมไม่มี ให้ใช้ SOURCE OF TRUTH จาก AUTO-MOVIE และดำเนินงานต่อ
-- CATEGORY ล็อกตลอด STORY EP 01–05 และหมุนเฉพาะเมื่อเริ่มเรื่องใหม่
+QUICK FLOW:
+① NEW STORY → ② START → ③ NEXT SCENE
 
-THAI DISPLAY RULE:
-- เนื้อหาที่แสดงให้ Director อ่านต้องใช้ภาษาไทยเป็นหลัก
-- หัวข้อ EP MASTER ให้ใช้ "ข้อมูลหลัก EP XX"
-- ใช้ป้ายกำกับ: ช่อง, ชื่อเรื่อง, หมวดเรื่อง, ตอน, จำนวนฉาก, ความยาว, รูปแบบ, กล้อง, สถานะ, ตัวละครหลัก
-- รายละเอียดแต่ละ Scene ให้ใช้หัวข้อไทย: ฉาก, สถานที่, ตัวละคร, ภาพ/การกระทำ, อารมณ์, บทพูด/ผู้บรรยาย, กล้อง, พรอมต์ Flow/Veo 3.1
-- คำระบบที่จำเป็น เช่น EP, Flow/Veo 3.1, Locked-off, QC, PASS, FAIL, REPAIR, LOCK, NEXT SCENE ให้คงภาษาอังกฤษไว้ร่วมกับภาษาไทย
-- หลีกเลี่ยงหัวข้ออังกฤษล้วน เช่น CHANNEL, TITLE, CATEGORY, EPISODE, SCENES, DURATION, FORMAT, CAMERA, STATUS ในผลลัพธ์ที่ Director อ่าน
-- กฎ/คำสั่งภายในระบบยังตีความตามคำศัพท์มาตรฐานเดิม ห้ามเปลี่ยนความหมาย Workflow
+CORE PRINCIPLE:
+- ใช้ ORIGINAL MASTER ที่แนบเป็นตัวละครผู้ใหญ่คนเดิมโดยตรง
+- ภาพอ้างอิงเป็นแหล่งข้อมูลหลักของใบหน้า ทรงผม อายุโดยประมาณ และภาพลักษณ์โดยรวม
+- อย่าเขียนคำบรรยายใบหน้า/รูปร่างใหม่จากข้อความ และอย่าปรับตัวละครให้เป็น generic actor/model
+- เปลี่ยนเฉพาะสิ่งที่ STORY/SCENE สั่ง เช่น เสื้อผ้า การกระทำ สีหน้า สถานที่ และเวลา
+- เสื้อผ้าใน ORIGINAL MASTER ไม่ใช่ Identity; เปลี่ยนชุดได้เต็มชุดตามฉาก
+- ถ้าฉากต่อเนื่องในวัน/เหตุการณ์เดียวกัน ให้คงชุดล่าสุดจนกว่าเรื่องจะมีเหตุผลให้เปลี่ยน
+- เสื้อผ้าใหม่ต้องเป็นธรรมชาติ เหมาะกับสถานการณ์ และไม่ใช้เพื่อ redesign หรือเน้นรูปลักษณ์ของบุคคล
+- ใช้เฉพาะ ORIGINAL MASTER ของ ACTIVE CAST; คนที่ไม่อยู่ใน ACTIVE CAST ห้ามเพิ่มเอง
+- ถ้ามีหลาย MASTER ให้รักษาแต่ละคนแยกกัน ห้ามผสมหรือสลับอัตลักษณ์
+- ห้ามใช้ภาพ Scene Output ก่อนหน้าแทน ORIGINAL MASTER
+- ให้ STORY BEAT เป็นตัวกำหนดจำนวนตัวละคร การกระทำ blocking และพร็อพ
+- ACTION FIRST: ฉากใหม่ต้องมีการกระทำที่ทำให้เรื่องเดินหน้า ไม่ใช่เพียงยืนโพสหรือเปลี่ยนสีหน้า
+- CONTINUITY: เวลา สถานที่ ชุด พร็อพ ข้อมูลที่ตัวละครรู้ และอารมณ์ ต้องต่อจากฉากก่อนอย่างสมเหตุผล
+- MODERN BLOCKING: ไม่บังคับตัวละครยืนเรียงหน้ากล้อง; จัดตำแหน่งจากเหตุการณ์และความสัมพันธ์
+- กล้อง Locked-off static camera; ห้าม zoom/pan/tilt/roll/dolly/tracking/cut/reframe
+- ทุกฉาก 8 วินาที • แนวตั้ง 9:16 • One Scene / One Image • Flow/Veo 3.1
+- ใช้ภาษาภาพและเสื้อผ้าที่เป็นกลาง เหมาะกับเนื้อเรื่อง และเคารพข้อกำหนดความปลอดภัย
+- ถ้ารายละเอียดย่อยไม่ชัด ให้เลือกค่าที่สอดคล้องกับ canon ล่าสุดและเดินเรื่องต่อ ห้ามถามซ้ำเมื่อข้อมูลพอ
+- START สร้าง STORY BIBLE + EP PLAN + SCENE 01 ในคำสั่งเดียว
+- NEXT SCENE สร้างฉากปัจจุบันทันทีแบบ SELF-CONTAINED
+- OUTPUT MINIMAL: แสดงเฉพาะข้อมูลฉากที่จำเป็น + IMAGE 9:16 + Flow/Veo prompt + NEXT HOOK
+- INTERNAL QC: ตรวจ cast, identity continuity, wardrobe continuity, action, hands/anatomy และจำนวนคนก่อนส่ง โดยไม่พิมพ์รายงานยาว
+- หากระบบภาพรักษาความเหมือนจาก MASTER ไม่ได้อย่างน่าเชื่อถือ ห้ามประกาศว่าตรงต้นฉบับแบบสมบูรณ์
 
-PRODUCTION RULES:
+CAST REGISTRY:
+MASTER 01 = กวิน
+MASTER 02 = รินลดา
+MASTER 03 = มายด์
 
-- 1 STORY มี 5 EP
-- EP 01–05 ต้องเป็นเรื่องเดียวกันและ CATEGORY เดียวกัน
-- แต่ละ EP ต้องมี 20 ฉาก
-- รวมทั้งเรื่อง 100 ฉาก
-- CATEGORY หมุนเฉพาะเมื่อเริ่ม STORY ใหม่ หลัง EP 05 จบแล้ว
-- จบแต่ละ EP ต้องมี EP HANDOFF FILE เฉพาะเพื่อส่งต่อ EP ถัดไป
-- ทุกฉากยาว 8 วินาทีเท่ากัน
-- วิดีโอแนวตั้ง 9:16
-- สำหรับ Flow / Veo 3.1
-- One Scene / One Image
-
-CAMERA:
-
-Locked-off static camera.
-
-ห้าม:
-- Zoom
-- Pan
-- Tilt
-- Roll
-- Dolly
-- Tracking
-- Camera movement
-- Cut
-- Reframe
-
-IDENTITY MASTER:
-
-รูปต้นฉบับของตัวละคร
-คือ ORIGINAL IDENTITY MASTER
-
-ต้องใช้ ORIGINAL IDENTITY MASTER
-ในทุก Scene ที่ตัวละครนั้นปรากฏ
-
-ห้ามใช้ภาพ Output
-จาก Scene ก่อนหน้า
-เป็น Identity Master
-
-Reference Image ใช้สำหรับ:
-
-- ใบหน้า
-- สีผิว
-- รูปร่างธรรมชาติ
-- ทรงผม
-- อายุโดยประมาณ
-- อัตลักษณ์
-
-เท่านั้น
-
-VISUAL IDENTITY LOCK — FIXED CAST REGISTRY:
-
-FIXED CAST REGISTRY — SINGLE SOURCE OF TRUTH:
-- MASTER กวิน / รินลดา / มายด์ คือทะเบียนนักแสดงถาวรของ STORY
-- SELECTIVE MASTER ENGINE จะเลือกแนบเฉพาะ ORIGINAL MASTER ของ ACTIVE CAST ในฉากปัจจุบัน
-- หมายเลข ATTACHMENT เป็นลำดับเฉพาะของคำสั่งปัจจุบัน ให้ยึด mapping ที่ AUTO-MOVIE ระบุใน CURRENT SCENE
-- MASTER ที่ไม่ได้แนบในคำสั่งปัจจุบัน = ตัวละครนั้นห้ามปรากฏในภาพฉากนี้
-- ORIGINAL MASTER ที่แนบคือบุคคลจริงของบท ไม่ใช่ภาพตัวอย่างสำหรับสร้างคนใหม่
-- เมื่อต้องใช้ตัวละครหลัก ให้ใช้ "บุคคลคนเดิมจาก IMAGE หมายเลขนั้น" โดยตรง
-- ห้ามสร้าง visual identity ใหม่จากชื่อ อายุ บุคลิก บทบาท เนื้อเรื่อง หรือคำบรรยายความหล่อ/สวย
-- ห้ามเขียนหรืออนุมานคำบรรยายใบหน้าใหม่ เช่น รูปหน้า ตา คิ้ว จมูก ปาก กราม ความหล่อ/สวย เชื้อชาติ หรือสไตล์ใบหน้า เพื่อใช้แทน IMAGE
-- คำบรรยาย Scene ของตัวละครหลักอนุญาตเฉพาะ: ชื่อ/IMAGE ID, เสื้อผ้าตาม Scene, ตำแหน่ง, การกระทำ, อารมณ์ และทิศทางการมอง
-- ห้าม RECAST, SUBSTITUTE ACTOR, FACE BLEND, FACE AVERAGE, BEAUTIFY, AGE SHIFT, FACE MORPH หรือ BODY RESHAPE
-- ห้ามใช้ Scene Output, portrait ที่ AI สร้าง, contact sheet, character card, รูปในกรอบ, กระจก หรือจอภาพ เป็น Identity Source ใหม่
-- ทุก Scene ต้องย้อนกลับไปที่ ORIGINAL MASTER ที่ AUTO-MOVIE แนบสำหรับ ACTIVE CAST เสมอ
-- เสื้อผ้าใน ORIGINAL MASTER ไม่ใช่ Identity และห้ามคัดลอกตาม WARDROBE FIREWALL
-- ถ้ามีหลายตัวละครในฉาก ให้รักษาแต่ละ IMAGE ID แยกจากกันแบบ 1:1 ห้ามถ่ายโอนลักษณะระหว่างคน
-- PRIORITY: FIXED CAST IDENTITY > NATURAL FACE/HAIR/BODY CONTINUITY > STORY ACTION > EMOTION > POSE > WARDROBE > CINEMATIC BEAUTY
-- ก่อนส่งภาพ ตรวจว่าบุคคลที่ใช้แทน กวิน/รินลดา/มายด์ ยังเป็นบุคคลคนเดิมจาก IMAGE 1/2/3 ตามลำดับ ถ้าเห็นชัดว่าเป็นคนใหม่ = INTERNAL QC FAIL
-- หากระบบภาพไม่สามารถรักษาบุคคลเดิมจาก IMAGE ได้อย่างน่าเชื่อถือ ให้ระบุข้อจำกัด ห้ามประกาศ Identity PASS เท็จ
-
-STORY BIBLE IMAGE RULE:
-- STORY BIBLE เป็นข้อมูลข้อความ/แผนเรื่อง ไม่ต้องสร้างภาพ portrait ใหม่ของ MASTER 01/02/03
-- ถ้าจำเป็นต้องแสดงรายชื่อตัวละคร ให้ใช้ชื่อและรหัส MASTER เท่านั้น
-- ภาพที่ต้องสร้างใน START คือภาพ SCENE 01 เพียงภาพเดียวหลังวาง STORY BIBLE
-- ห้ามรวม STORY BIBLE, ตาราง, portrait ตัวละคร และ SCENE 01 เป็นภาพ collage/infographic เดียว
-- Output ภาพ SCENE ต้องเป็นภาพฉาก 9:16 แบบเต็มฉาก ไม่ใส่ตาราง/ตัวหนังสือ/character card ทับในภาพ
-
-FIXED CAST COMPATIBILITY MAP:
-
-ตัวละครหลักถาวรมีเพียง 3 คน:
-- MASTER 01 = กวิน (Gawin) — ตัวละครหลักชาย
-- MASTER 02 = รินลดา (Rinlada) — ตัวละครหลักหญิง
-- MASTER 03 = มายด์ (Mind) — ตัวละครหลักหญิง
-
-เมื่อคำสั่งจาก AUTO-MOVIE มีภาพแนบ 3 ภาพ:
-- ให้จับคู่ตามลำดับ MASTER 01 กวิน / MASTER 02 รินลดา / MASTER 03 มายด์
-- ภาพเหล่านี้คือ ORIGINAL IDENTITY MASTER ที่แอปแนบให้อัตโนมัติ
-- ห้ามถาม Director ให้แนบภาพทั้ง 3 คนซ้ำ หากภาพแนบมากับคำสั่งแล้ว
-- ใช้เฉพาะตัวละครหลักที่ EP MASTER / CURRENT SCENE ระบุว่าปรากฏในฉาก
-- ตัวละครอื่นทั้งหมดเป็น SUPPORTING CHARACTER ให้ระบบสร้างอัตโนมัติตามบท
-- SUPPORTING CHARACTER ต้องมีชื่อ/บทบาท/อายุโดยประมาณ/ลักษณะเด่นที่ล็อกไว้เมื่อปรากฏครั้งแรก
-- เมื่อ SUPPORTING CHARACTER คนเดิมกลับมา ให้รักษาข้อมูลที่ล็อกไว้จาก STORY/EP CONTEXT
-- ห้ามร้องขอ Identity Master จาก Director สำหรับตัวละครรองที่ระบบสร้างขึ้นเอง
-
-WARDROBE FIREWALL:
-
-ORIGINAL IDENTITY MASTER ใช้ได้เฉพาะ:
-- ใบหน้า
-- สีผิว
-- รูปร่างธรรมชาติ
-- ทรงผม
-- อายุโดยประมาณ
-- อัตลักษณ์
-
-STRICTLY FORBIDDEN FROM IDENTITY MASTER:
-- เสื้อ / กางเกง / กระโปรง / เดรส / สูท
-- รองเท้า
-- เครื่องประดับที่เป็นส่วนของชุด
-- สีเสื้อผ้า / รูปแบบเสื้อผ้า
-- ความโป๊/ความปิดของชุด
-
-ห้ามคัดลอก เลียนแบบ หรืออนุมาน WARDROBE
-จาก ORIGINAL IDENTITY MASTER
-
-WARDROBE SOURCE PRIORITY:
-1. CURRENT SCENE MASTER
-2. SAME-DAY CONTINUITY จาก EP MASTER
-3. STORY CONTEXT
-4. DIRECTOR COMMAND
-
-ถ้า CURRENT SCENE MASTER ระบุชุดไว้ ต้องใช้ชุดนั้นเป็นอันดับแรก
-ถ้าไม่ได้ระบุชุดใหม่ ให้ใช้ SAME-DAY CONTINUITY จากบทที่ล็อกไว้ ไม่ใช่จากภาพ Output
-
-NEVER:
-IDENTITY MASTER -> WARDROBE
-PREVIOUS GENERATED IMAGE -> IDENTITY MASTER
-PREVIOUS GENERATED IMAGE -> WARDROBE SOURCE
-
-WARDROBE LEAK:
-ถ้า Output ใช้เสื้อผ้า สีชุด หรือรูปแบบชุด
-เหมือน/ใกล้เคียง ORIGINAL IDENTITY MASTER
-โดยไม่มีคำสั่งรองรับจาก CURRENT SCENE MASTER, CONTINUITY หรือ DIRECTOR:
-QC = FAIL
-FAIL CODE = WLF-01 — IDENTITY MASTER WARDROBE LEAK
-
-ห้าม:
-
-- ลดรูปร่าง
-- ทำให้ผอม
-- เปลี่ยนสัดส่วน
-- Reshape Body
-
-เพื่อให้เข้ากับเสื้อผ้า
-
-VOICE RULES:
-
-ถ้าเป็นบทพูด:
-
-ขยับปากเฉพาะ
-ตัวละครที่กำลังพูด
-
-ถ้าเป็นผู้บรรยาย:
-
-ตัวละครทุกคนในภาพ
-ต้องไม่พูด
-
-ปากปิดอย่างเป็นธรรมชาติ
-
-NO LIP SYNC
-
-QC RULE:
-
-ตรวจจากภาพ Output จริงเท่านั้น
-
-ห้ามตัดสินจาก Prompt Intent
-
-FAIL-CLOSED
-
-ถ้าไม่แน่ใจ = FAIL
-
-REPAIR RULE:
-
-DELTA-ONLY
-
-แก้เฉพาะจุดที่ไม่ผ่าน
-
-รักษาทุกส่วนที่ผ่านแล้ว
-
-REPAIR สูงสุด 3 ครั้งต่อ Scene
-
-AUTO-CONTEXT RULE:
-
-เมื่อ CREATE EP
-ได้สร้างบท 20 Scene
-ไว้ก่อนหน้านี้แล้ว
-
-คำสั่ง GENERATE SCENE
-และ NEXT SCENE
-
-ต้องค้นหาและใช้
-EP ล่าสุดที่สร้างไว้
-ในบทสนทนาเดียวกัน
-
-ต้องดึงบท
-CURRENT SCENE
-จาก EP เดิมโดยอัตโนมัติ
-
-ห้ามถาม Director
-ให้ส่งบท Scene ซ้ำ
-ถ้าบทนั้นมีอยู่แล้ว
-ในบทสนทนา
-
-ห้ามสร้าง Scene ใหม่
-แทน Scene ที่มีอยู่แล้ว
-
-ห้ามเปลี่ยนเหตุการณ์เดิม
-โดยไม่มีคำสั่ง Director
-
-สำหรับตัวละครหลัก กวิน / รินลดา / มายด์:
-ให้ใช้ ORIGINAL IDENTITY MASTER ที่ AUTO-MOVIE แนบมากับคำสั่ง
-
-สำหรับตัวละครรอง:
-สร้างอัตโนมัติจากข้อมูล SUPPORTING CHARACTER ที่ล็อกไว้
-ห้ามขอ Director แนบ Identity Master เพิ่ม
-
-ห้ามถามหาบท Scene ซ้ำ
-
-SCENE 20:
-
-SAVE_EP
-HANDOFF
-STOP
-
-ห้ามเริ่ม EP ถัดไปอัตโนมัติ
+REFERENCE RULE:
+คิดแบบคำสั่งสั้น:
+“ใช้คนเดิมจากไฟล์ที่แนบ + ทำ ACTION ของฉาก + ใส่ WARDROBE ของฉาก + อยู่ LOCATION ของฉาก + 9:16”
+รายละเอียดที่ไม่ได้สั่งให้เปลี่ยน ให้คงจาก ORIGINAL MASTER/continuity โดยไม่บรรยายซ้ำเกินจำเป็น
         """.trimIndent()
     }
 

@@ -973,6 +973,8 @@ SOURCE OF TRUTH:
 - LEAN IMAGE PIPELINE V1: ใช้ ORIGINAL MASTER ทั้ง 3 ภาพเป็นตัวอ้างอิงตัวละครผู้ใหญ่โดยตรง แล้วสร้าง FINAL IMAGE ทันที
 - EXACT CAST: ภาพต้องมีตัวละครผู้ใหญ่ 3 คนพอดี — CHAR_01 กวิน, CHAR_02 รินลดา, CHAR_03 มายด์ — ห้ามเพิ่มคน ห้ามทำคนซ้ำ
 - IDENTITY CORE: รักษาใบหน้าและทรงผมของแต่ละคนให้ใกล้ ORIGINAL MASTER และห้ามสลับ identity ระหว่างกัน
+- NATURAL BODY BUILD LOCK V1: รักษารูปร่างโดยรวมและสัดส่วนตามธรรมชาติของตัวละครผู้ใหญ่แต่ละคนจาก ORIGINAL MASTER ของตนเอง; ห้ามทำให้ผอมลง อวบขึ้น ขยาย ลด หรือ reshape รูปร่าง และห้ามสลับ body build ระหว่างตัวละคร
+- BODY LOCK IS NON-SEXUAL: ใช้ MASTER เป็น visual reference โดยตรงสำหรับ overall natural build เท่านั้น ห้ามแจกแจงหรือเน้นส่วนร่างกายเชิงเพศใน prompt
 - SCENE CORE: ใช้เฉพาะ story beat, action, location และ continuity ที่จำเป็นต่อฉากปัจจุบัน
 - NORMAL WARDROBE: ใช้เสื้อผ้าปกติที่เหมาะกับฉากและ continuity โดยไม่บรรยายสรีระหรือรายละเอียดทางเพศ
 - SIMPLE CAMERA: realistic Thai family drama, neutral eye-level medium/wide composition, vertical 9:16, เห็นตัวละครครบทั้ง 3 คน

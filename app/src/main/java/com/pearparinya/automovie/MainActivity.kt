@@ -1006,20 +1006,54 @@ AUTO-MOVIE • START
         """.trimIndent()
     }
 
+    // BUILD 706: POSITIVE WARDROBE STATE V2
+    // Keep the outgoing prompt short, but always name a concrete outfit for
+    // every active character so clothing is scene data, not inferred from MASTER.
+    private fun wardrobeFor(key: String, scene: Int): String {
+        val phase = ((scene - 1) / 4).coerceIn(0, 4)
+        return when (key) {
+            "gawin" -> listOf(
+                "เสื้อยืดคอกลมสีกรมท่ากับกางเกงขายาวสีเทาเข้ม",
+                "เสื้อเชิ้ตแขนยาวสีขาวกับกางเกงขายาวสีกรมท่า",
+                "เสื้อโปโลสีเทาเข้มกับกางเกงขายาวสีดำ",
+                "เสื้อเชิ้ตสีฟ้าอ่อนกับกางเกงขายาวสีเทา",
+                "เสื้อแขนยาวสีกรมท่ากับกางเกงขายาวสีดำ"
+            )[phase]
+            "rinlada" -> listOf(
+                "เสื้อแขนสั้นสีครีมกับกางเกงขายาวสีเบจ",
+                "เสื้อเชิ้ตแขนยาวสีขาวกับกางเกงขายาวสีกรมท่า",
+                "เสื้อแขนยาวสีชมพูอ่อนกับกางเกงขายาวสีครีม",
+                "เสื้อเชิ้ตสีเบจกับกางเกงขายาวสีน้ำตาลอ่อน",
+                "เสื้อแขนยาวสีม่วงอ่อนกับกางเกงขายาวสีเทา"
+            )[phase]
+            "mind" -> listOf(
+                "เสื้อแขนสั้นสีฟ้าอ่อนกับกางเกงขายาวสีขาว",
+                "เสื้อเชิ้ตแขนยาวสีชมพูอ่อนกับกางเกงขายาวสีเทา",
+                "เสื้อแขนยาวสีครีมกับกางเกงขายาวสีเบจ",
+                "เสื้อเชิ้ตสีม่วงอ่อนกับกางเกงขายาวสีกรมท่า",
+                "เสื้อแขนยาวสีฟ้าเทากับกางเกงขายาวสีดำ"
+            )[phase]
+            else -> "ชุดลำลองสุภาพที่เหมาะกับเหตุการณ์"
+        }
+    }
+
+    private fun currentWardrobeText(): String =
+        sceneCastKeys(currentScene).joinToString("\n") { key ->
+            "${characterNames[key] ?: key} ใส่${wardrobeFor(key, currentScene)}"
+        }
+
     private fun buildQuickSceneCommand(): String {
         val cast = sceneCastNames(currentScene)
         val scene = currentSceneLedger().ifBlank {
             "ต่อจากเหตุการณ์ล่าสุดของเรื่องเดิม"
         }
+        val wardrobe = currentWardrobeText()
 
-        // BUILD 705: LEAN SCENE PROMPT.
-        // Tell the image model only: reference person, wardrobe, place/action, format.
-        // Story/EP/continuity rules stay inside AUTO-MOVIE instead of bloating the prompt.
         return """
 สร้างรูปจากไฟล์ที่แนบ
 ตัวละคร: $cast
+$wardrobe
 ฉาก: $scene
-ใส่ชุดที่เหมาะกับฉากและเหตุการณ์นี้
 ภาพแนวตั้ง 9:16 ละครไทยสมจริง
         """.trimIndent()
     }

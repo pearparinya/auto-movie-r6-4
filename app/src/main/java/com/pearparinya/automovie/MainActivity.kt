@@ -1006,20 +1006,41 @@ AUTO-MOVIE • START
         """.trimIndent()
     }
 
-    // BUILD 708: EVENT-BASED WARDROBE CONTINUITY
-    // Wardrobe is driven by story time/event continuity in the ChatGPT thread,
-    // not by scene number. Character Master remains identity-only.
+    // BUILD 709: EXPLICIT WARDROBE MEMORY
+    // Every outgoing scene prompt names a concrete outfit for every active character.
+    // Outfit state is persisted per character and changes only at an event boundary.
+    private fun wardrobeKey(key: String) = "wardrobe_current_" + key
+
+    private fun defaultWardrobe(key: String): String = when (key) {
+        "gawin" -> "เสื้อโปโลสีเทาเข้มกับกางเกงขายาวสีดำ"
+        "rinlada" -> "เสื้อแขนยาวสีชมพูอ่อนกับกางเกงขายาวสีครีม"
+        "mind" -> "เสื้อแขนยาวสีครีมกับกางเกงขายาวสีเบจ"
+        else -> "ชุดลำลองสุภาพที่เหมาะกับเหตุการณ์"
+    }
+
+    private fun currentWardrobe(key: String): String =
+        statePrefs.getString(wardrobeKey(key), null)?.takeIf { it.isNotBlank() }
+            ?: defaultWardrobe(key).also {
+                statePrefs.edit().putString(wardrobeKey(key), it).apply()
+            }
+
+    private fun explicitWardrobeText(): String =
+        sceneCastKeys(currentScene).joinToString("\n") { key ->
+            "${characterNames[key] ?: key} ใส่${currentWardrobe(key)}"
+        }
+
     private fun buildQuickSceneCommand(): String {
         val cast = sceneCastNames(currentScene)
         val scene = currentSceneLedger().ifBlank {
             "ต่อจากเหตุการณ์ล่าสุดของเรื่องเดิม"
         }
+        val wardrobe = explicitWardrobeText()
 
         return """
 สร้างรูปจากไฟล์ที่แนบ
 ตัวละคร: $cast
+$wardrobe
 ฉาก: $scene
-เสื้อผ้า: ต่อเนื่องตามเวลาและเหตุการณ์ของเรื่อง ถ้าเป็นเหตุการณ์ต่อเนื่องให้ใช้ชุดเดิมจากฉากก่อน ถ้าเวลา สถานที่ หรือกิจกรรมเปลี่ยน ให้เลือกชุดใหม่ที่เหมาะกับฉาก
 ภาพแนวตั้ง 9:16 ละครไทยสมจริง
         """.trimIndent()
     }

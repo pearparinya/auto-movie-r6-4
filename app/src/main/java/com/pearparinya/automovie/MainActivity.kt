@@ -1006,54 +1006,20 @@ AUTO-MOVIE • START
         """.trimIndent()
     }
 
-    // BUILD 706: POSITIVE WARDROBE STATE V2
-    // Keep the outgoing prompt short, but always name a concrete outfit for
-    // every active character so clothing is scene data, not inferred from MASTER.
-    private fun wardrobeFor(key: String, scene: Int): String {
-        val phase = ((scene - 1) / 4).coerceIn(0, 4)
-        return when (key) {
-            "gawin" -> listOf(
-                "เสื้อยืดคอกลมสีกรมท่ากับกางเกงขายาวสีเทาเข้ม",
-                "เสื้อเชิ้ตแขนยาวสีขาวกับกางเกงขายาวสีกรมท่า",
-                "เสื้อโปโลสีเทาเข้มกับกางเกงขายาวสีดำ",
-                "เสื้อเชิ้ตสีฟ้าอ่อนกับกางเกงขายาวสีเทา",
-                "เสื้อแขนยาวสีกรมท่ากับกางเกงขายาวสีดำ"
-            )[phase]
-            "rinlada" -> listOf(
-                "เสื้อแขนสั้นสีครีมกับกางเกงขายาวสีเบจ",
-                "เสื้อเชิ้ตแขนยาวสีขาวกับกางเกงขายาวสีกรมท่า",
-                "เสื้อแขนยาวสีชมพูอ่อนกับกางเกงขายาวสีครีม",
-                "เสื้อเชิ้ตสีเบจกับกางเกงขายาวสีน้ำตาลอ่อน",
-                "เสื้อแขนยาวสีม่วงอ่อนกับกางเกงขายาวสีเทา"
-            )[phase]
-            "mind" -> listOf(
-                "เสื้อแขนสั้นสีฟ้าอ่อนกับกางเกงขายาวสีขาว",
-                "เสื้อเชิ้ตแขนยาวสีชมพูอ่อนกับกางเกงขายาวสีเทา",
-                "เสื้อแขนยาวสีครีมกับกางเกงขายาวสีเบจ",
-                "เสื้อเชิ้ตสีม่วงอ่อนกับกางเกงขายาวสีกรมท่า",
-                "เสื้อแขนยาวสีฟ้าเทากับกางเกงขายาวสีดำ"
-            )[phase]
-            else -> "ชุดลำลองสุภาพที่เหมาะกับเหตุการณ์"
-        }
-    }
-
-    private fun currentWardrobeText(): String =
-        sceneCastKeys(currentScene).joinToString("\n") { key ->
-            "${characterNames[key] ?: key} ใส่${wardrobeFor(key, currentScene)}"
-        }
-
+    // BUILD 708: EVENT-BASED WARDROBE CONTINUITY
+    // Wardrobe is driven by story time/event continuity in the ChatGPT thread,
+    // not by scene number. Character Master remains identity-only.
     private fun buildQuickSceneCommand(): String {
         val cast = sceneCastNames(currentScene)
         val scene = currentSceneLedger().ifBlank {
             "ต่อจากเหตุการณ์ล่าสุดของเรื่องเดิม"
         }
-        val wardrobe = currentWardrobeText()
 
         return """
 สร้างรูปจากไฟล์ที่แนบ
 ตัวละคร: $cast
-$wardrobe
 ฉาก: $scene
+เสื้อผ้า: ต่อเนื่องตามเวลาและเหตุการณ์ของเรื่อง ถ้าเป็นเหตุการณ์ต่อเนื่องให้ใช้ชุดเดิมจากฉากก่อน ถ้าเวลา สถานที่ หรือกิจกรรมเปลี่ยน ให้เลือกชุดใหม่ที่เหมาะกับฉาก
 ภาพแนวตั้ง 9:16 ละครไทยสมจริง
         """.trimIndent()
     }

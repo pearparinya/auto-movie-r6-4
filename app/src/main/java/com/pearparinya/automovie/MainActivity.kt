@@ -1006,9 +1006,9 @@ AUTO-MOVIE • START
         """.trimIndent()
     }
 
-    // BUILD 712: SCENE ACTION ENGINE + SOURCE-ANCHORED IDENTITY
-    // NEXT SCENE must describe a visible dramatic action, not only cast/wardrobe metadata.
-    // Identity/body remain anchored to Character Master; wardrobe stays separate.
+    // BUILD 713: STORY ACTION PROGRESSION ENGINE + SOURCE-ANCHORED IDENTITY
+    // Each NEXT SCENE gets a concrete visible action that advances the drama.
+    // Character/body identity and wardrobe memory remain unchanged.
     private fun wardrobeKey(key: String) = "wardrobe_current_" + key
 
     private fun defaultWardrobe(key: String): String = when (key) {
@@ -1029,26 +1029,43 @@ AUTO-MOVIE • START
             "${characterNames[key] ?: key} ใส่${currentWardrobe(key)}"
         }
 
-    private fun sceneActionText(): String {
-        val keys = sceneCastKeys(currentScene)
-        val names = keys.map { characterNames[it] ?: it }
-        val place = when ((currentScene - 1) % 4) {
-            0 -> "ห้องนั่งเล่น"
-            1 -> "บริเวณหน้าห้อง"
-            2 -> "โต๊ะรับประทานอาหาร"
-            else -> "โถงภายในบ้าน"
-        }
+    private fun storyActionProgressionText(): String {
+        val names = sceneCastKeys(currentScene).map { characterNames[it] ?: it }
+        val a = names.getOrElse(0) { "ตัวละครหลัก" }
+        val b = names.getOrElse(1) { "อีกคน" }
+        val c = names.getOrElse(2) { "อีกคน" }
+
+        val beat = (currentScene - 1) % 8
         return when (names.size) {
-            1 -> "${names[0]}อยู่ที่$place กำลังตรวจดูโทรศัพท์และหยุดคิดกับสิ่งที่เพิ่งพบ สีหน้าจริงจัง"
-            2 -> "${names[0]}กับ${names[1]}อยู่ที่$place กำลังพูดคุยกันเรื่องเหตุการณ์ล่าสุด ทั้งคู่สบตากันด้วยความระแวงและความสงสัย"
-            else -> "${names.joinToString(" + ")}อยู่ที่$place กำลังเผชิญหน้ากันจากเหตุการณ์ล่าสุด แต่ละคนมีปฏิกิริยาและอารมณ์แตกต่างกัน"
+            1 -> when (beat) {
+                0, 4 -> "$aอยู่ในห้องนั่งเล่น กำลังอ่านข้อความใหม่ในโทรศัพท์ สีหน้าเปลี่ยนเป็นสงสัยเมื่อพบข้อมูลบางอย่าง"
+                1, 5 -> "$aอยู่บริเวณหน้าห้อง กำลังเปิดประตูและหยุดมองสิ่งที่พบด้านหน้า สีหน้าประหลาดใจ"
+                2, 6 -> "$aอยู่ที่โต๊ะรับประทานอาหาร กำลังหยิบเอกสารขึ้นมาตรวจดูอย่างตั้งใจหลังพบความผิดปกติ"
+                else -> "$aอยู่ในโถงภายในบ้าน กำลังเดินตามหาอีกคนพร้อมถือโทรศัพท์ที่มีข้อมูลสำคัญ สีหน้าจริงจัง"
+            }
+            2 -> when (beat) {
+                0 -> "$aกับ$bอยู่ในห้องนั่งเล่น $aยื่นโทรศัพท์ให้$bดูข้อความล่าสุด $bรับมาดูและมีสีหน้าตกใจ"
+                1 -> "$aกับ$bอยู่บริเวณหน้าห้อง $aเปิดประตูออกมาเจอ$b ทั้งคู่หยุดและสบตากันอย่างระแวง"
+                2 -> "$aกับ$bอยู่ที่โต๊ะรับประทานอาหาร $bวางเอกสารสำคัญตรงหน้า$a แล้วชี้ให้ดูจุดที่ผิดปกติ"
+                3 -> "$aกับ$bอยู่ในโถงภายในบ้าน $aเดินเข้ามาถาม$bเกี่ยวกับสิ่งที่เพิ่งพบ $bชะงักและหลบสายตา"
+                4 -> "$aกับ$bอยู่ในห้องนั่งเล่น $bพยายามขอโทรศัพท์คืนจาก$a หลัง$aเห็นข้อความสำคัญ ทั้งคู่มีสีหน้าตึงเครียด"
+                5 -> "$aกับ$bอยู่บริเวณหน้าห้อง $bกำลังจะเดินออกไป แต่$aเรียกไว้และยื่นสิ่งของที่เพิ่งพบให้ดู"
+                6 -> "$aกับ$bอยู่ที่โต๊ะรับประทานอาหาร $aหยิบเอกสารขึ้นมาถามตรง ๆ ขณะที่$bมองเอกสารด้วยความกังวล"
+                else -> "$aกับ$bอยู่ในโถงภายในบ้าน $bกำลังอธิบายเหตุการณ์ล่าสุด ขณะที่$aถือโทรศัพท์และมองอย่างไม่แน่ใจ"
+            }
+            else -> when (beat) {
+                0, 4 -> "$a $b และ$cอยู่ในห้องนั่งเล่น $aยื่นโทรศัพท์ที่มีข้อความสำคัญให้ทุกคนดู $bตกใจ ส่วน$cมองอีกสองคนอย่างสงสัย"
+                1, 5 -> "$a $b และ$cอยู่บริเวณหน้าห้อง $cเดินเข้ามาพบ$aกับ$bกำลังคุยกัน ทั้งสามหยุดและมองหน้ากันอย่างตึงเครียด"
+                2, 6 -> "$a $b และ$cอยู่ที่โต๊ะรับประทานอาหาร $bวางเอกสารลงกลางโต๊ะ $aหยิบขึ้นมาตรวจ ขณะที่$cเฝ้ามองปฏิกิริยาของทั้งคู่"
+                else -> "$a $b และ$cอยู่ในโถงภายในบ้าน $aถามถึงเหตุการณ์ล่าสุด $bกำลังตอบ ขณะที่$cแสดงท่าทีไม่เชื่อและจับตาดูทั้งสองคน"
+            }
         }
     }
 
     private fun buildQuickSceneCommand(): String {
         val cast = sceneCastNames(currentScene)
         val wardrobe = explicitWardrobeText()
-        val action = sceneActionText()
+        val action = storyActionProgressionText()
 
         return """
 สร้างรูปจากไฟล์ที่แนบ

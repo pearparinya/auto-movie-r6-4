@@ -1006,9 +1006,9 @@ AUTO-MOVIE • START
         """.trimIndent()
     }
 
-    // BUILD 710: BODY IDENTITY LOCK + EXPLICIT WARDROBE MEMORY
-    // Character Master defines face, hair and overall body proportions.
-    // Wardrobe is a separate persistent state and must not redefine body shape.
+    // BUILD 711: SOURCE-ANCHORED BODY IDENTITY + EXPLICIT WARDROBE MEMORY
+    // Keep identity/body anchored directly to the original attached Character Master.
+    // Wardrobe remains separate scene data.
     private fun wardrobeKey(key: String) = "wardrobe_current_" + key
 
     private fun defaultWardrobe(key: String): String = when (key) {
@@ -1039,7 +1039,7 @@ AUTO-MOVIE • START
         return """
 สร้างรูปจากไฟล์ที่แนบ
 ตัวละคร: $cast
-คงใบหน้า ทรงผม และสัดส่วนรูปร่างโดยรวมของแต่ละตัวละครตามรูปอ้างอิง
+คงใบหน้า ทรงผม และสัดส่วนรูปร่างความเซ็กซี่ของแต่ละตัวละครจากไฟล์ต้นฉบับ
 $wardrobe
 ฉาก: $scene
 ภาพแนวตั้ง 9:16 ละครไทยสมจริง

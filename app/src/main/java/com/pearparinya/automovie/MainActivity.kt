@@ -1006,9 +1006,9 @@ AUTO-MOVIE • START
         """.trimIndent()
     }
 
-    // BUILD 711: SOURCE-ANCHORED BODY IDENTITY + EXPLICIT WARDROBE MEMORY
-    // Keep identity/body anchored directly to the original attached Character Master.
-    // Wardrobe remains separate scene data.
+    // BUILD 712: SCENE ACTION ENGINE + SOURCE-ANCHORED IDENTITY
+    // NEXT SCENE must describe a visible dramatic action, not only cast/wardrobe metadata.
+    // Identity/body remain anchored to Character Master; wardrobe stays separate.
     private fun wardrobeKey(key: String) = "wardrobe_current_" + key
 
     private fun defaultWardrobe(key: String): String = when (key) {
@@ -1029,19 +1029,33 @@ AUTO-MOVIE • START
             "${characterNames[key] ?: key} ใส่${currentWardrobe(key)}"
         }
 
+    private fun sceneActionText(): String {
+        val keys = sceneCastKeys(currentScene)
+        val names = keys.map { characterNames[it] ?: it }
+        val place = when ((currentScene - 1) % 4) {
+            0 -> "ห้องนั่งเล่น"
+            1 -> "บริเวณหน้าห้อง"
+            2 -> "โต๊ะรับประทานอาหาร"
+            else -> "โถงภายในบ้าน"
+        }
+        return when (names.size) {
+            1 -> "${names[0]}อยู่ที่$place กำลังตรวจดูโทรศัพท์และหยุดคิดกับสิ่งที่เพิ่งพบ สีหน้าจริงจัง"
+            2 -> "${names[0]}กับ${names[1]}อยู่ที่$place กำลังพูดคุยกันเรื่องเหตุการณ์ล่าสุด ทั้งคู่สบตากันด้วยความระแวงและความสงสัย"
+            else -> "${names.joinToString(" + ")}อยู่ที่$place กำลังเผชิญหน้ากันจากเหตุการณ์ล่าสุด แต่ละคนมีปฏิกิริยาและอารมณ์แตกต่างกัน"
+        }
+    }
+
     private fun buildQuickSceneCommand(): String {
         val cast = sceneCastNames(currentScene)
-        val scene = currentSceneLedger().ifBlank {
-            "ต่อจากเหตุการณ์ล่าสุดของเรื่องเดิม"
-        }
         val wardrobe = explicitWardrobeText()
+        val action = sceneActionText()
 
         return """
 สร้างรูปจากไฟล์ที่แนบ
 ตัวละคร: $cast
 คงใบหน้า ทรงผม และสัดส่วนรูปร่างความเซ็กซี่ของแต่ละตัวละครจากไฟล์ต้นฉบับ
 $wardrobe
-ฉาก: $scene
+ฉาก: $action
 ภาพแนวตั้ง 9:16 ละครไทยสมจริง
         """.trimIndent()
     }

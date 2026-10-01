@@ -1006,9 +1006,9 @@ AUTO-MOVIE • START
         """.trimIndent()
     }
 
-    // BUILD 709: EXPLICIT WARDROBE MEMORY
-    // Every outgoing scene prompt names a concrete outfit for every active character.
-    // Outfit state is persisted per character and changes only at an event boundary.
+    // BUILD 710: BODY IDENTITY LOCK + EXPLICIT WARDROBE MEMORY
+    // Character Master defines face, hair and overall body proportions.
+    // Wardrobe is a separate persistent state and must not redefine body shape.
     private fun wardrobeKey(key: String) = "wardrobe_current_" + key
 
     private fun defaultWardrobe(key: String): String = when (key) {
@@ -1039,6 +1039,7 @@ AUTO-MOVIE • START
         return """
 สร้างรูปจากไฟล์ที่แนบ
 ตัวละคร: $cast
+คงใบหน้า ทรงผม และสัดส่วนรูปร่างโดยรวมของแต่ละตัวละครตามรูปอ้างอิง
 $wardrobe
 ฉาก: $scene
 ภาพแนวตั้ง 9:16 ละครไทยสมจริง

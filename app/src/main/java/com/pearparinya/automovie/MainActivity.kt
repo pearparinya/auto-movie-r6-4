@@ -930,7 +930,7 @@ class MainActivity : AppCompatActivity() {
         updateUi()
         saveWorkState()
         share(safeNormalizePrompt(buildQuickStartCommand(story, category)), characterKeys = characterNames.keys.toList())
-        status.text = "⚡ FAST START • SCENE 01 • IDENTITY ANCHOR ON"
+        status.text = "⚡ FAST START • SCENE 01 • BODY IDENTITY ON"
     }
 
     private fun generateNextQuickScene() {
@@ -997,7 +997,7 @@ AUTO-MOVIE • START
 
 สร้างโครงเรื่องแบบกระชับสำหรับทั้งเรื่องและ EP 01 แล้วสร้างภาพ SCENE 01 ทันที
 ให้เหตุการณ์ของฉากเป็นตัวกำหนดว่าใครต้องอยู่ในภาพ การกระทำ สถานที่ อารมณ์ และเสื้อผ้า
-ใช้ภาพแนบเป็นหลักสำหรับใบหน้า ทรงผม สีผม ความยาวผม และรูปร่างโดยรวมของตัวละครแต่ละคน โดยจับคู่รูปกับชื่อตามลำดับเดิม
+ใช้รูปที่แนบเป็นต้นฉบับของตัวละครแต่ละคน คงใบหน้า ทรงผม สีผม ความยาวผม รูปร่าง และความเซ็กซี่ตามรูปต้นฉบับ โดยจับคู่รูปกับชื่อตามลำดับเดิม
 เสื้อผ้าเปลี่ยนได้ตามเรื่อง โดยสิ่งที่ไม่ได้สั่งให้เปลี่ยนให้คงความต่อเนื่องจากตัวละครและเรื่องเดิม
 จัดฉากแบบละครไทยสมจริง ให้ตัวละครกำลังทำสิ่งที่ทำให้เรื่องเดินหน้า ไม่ใช่เพียงยืนโพส
 ภาพแนวตั้ง 9:16 กล้องนิ่ง
@@ -1029,7 +1029,7 @@ AUTO-MOVIE • START
             "${characterNames[key] ?: key} ใส่${currentWardrobe(key)}"
         }
 
-    // BUILD 716: CHARACTER IDENTITY ANCHOR + ACTIVE CAST ATTACHMENT SYNC
+    // BUILD 717: BODY IDENTITY CONTINUITY + CHARACTER IDENTITY ANCHOR
     // The current scene is derived from the previous scene's unresolved hook.
     // Visual identity, body appearance and wardrobe logic are intentionally unchanged.
     private data class StoryBeat(
@@ -1156,7 +1156,7 @@ AUTO-MOVIE • START
         return """
 สร้างรูปจากไฟล์ที่แนบ
 ตัวละคร: $cast
-คงใบหน้า ทรงผม สีผม ความยาวผม และสัดส่วนรูปร่างโดยรวมของแต่ละตัวละครจากไฟล์ต้นฉบับ โดยจับคู่ตัวละครกับ ORIGINAL MASTER ของตนเอง
+ใช้รูปที่แนบเป็นต้นฉบับของแต่ละตัวละคร คงใบหน้า ทรงผม สีผม ความยาวผม รูปร่าง และความเซ็กซี่ตามรูปต้นฉบับ โดยจับคู่ตัวละครกับ ORIGINAL MASTER ของตนเอง
 $wardrobe
 ความต่อเนื่องของเรื่อง:
 $memory
@@ -1584,7 +1584,8 @@ MASTER 03 = มายด์ — ผมบ๊อบสั้นสีน้ำต
 
 CHARACTER IDENTITY ANCHOR:
 - ทรงผม สีผม และความยาวผมเป็นส่วนหนึ่งของ Identity ของแต่ละตัวละคร
-- ทุกฉากให้ยึด Face + Hair + Overall Appearance จาก ORIGINAL MASTER ของคนนั้น
+- ทุกฉากให้ยึด Face + Hair + Body Identity + Overall Appearance จาก ORIGINAL MASTER ของคนนั้น
+- รักษารูปร่างและความเซ็กซี่เดิมตาม ORIGINAL MASTER โดยไม่ออกแบบสรีระขึ้นใหม่
 - เสื้อผ้า สถานที่ ท่าทาง และอารมณ์เปลี่ยนตามเรื่องได้ โดยไม่เปลี่ยน Identity
 - เมื่อมีหลายตัวละคร ให้จับคู่ MASTER กับชื่อของแต่ละคนแยกกันก่อนสร้างภาพ
 

@@ -930,7 +930,7 @@ class MainActivity : AppCompatActivity() {
         updateUi()
         saveWorkState()
         share(safeNormalizePrompt(buildQuickStartCommand(story, category)), characterKeys = characterNames.keys.toList())
-        status.text = "⚡ FAST START • SCENE 01 • 3 CAST LOCKED"
+        status.text = "⚡ FAST START • SCENE 01 • IDENTITY ANCHOR ON"
     }
 
     private fun generateNextQuickScene() {
@@ -944,7 +944,7 @@ class MainActivity : AppCompatActivity() {
             saveSceneLedger(currentEp, currentScene)
             updateUi()
             saveWorkState()
-            share(safeNormalizePrompt(buildQuickSceneCommand()), characterKeys = sceneCastKeys(currentScene))
+            share(safeNormalizePrompt(buildQuickSceneCommand()), characterKeys = activeSceneCastKeys(currentScene))
             status.text = "⚡ EP ${fmt(currentEp)} • SCENE ${fmt(currentScene)} • ส่งแล้ว"
             return
         }
@@ -964,7 +964,7 @@ class MainActivity : AppCompatActivity() {
         saveSceneLedger(currentEp, currentScene)
         updateUi()
         saveWorkState()
-        share(safeNormalizePrompt(buildQuickSceneCommand()), characterKeys = sceneCastKeys(currentScene))
+        share(safeNormalizePrompt(buildQuickSceneCommand()), characterKeys = activeSceneCastKeys(currentScene))
         status.text = "🎬 HANDOFF → EP ${fmt(currentEp)} • SCENE 01"
     }
 
@@ -997,7 +997,7 @@ AUTO-MOVIE • START
 
 สร้างโครงเรื่องแบบกระชับสำหรับทั้งเรื่องและ EP 01 แล้วสร้างภาพ SCENE 01 ทันที
 ให้เหตุการณ์ของฉากเป็นตัวกำหนดว่าใครต้องอยู่ในภาพ การกระทำ สถานที่ อารมณ์ และเสื้อผ้า
-ใช้ภาพแนบเป็นหลักสำหรับลักษณะของตัวละคร ไม่ต้องบรรยายใบหน้าหรือรูปร่างขึ้นใหม่
+ใช้ภาพแนบเป็นหลักสำหรับใบหน้า ทรงผม สีผม ความยาวผม และรูปร่างโดยรวมของตัวละครแต่ละคน โดยจับคู่รูปกับชื่อตามลำดับเดิม
 เสื้อผ้าเปลี่ยนได้ตามเรื่อง โดยสิ่งที่ไม่ได้สั่งให้เปลี่ยนให้คงความต่อเนื่องจากตัวละครและเรื่องเดิม
 จัดฉากแบบละครไทยสมจริง ให้ตัวละครกำลังทำสิ่งที่ทำให้เรื่องเดินหน้า ไม่ใช่เพียงยืนโพส
 ภาพแนวตั้ง 9:16 กล้องนิ่ง
@@ -1029,7 +1029,7 @@ AUTO-MOVIE • START
             "${characterNames[key] ?: key} ใส่${currentWardrobe(key)}"
         }
 
-    // BUILD 715: STORY MEMORY + CONSEQUENCE ENGINE
+    // BUILD 716: CHARACTER IDENTITY ANCHOR + ACTIVE CAST ATTACHMENT SYNC
     // The current scene is derived from the previous scene's unresolved hook.
     // Visual identity, body appearance and wardrobe logic are intentionally unchanged.
     private data class StoryBeat(
@@ -1156,7 +1156,7 @@ AUTO-MOVIE • START
         return """
 สร้างรูปจากไฟล์ที่แนบ
 ตัวละคร: $cast
-คงใบหน้า ทรงผม และสัดส่วนรูปร่างความเซ็กซี่ของแต่ละตัวละครจากไฟล์ต้นฉบับ
+คงใบหน้า ทรงผม สีผม ความยาวผม และสัดส่วนรูปร่างโดยรวมของแต่ละตัวละครจากไฟล์ต้นฉบับ โดยจับคู่ตัวละครกับ ORIGINAL MASTER ของตนเอง
 $wardrobe
 ความต่อเนื่องของเรื่อง:
 $memory
@@ -1578,9 +1578,15 @@ CORE PRINCIPLE:
 - หากระบบภาพรักษาความเหมือนจาก MASTER ไม่ได้อย่างน่าเชื่อถือ ห้ามประกาศว่าตรงต้นฉบับแบบสมบูรณ์
 
 CAST REGISTRY:
-MASTER 01 = กวิน
-MASTER 02 = รินลดา
-MASTER 03 = มายด์
+MASTER 01 = กวิน — ผมสั้นสีดำตาม ORIGINAL MASTER
+MASTER 02 = รินลดา — ผมยาวสีดำตาม ORIGINAL MASTER
+MASTER 03 = มายด์ — ผมบ๊อบสั้นสีน้ำตาลตาม ORIGINAL MASTER
+
+CHARACTER IDENTITY ANCHOR:
+- ทรงผม สีผม และความยาวผมเป็นส่วนหนึ่งของ Identity ของแต่ละตัวละคร
+- ทุกฉากให้ยึด Face + Hair + Overall Appearance จาก ORIGINAL MASTER ของคนนั้น
+- เสื้อผ้า สถานที่ ท่าทาง และอารมณ์เปลี่ยนตามเรื่องได้ โดยไม่เปลี่ยน Identity
+- เมื่อมีหลายตัวละคร ให้จับคู่ MASTER กับชื่อของแต่ละคนแยกกันก่อนสร้างภาพ
 
 REFERENCE RULE:
 คิดแบบคำสั่งสั้น:

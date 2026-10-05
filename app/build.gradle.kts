@@ -11,8 +11,8 @@ android {
         applicationId = "com.pearparinya.automovie"
         minSdk = 26
         targetSdk = 35
-        versionCode = 717
-        versionName = "6.26"
+        versionCode = 718
+        versionName = "6.27"
     }
 
     sourceSets {
@@ -37,6 +37,18 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+}
+
+// BUILD 718 feature transform: keeps the large production Activity stable in source
+// while applying the tested Cinematic Shot Director + Retry Current Scene additions
+// immediately before Android compilation.
+val applyBuild718 by tasks.registering(Exec::class) {
+    workingDir(rootProject.projectDir)
+    commandLine("python3", "scripts/apply_build718.py")
+}
+
+tasks.matching { it.name == "preBuild" }.configureEach {
+    dependsOn(applyBuild718)
 }
 
 dependencies {

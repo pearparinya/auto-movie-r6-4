@@ -11,8 +11,8 @@ android {
         applicationId = "com.pearparinya.automovie"
         minSdk = 26
         targetSdk = 35
-        versionCode = 718
-        versionName = "6.27"
+        versionCode = 719
+        versionName = "6.28"
     }
 
     sourceSets {
@@ -39,16 +39,14 @@ android {
     }
 }
 
-// BUILD 718 feature transform: keeps the large production Activity stable in source
-// while applying the tested Cinematic Shot Director + Retry Current Scene additions
-// immediately before Android compilation.
-val applyBuild718 by tasks.registering(Exec::class) {
+// BUILD 719 feature transform: BUILD 718 + per-character identity lock + prop continuity.
+val applyBuild719 by tasks.registering(Exec::class) {
     workingDir(rootProject.projectDir)
-    commandLine("python3", "scripts/apply_build718.py")
+    commandLine("python3", "scripts/apply_build719.py")
 }
 
 tasks.matching { it.name == "preBuild" }.configureEach {
-    dependsOn(applyBuild718)
+    dependsOn(applyBuild719)
 }
 
 dependencies {

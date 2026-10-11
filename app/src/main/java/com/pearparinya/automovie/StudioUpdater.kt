@@ -24,7 +24,7 @@ class StudioUpdater(private val activity: AppCompatActivity) {
         if (file != null && activity.packageManager.canRequestPackageInstalls()) install(file)
         else message("ยังไม่ได้อนุญาตติดตั้งอัปเดต กด Update เพื่อลองอีกครั้งครับ")
     }
-    private fun message(text: String) = AlertDialog.Builder(activity).setTitle("DIRECTOR X").setMessage(text).setPositiveButton("ตกลง",null).show()
+    private fun message(text: String) = AlertDialog.Builder(activity).setIcon(R.drawable.director_mark).setTitle("DIRECTOR X").setMessage(text).setPositiveButton("ตกลง",null).show()
     private var lastAutomaticCheck = 0L
     fun checkAutomatically() {
         val now = android.os.SystemClock.elapsedRealtime()
@@ -36,7 +36,7 @@ class StudioUpdater(private val activity: AppCompatActivity) {
     fun check(automatic: Boolean = false) {
         if (busy) return
         busy = true
-        val dialog = if (automatic) null else AlertDialog.Builder(activity).setTitle("DIRECTOR X").setMessage("กำลังตรวจสอบรุ่นใหม่…").setCancelable(false).show()
+        val dialog = if (automatic) null else AlertDialog.Builder(activity).setIcon(R.drawable.director_mark).setTitle("DIRECTOR X").setMessage("กำลังตรวจสอบรุ่นใหม่…").setCancelable(false).show()
         Thread {
             try {
                 val connection = connect("https://api.github.com/repos/pearparinya/auto-movie-r6-4/releases/latest?cb=${System.currentTimeMillis()}")
@@ -57,7 +57,7 @@ class StudioUpdater(private val activity: AppCompatActivity) {
                         return@runOnUiThread
                     }
                     if (build <= local) { if (!automatic) message("คุณใช้ DIRECTOR X รุ่นล่าสุดแล้วครับ") }
-                    else AlertDialog.Builder(activity).setTitle("DIRECTOR X รุ่นใหม่พร้อมแล้ว").setMessage("${release.optString("name", "รุ่นใหม่")}\nดาวน์โหลดและติดตั้งทับเพื่ออัปเดต งานที่บันทึกไว้จะยังอยู่")
+                    else AlertDialog.Builder(activity).setIcon(R.drawable.director_mark).setTitle("DIRECTOR X รุ่นใหม่พร้อมแล้ว").setMessage("${release.optString("name", "รุ่นใหม่")}\nดาวน์โหลดและติดตั้งทับเพื่ออัปเดต งานที่บันทึกไว้จะยังอยู่")
                         .setPositiveButton("อัปเดต") { _,_ -> download(url,build,asset.optLong("size",-1)) }.setNegativeButton("ภายหลัง",null).show()
                 }
             } catch (e: Exception) { activity.runOnUiThread { busy = false; dialog?.dismiss(); if (!automatic && !activity.isFinishing && !activity.isDestroyed) message("ตรวจสอบอัปเดตไม่สำเร็จ: ${e.message}") } }
@@ -72,7 +72,7 @@ class StudioUpdater(private val activity: AppCompatActivity) {
     private fun download(url: String, build: Long, expectedSize: Long) {
         if (busy) return
         busy = true
-        val dialog = AlertDialog.Builder(activity).setTitle("อัปเดต DIRECTOR X").setMessage("กำลังดาวน์โหลด…").setCancelable(false).show()
+        val dialog = AlertDialog.Builder(activity).setIcon(R.drawable.director_mark).setTitle("อัปเดต DIRECTOR X").setMessage("กำลังดาวน์โหลด…").setCancelable(false).show()
         Thread {
             var target: File? = null
             try {
@@ -100,7 +100,7 @@ class StudioUpdater(private val activity: AppCompatActivity) {
     private fun install(file: File) {
         pending = file
         if (!activity.packageManager.canRequestPackageInstalls()) {
-            AlertDialog.Builder(activity).setTitle("อนุญาตอัปเดต DIRECTOR X").setMessage("เปิดสิทธิ์ติดตั้งจากแอปนี้ แล้วกลับมาเพื่อติดตั้งอัปเดต")
+            AlertDialog.Builder(activity).setIcon(R.drawable.director_mark).setTitle("อนุญาตอัปเดต DIRECTOR X").setMessage("เปิดสิทธิ์ติดตั้งจากแอปนี้ แล้วกลับมาเพื่อติดตั้งอัปเดต")
                 .setPositiveButton("เปิดการตั้งค่า") { _,_ -> permission.launch(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,Uri.parse("package:${activity.packageName}"))) }
                 .setNegativeButton("ภายหลัง",null).show()
             return

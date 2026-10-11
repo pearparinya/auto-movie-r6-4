@@ -91,32 +91,47 @@ class StudioActivity : AppCompatActivity() {
         }
     }
     private val packagePicker = registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-        if (uris.isNotEmpty()) {
-            val plans = uris.filter { displayName(it).endsWith(".json",ignoreCase = true) }
-            val masters = uris.filter { contentResolver.getType(it)?.startsWith("image/") == true && Regex("^CHARACTER_\\d+\\.", RegexOption.IGNORE_CASE).containsMatchIn(displayName(it)) }
-            val pictures = uris.filter { contentResolver.getType(it)?.startsWith("image/") == true && it !in masters }
-            if (plans.size > 1) notice("เลือกไฟล์บท story.json ของเรื่องเดียวเท่านั้นครับ")
-            else if (plans.isEmpty()) {
-                if (plan == null) notice("เลือกไฟล์บท story.json พร้อมภาพของเรื่องก่อนครับ")
-                else {
-                    try { require(masters.isNotEmpty() || pictures.isNotEmpty()) { "ไม่พบไฟล์ภาพหรือ story.json" }; importNewMasters(masters); if (pictures.isNotEmpty()) importImages(pictures) else notice("รับภาพตัวละครแล้ว") }
-                    catch (e: Exception) { notice("รับภาพตัวละครไม่สำเร็จ: ${e.message}") }
+        if (uris.isNotEmpty()) receivePackage(uris)
+    }
+    private fun receivePackage(selected: List<Uri>) {
+        importing = true
+        val dialog = AlertDialog.Builder(this).setMessage("กำลังตรวจบทและภาพ…").setCancelable(false).show()
+        Thread {
+            try {
+                File(cacheDir,"story_import").deleteRecursively()
+                val staging = File(cacheDir, "story_import/${UUID.randomUUID()}").apply { mkdirs() }
+                val files = mutableListOf<Uri>()
+                for (uri in selected) {
+                    if (displayName(uri).endsWith(".zip", true) || contentResolver.getType(uri) in listOf("application/zip", "application/x-zip-compressed")) {
+                        contentResolver.openInputStream(uri)!!.use { input -> files.addAll(StoryFiles.unpack(input, File(staging, files.size.toString())).map { Uri.fromFile(it) }) }
+                    } else files.add(uri)
                 }
-            } else {
-                val dialog = AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setMessage("กำลังรับบททั้งเรื่อง…").setCancelable(false).show()
-                Thread {
-                    try {
-                        val candidate = contentResolver.openInputStream(plans[0])!!.bufferedReader().use { JSONObject(it.readText().removePrefix("\uFEFF")) }
-                        validate(candidate)
-                        val folder = File(base,UUID.randomUUID().toString()).apply { mkdirs() }
-                        File(folder,"story.json").writeText(candidate.toString(2))
-                        importNewMasters(masters, folder, candidate)
-                        prefs.edit().putString("project",folder.name).commit()
-                        runOnUiThread { dialog.dismiss(); render(); if (pictures.isNotEmpty()) importImages(pictures) else notice("รับบทแล้ว เมื่อได้ภาพให้กดรับบทและภาพอีกครั้ง เลือกภาพทั้งหมดได้เลยครับ") }
-                    } catch (e: Exception) { runOnUiThread { dialog.dismiss(); notice("รับบทไม่สำเร็จ: ${e.message}") } }
-                }.start()
-            }
-        }
+                val scripts = files.filter { displayName(it).endsWith(".json", true) }
+                require(scripts.size <= 1) { "เลือก story.json ของเรื่องเดียวเท่านั้น" }
+                val pictures = files.filter { displayName(it).substringAfterLast('.').lowercase() in listOf("png", "jpg", "jpeg", "webp") || contentResolver.getType(it)?.startsWith("image/") == true }
+                val masters = pictures.filter { Regex("^CHARACTER_\\d+\\.", RegexOption.IGNORE_CASE).containsMatchIn(displayName(it)) }
+                val scenes = pictures - masters.toSet()
+                require(scripts.isNotEmpty() || pictures.isNotEmpty()) { "ไม่พบ story.json หรือภาพในไฟล์ที่เลือก กรุณาเลือก ZIP ชุดงาน หรือ JSON/PNG/JPG" }
+                val candidate = scripts.firstOrNull()?.let { contentResolver.openInputStream(it)!!.bufferedReader().use { reader -> JSONObject(reader.readText().removePrefix("\uFEFF")) } }
+                if (candidate != null) {
+                    validate(candidate)
+                    // Reimporting the same story must retain images already received.
+                    val sameStory = plan?.let { old -> old.toString() == candidate.toString() } == true
+                    val folder = if (sameStory) project else File(base, UUID.randomUUID().toString()).apply { mkdirs() }
+                    importNewMasters(masters, folder, candidate)
+                    File(folder,"story.json").writeText(candidate.toString(2))
+                    prefs.edit().putString("project",folder.name).commit()
+                } else {
+                    require(plan != null) { "ยังไม่มีบท กรุณานำเข้า story.json หรือ ZIP ที่มีบทก่อน" }
+                    importNewMasters(masters)
+                }
+                runOnUiThread {
+                    importing = false; dialog.dismiss(); render()
+                    if (scenes.isNotEmpty()) importImages(scenes)
+                    else notice(if (candidate != null) "รับบทแล้ว ขั้นตอน 2: เพิ่มภาพฉากได้เลย ไม่ต้องเลือก story.json ซ้ำ" else "รับภาพ MASTER แล้ว เพิ่มภาพฉากในขั้นตอน 2 ได้เลย")
+                }
+            } catch (e: Exception) { runOnUiThread { importing = false; dialog.dismiss(); render(); notice("นำเข้าบทและภาพไม่สำเร็จ: ${e.message}") } }
+        }.start()
     }
     private val imagesPicker = registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris.isNotEmpty()) importImages(uris)
@@ -218,9 +233,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.19", 24, 16, gold, true, 1)
+        brandLine("DIRECTOR X 1.20", 24, 16, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 20, 16, ice, true, 3)
-        brandLine("รุ่น 019 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 020 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         label("สร้างละครได้ทุกแนว • เลือกช่องก่อนเริ่ม", 13)
@@ -234,7 +249,7 @@ class StudioActivity : AppCompatActivity() {
             summary.addView(TextView(this).apply { text = value; textSize = size; setTextColor(color); setPadding(0,dp(3),0,dp(3)); if (bold) setTypeface(null,Typeface.BOLD) })
         }
         if (p == null) {
-            summaryText("🎬 พร้อมสร้างเรื่องใหม่ • ครบทุก EP",14f,ice,true)
+            summaryText(if (File(project,"command_sent").exists()) "ส่งไป ChatGPT แล้ว • รอรับบทและภาพในขั้นตอน 2" else "🎬 พร้อมสร้างเรื่องใหม่ • ครบทุก EP",14f,ice,true)
         } else {
             val scenes = rows(p); val count = scenes.count { image(it).exists() }
             summaryText(p.getString("title"),20f,ice,true)
@@ -249,22 +264,31 @@ class StudioActivity : AppCompatActivity() {
             })
         }
         root.addView(summary)
-        label("สร้างหนึ่งเรื่องจนจบ • รับภาพ • พร้อมใช้ใน Flow", 14, true)
-        stepCard(1, "🎬", "สร้างหนังหนึ่งเรื่อง", "เลือกช่องและแนว • สร้างบทครบทุก EP") { planning() }
-        stepCard(2, "🎨", "รับบทและภาพทั้งหมด", "นำเข้า story.json พร้อมภาพ • จัดฉากอัตโนมัติ") { packagePicker.launch(arrayOf("*/*")) }
-        stepCard(3, "📦", "ดาวน์โหลดชุด Flow", "ZIP ทั้งเรื่อง • ภาพ + บทพูด + คำสั่ง Flow") {
-            val current = plan
-            if (current == null) notice("ยังไม่มีบทและภาพ กดรับบทและภาพทั้งหมดก่อนครับ")
-            else {
-                val missing = rows(current).filter { !image(it).exists() }
-                if (missing.isNotEmpty()) notice("ยังขาดภาพ ${missing.size} ฉาก: ${missing.joinToString { key(it) }}\nกดรับบทและภาพทั้งหมดเพื่อเพิ่มภาพครับ")
-                else zipPicker.launch("DIRECTOR-X-${System.currentTimeMillis()}.zip")
-            }
+        val sent = p != null || File(project,"command_sent").exists()
+        val complete = p != null && rows(p).all { image(it).exists() }
+        label(if (complete) "ขั้นตอน 3 • ภาพครบแล้ว พร้อมบันทึกชุด Flow" else if (sent) "ขั้นตอน 2 • รับไฟล์จาก ChatGPT กลับเข้าแอป" else "ขั้นตอน 1 • เลือกเรื่องแล้วส่งไป ChatGPT", 14, true)
+        stepCard(1, "🎬", if (sent) "ส่งคำสั่งแล้ว ✓" else "สร้างเรื่องและส่งไป ChatGPT", if (sent) "ล็อกการสร้างซ้ำ • เริ่มเรื่องใหม่ใช้ปุ่มด้านล่าง" else "เลือกช่องและแนว • ชื่อเรื่องภาษาไทย", enabled = !sent) { planning() }
+        stepCard(2, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "เพิ่มภาพฉาก / รับ ZIP", "เลือก ZIP หรือ story.json และภาพ • มีบทแล้วเพิ่มเฉพาะภาพได้") { packagePicker.launch(arrayOf("*/*")) }
+        stepCard(3, "📦", "บันทึกชุด Flow", if (complete) "พร้อมบันทึก ZIP ชื่อเรื่องภาษาไทย" else "ปลดล็อกเมื่อมีบทและภาพครบทุกฉาก", enabled = complete) {
+            val current = plan ?: return@stepCard
+            val title = current.getString("title")
+            if (!Regex("[ก-๙]").containsMatchIn(title)) {
+                val input = EditText(this).apply { hint = "ชื่อเรื่องภาษาไทย" }
+                AlertDialog.Builder(this).setTitle("ตั้งชื่อเรื่องภาษาไทยก่อนบันทึก").setView(input).setPositiveButton("บันทึกชื่อ") { _, _ ->
+                    val thai = input.text.toString().trim()
+                    if (!Regex("[ก-๙]").containsMatchIn(thai)) notice("กรุณาใส่ชื่อเรื่องภาษาไทย")
+                    else { current.put("title",thai); File(project,"story.json").writeText(current.toString(2)); render(); zipPicker.launch(StoryFiles.zipName(thai)) }
+                }.setNegativeButton("ยกเลิก",null).show()
+            } else zipPicker.launch(StoryFiles.zipName(title))
+        }
+        if (sent) button("＋ เริ่มเรื่องใหม่",false) {
+            AlertDialog.Builder(this).setTitle("เริ่มเรื่องใหม่?").setMessage("เรื่องปัจจุบันเก็บไว้ในรายการเรื่องที่บันทึก สามารถกลับมาทำต่อได้")
+                .setPositiveButton("เริ่มเรื่องใหม่") { _,_ -> prefs.edit().putString("project", UUID.randomUUID().toString()).apply(); render() }.setNegativeButton("ทำเรื่องเดิมต่อ",null).show()
         }
         button("↻ Update DIRECTOR X",false) { updater.check() }
         button("⚙ ตัวละคร • ตัวเลือก",false) { toolsMenu() }
     }
-    private fun stepCard(number: Int, icon: String, title: String, detail: String, action: () -> Unit) {
+    private fun stepCard(number: Int, icon: String, title: String, detail: String, enabled: Boolean = true, action: () -> Unit) {
         val colors = when (number) {
             1 -> intArrayOf(Color.rgb(255,218,112),Color.rgb(255,173,34))
             2 -> intArrayOf(Color.rgb(46,189,252),Color.rgb(30,101,221))
@@ -277,12 +301,12 @@ class StudioActivity : AppCompatActivity() {
             background = backdrop(colors[0],colors[1],Color.argb(110,255,255,255))
             elevation = dp(5).toFloat()
             layoutParams = LinearLayout.LayoutParams(-1,-2).apply { topMargin = dp(8); bottomMargin = dp(8) }
-            isClickable = true; isFocusable = true
+            isEnabled = enabled; isClickable = enabled; isFocusable = enabled; alpha = if (enabled) 1f else 0.45f
             val attribute = android.util.TypedValue()
             theme.resolveAttribute(android.R.attr.selectableItemBackground,attribute,true)
             foreground = getDrawable(attribute.resourceId)
             contentDescription = "ขั้นตอน $number $title $detail"
-            setOnClickListener { if (!importing) action() else Toast.makeText(this@StudioActivity,"กำลังนำเข้าภาพ กรุณารอสักครู่",Toast.LENGTH_SHORT).show() }
+            setOnClickListener { if (enabled && !importing) action() else Toast.makeText(this@StudioActivity,"กำลังนำเข้าภาพ กรุณารอสักครู่",Toast.LENGTH_SHORT).show() }
         }
         card.addView(ImageView(this).apply {
             setImageResource(when (number) { 1 -> R.drawable.studio_movie; 2 -> R.drawable.studio_images; else -> R.drawable.studio_package }); scaleType = ImageView.ScaleType.FIT_CENTER
@@ -301,7 +325,7 @@ class StudioActivity : AppCompatActivity() {
         })
         card.addView(words)
         card.addView(TextView(this).apply {
-            text = "›"; textSize = 27f; setTextColor(ink); gravity = Gravity.CENTER
+            text = if (enabled) "›" else "🔒"; textSize = 27f; setTextColor(ink); gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(dp(18),-2)
         })
         root.addView(card)
@@ -316,7 +340,7 @@ class StudioActivity : AppCompatActivity() {
                     AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setTitle("เรื่องของคุณ").setItems(folders.map { JSONObject(File(it,"story.json").readText()).getString("title") }.toTypedArray()) { _, i -> prefs.edit().putString("project",folders[i].name).apply(); render() }.show()
                 }
                 3 -> wholeStoryCommands()
-                4 -> notice("1. ตั้งภาพต้นฉบับตัวละคร แล้วกดสร้างหนังหนึ่งเรื่อง เลือกช่องและแนวละคร ส่งไป ChatGPT ช่องเดิมใช้ตัวละครเดิม ช่องอื่นสร้างใบหน้าใหม่โดยอ้างอิงรูปร่าง และใช้ MASTER ใหม่ต่อเนื่องทั้งเรื่อง\n2. บันทึก story.json และภาพแต่ละฉากจาก ChatGPT สำหรับช่องอื่นบันทึกภาพ CHARACTER_01.png เป็นต้นฉบับใหม่ด้วย กดรับบทและภาพทั้งหมด เลือกไฟล์ได้พร้อมกัน\n3. เมื่อภาพครบ ดาวน์โหลด ZIP และนำภาพกับคำสั่งไปใช้ใน Flow / Veo 3.1 Lite 8 วินาที\n\nChatGPT เป็นผู้สร้างบทและภาพ แอปจัดไฟล์และตรวจฉากที่ขาด ไม่ได้สร้างภาพเองผ่าน Plus อัตโนมัติ")
+                4 -> notice("1. ตั้งภาพต้นฉบับตัวละคร แล้วกดสร้างเรื่องและส่งไป ChatGPT เลือกช่องและแนวละคร ส่งไป ChatGPT ช่องเดิมใช้ตัวละครเดิม ช่องอื่นสร้างใบหน้าใหม่โดยอ้างอิงรูปร่าง และใช้ MASTER ใหม่ต่อเนื่องทั้งเรื่อง\n2. บันทึก story.json และภาพแต่ละฉากจาก ChatGPT สำหรับช่องอื่นบันทึกภาพ CHARACTER_01.png เป็นต้นฉบับใหม่ด้วย กดขั้นตอน 2 เลือก ZIP ทั้งชุด หรือ story.json พร้อมภาพ ถ้ามีบทแล้วเพิ่มเฉพาะภาพได้ ไม่ต้องเลือกบทซ้ำ\n3. เมื่อภาพครบ ปุ่มบันทึกชุด Flow จะเปิดให้บันทึก ZIP ชื่อเรื่องภาษาไทย และนำภาพกับคำสั่งไปใช้ใน Flow / Veo 3.1 Lite 8 วินาที\n\nChatGPT เป็นผู้สร้างบทและภาพ แอปจัดไฟล์และตรวจฉากที่ขาด ไม่ได้สร้างภาพเองผ่าน Plus อัตโนมัติ")
             }
         }.show()
     }
@@ -359,7 +383,7 @@ class StudioActivity : AppCompatActivity() {
             catch (e: Exception) { runOnUiThread { dialog.dismiss(); notice("ดำเนินการไม่สำเร็จ: ${e.message}") } }
         }.start()
     }
-    private fun shareText(text: String, useNewMasters: Boolean = plan?.optString("character_mode") == "new") {
+    private fun shareText(text: String, lockCreation: Boolean = false, useNewMasters: Boolean = plan?.optString("character_mode") == "new") {
         val uris = arrayListOf<Uri>()
         val sources = if (useNewMasters) File(project, "masters").listFiles()?.toList() ?: emptyList()
             else listOf("gawin", "rinlada", "mind").map { File(filesDir, "character_masters/$it.master") }
@@ -385,6 +409,7 @@ class StudioActivity : AppCompatActivity() {
             val direct = Intent(intent).setPackage(target)
             try {
                 startActivity(direct)
+                if (lockCreation) { File(project,"command_sent").writeText("sent"); render() }
                 return
             } catch (_: android.content.ActivityNotFoundException) {
                 // Try the other supported ChatGPT package.
@@ -550,11 +575,12 @@ class StudioActivity : AppCompatActivity() {
             shareText("""วางเรื่องละครให้ช่อง $channel จนจบทุก EP ในชุดเดียว
 แนวคิด: ${idea.text.toString().ifBlank { "คิดเรื่องใหม่อัตโนมัติ" }}
 หมวดหมู่ที่ผู้ใช้เลือก: $category
+ตั้งชื่อเรื่องเป็นภาษาไทยเท่านั้น ใส่ชื่อภาษาไทยในค่า title ของ story.json และตั้งชื่อไฟล์ ZIP เป็นชื่อเรื่องภาษาไทย.zip ห้ามใช้ชื่อหมวดภาษาอังกฤษเป็นชื่อเรื่องหรือชื่อ ZIP
 สร้างชื่อเรื่องและพล็อตให้ตรงหมวดนี้ ใช้ค่า category ใน story.json เป็น "$category" ตรงทุกตัวอักษร
 ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ${if (mode == "original") "ตัวละครหลัก กวิน รินลดา มายด์ อ้างอิง MASTER ของแต่ละคนเพื่อคงใบหน้า ผม รูปร่าง" else "สร้างชื่อและใบหน้าตัวละครใหม่สำหรับเรื่องนี้ ใช้ภาพที่แนบอ้างอิงเฉพาะรูปร่างและสัดส่วนของตัวละครผู้ใหญ่ ไม่ใช้ชื่อหรือใบหน้าเดิม สร้างภาพ MASTER ใหม่ก่อนสร้างฉาก ตั้งชื่อ CHARACTER_01.png, CHARACTER_02.png ตามจำนวนที่ต้องใช้ แล้วใช้ใบหน้าใหม่เดิมอย่างต่อเนื่องทุกฉาก เก็บรายละเอียดตัวละครและชื่อไฟล์ MASTER ใน bible"} ระบุชุดใหม่ สถานที่ การกระทำอย่างกระชับ รักษาความต่อเนื่อง จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน
 ส่งไฟล์ story.json เป็น JSON ไม่มี markdown โครงสร้าง:
 {"channel":${JSONObject.quote(channel)},"character_mode":"$mode","title":"ชื่อเรื่อง","category":"ชื่อหมวดเต็มตรงรายการ","bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"scenes":[{"scene":1,"action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","image_prompt":"คำสั่งภาพพร้อมระบุ MASTER ชุด สถานที่ การกระทำ","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}
-เพิ่ม EP และฉากเท่าที่เรื่องต้องใช้ เรียงเลขจาก 1 ไม่กำหนดจำนวนตายตัว หลังวางบททั้งเรื่อง ส่งไฟล์ story.json แล้วสร้างภาพแยกหนึ่งฉากหนึ่งไฟล์ตามลำดับครบทุก EP จนจบ ตั้งชื่อ EP01_SC001.png ตามเลข EP และฉาก ไม่ทำภาพรวมหลายฉาก ${if (mode == "original") "ใช้ MASTER ที่แนบให้ตรงรายคน" else "ใช้ CHARACTER MASTER ใหม่ที่สร้างสำหรับเรื่องนี้ตรงรายคน"} พร้อมคำสั่งสำหรับ Flow / Veo 3.1 Lite ทุกฉาก ผู้ใช้ต้องการบทและภาพพร้อมนำไปทำวิดีโอ""", useNewMasters = false)
+เพิ่ม EP และฉากเท่าที่เรื่องต้องใช้ เรียงเลขจาก 1 ไม่กำหนดจำนวนตายตัว หลังวางบททั้งเรื่อง ส่งไฟล์ story.json แล้วสร้างภาพแยกหนึ่งฉากหนึ่งไฟล์ตามลำดับครบทุก EP จนจบ ตั้งชื่อ EP01_SC001.png ตามเลข EP และฉาก ไม่ทำภาพรวมหลายฉาก ${if (mode == "original") "ใช้ MASTER ที่แนบให้ตรงรายคน" else "ใช้ CHARACTER MASTER ใหม่ที่สร้างสำหรับเรื่องนี้ตรงรายคน"} พร้อมคำสั่งสำหรับ Flow / Veo 3.1 Lite ทุกฉาก ผู้ใช้ต้องการบทและภาพพร้อมนำไปทำวิดีโอ""", lockCreation = true, useNewMasters = false)
         }.setNegativeButton("ยกเลิก",null).show()
     }
     private fun sceneCommands() {
@@ -567,7 +593,7 @@ class StudioActivity : AppCompatActivity() {
     }
     @Deprecated("Android legacy back callback")
     override fun onBackPressed() { if (!importing) super.onBackPressed() }
-    private fun displayName(uri: Uri): String = contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null,null,null)?.use { if (it.moveToFirst()) it.getString(0) else "" } ?: ""
+    private fun displayName(uri: Uri): String = if (uri.scheme == "file") File(uri.path!!).name else contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null,null,null)?.use { if (it.moveToFirst()) it.getString(0) else "" } ?: ""
     private fun importNewMasters(uris: List<Uri>, folder: File = project, story: JSONObject? = plan) {
         if (uris.isEmpty()) return
         require(story?.optString("character_mode") == "new") { "ภาพ CHARACTER ใช้กับช่องอื่นเท่านั้น" }
@@ -587,8 +613,9 @@ class StudioActivity : AppCompatActivity() {
         val assignments = linkedMapOf<Uri,JSONObject>()
         val unknown = mutableListOf<Uri>()
         for (uri in uris) {
-            val match = Regex("EP(\\d+)[ _-]*SC(?:ENE)?(\\d+)",RegexOption.IGNORE_CASE).find(displayName(uri))
-            val found = match?.let { m -> scenes.find { it.getInt("ep") == m.groupValues[1].toIntOrNull() && it.getInt("scene") == m.groupValues[2].toIntOrNull() } }
+            val match = StoryFiles.sceneNumber(displayName(uri))
+            val found = match?.let { m -> scenes.find { it.getInt("ep") == m.first && it.getInt("scene") == m.second } }
+            if (match != null && found == null) return notice("${displayName(uri)} ไม่ตรงกับฉากในเรื่องนี้ กรุณาเลือกภาพของเรื่องปัจจุบัน")
             if (found == null) unknown.add(uri) else assignments[uri] = found
         }
         if (assignments.values.map { key(it) }.distinct().size != assignments.size) return notice("มีไฟล์ชื่อฉากซ้ำในชุดที่เลือก กรุณาเลือกหนึ่งภาพต่อฉากครับ")
@@ -606,11 +633,11 @@ class StudioActivity : AppCompatActivity() {
         importing = true
         val remaining = uris.toMutableList()
         fun next() {
-            if (remaining.isEmpty()) { importing = false; render(); return }
+            if (remaining.isEmpty()) { importing = false; render(); val missing = rows(plan!!).count { !image(it).exists() }; notice(if (missing == 0) "รับภาพครบแล้ว ขั้นตอน 3: บันทึกชุด Flow ได้เลย" else "รับภาพแล้ว ยังขาด $missing ฉาก เพิ่มภาพต่อในขั้นตอน 2 ได้เลย"); return }
             val uri = remaining.removeAt(0)
             val name = displayName(uri)
-            val match = Regex("EP(\\d+)[ _-]*SC(?:ENE)?(\\d+)",RegexOption.IGNORE_CASE).find(name)
-            val found = match?.let { m -> scenes.find { it.getInt("ep") == m.groupValues[1].toIntOrNull() && it.getInt("scene") == m.groupValues[2].toIntOrNull() } }
+            val match = StoryFiles.sceneNumber(name)
+            val found = match?.let { m -> scenes.find { it.getInt("ep") == m.first && it.getInt("scene") == m.second } }
             fun save(s: JSONObject) {
                 Thread {
                     try {
@@ -666,3 +693,4 @@ class StudioActivity : AppCompatActivity() {
         } }
     }
 }
+

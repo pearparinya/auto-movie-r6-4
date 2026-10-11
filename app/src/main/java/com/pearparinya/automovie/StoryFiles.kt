@@ -7,14 +7,24 @@ import java.util.zip.ZipInputStream
 /** File formats shared by ChatGPT packages and Studio exports. */
 internal object StoryFiles {
     fun zipName(title: String): String = title.replace(Regex("[\\\\/:*?\"<>|\\p{Cntrl}]"), "_").trim().take(100).ifBlank { "เรื่องใหม่" } + ".zip"
-    fun sceneNumber(name: String): Pair<Int, Int>? { return Regex("EP(\\d+)[ _-]*SC(?:ENE)?(\\d+)", RegexOption.IGNORE_CASE).find(name)?.let {
+    private val separators = "[ _.-]*"
+    fun sceneNumber(name: String): Pair<Int, Int>? = Regex("EP${separators}(\\d+)${separators}SC(?:ENE)?${separators}(\\d+)", RegexOption.IGNORE_CASE).find(name)?.let {
         val ep = it.groupValues[1].toIntOrNull() ?: return null
         val scene = it.groupValues[2].toIntOrNull() ?: return null
-        ep to scene
-    } }
-    fun coverName(name: String): String? = Regex("^EP(\\d+)_COVER_(9x16|16x9)\\.(png|jpe?g|webp)$", RegexOption.IGNORE_CASE).matchEntire(name)?.let {
+        if (ep > 0 && scene > 0) ep to scene else null
+    }
+    fun coverName(name: String): String? = Regex("EP${separators}(\\d+)${separators}COVER${separators}(9[xX:_-]16|16[xX:_-]9)(?:[ _-]*\\(\\d+\\))?\\.(png|jpe?g|webp)$", RegexOption.IGNORE_CASE).find(name)?.let {
         val ep = it.groupValues[1].toIntOrNull()
-        if (ep == null || ep < 1) null else "EP%02d_COVER_%s".format(ep, it.groupValues[2].lowercase())
+        val ratio = if (it.groupValues[2].startsWith("9")) "9x16" else "16x9"
+        if (ep == null || ep < 1) null else "EP%02d_COVER_%s".format(ep, ratio)
+    }
+    fun isMaster(name: String): Boolean = Regex("^(?:CHARACTER[_ -]*\\d+|(?:GAWIN|RINLADA|MIND)[_ -]*MASTER|MASTER[_ -]*\\d+)(?:[_. (]|$)", RegexOption.IGNORE_CASE).containsMatchIn(name)
+    fun packageName(path: String): String {
+        val normalized = path.replace('\\', '/')
+        val name = normalized.substringAfterLast('/')
+        if (sceneNumber(name) != null || coverName(name) != null) return name
+        val ep = Regex("(?:^|/)EP[ _-]*(\\d+)(?:/|$)", RegexOption.IGNORE_CASE).find(normalized.substringBeforeLast('/'))?.groupValues?.get(1) ?: return name
+        return if (Regex("^(?:SC(?:ENE)?[ _-]*\\d+|COVER[ _-]*(?:9[xX:_-]16|16[xX:_-]9))", RegexOption.IGNORE_CASE).containsMatchIn(name)) "EP${ep}_$name" else name
     }
     fun unpack(input: InputStream, staging: File, maxBytes: Long = 512L * 1024 * 1024): List<File> {
         val files = mutableListOf<File>()
@@ -25,8 +35,8 @@ internal object StoryFiles {
             while (entry != null) {
                 require(++count <= 2000) { "ZIP มีไฟล์มากเกินไป" }
                 // Flatten each entry into its own directory: archive paths cannot escape staging.
-                val name = entry.name.replace('\\', '/').substringAfterLast('/')
-                if (!entry.isDirectory && (name.endsWith(".json", true) || name.substringAfterLast('.').lowercase() in listOf("png", "jpg", "jpeg", "webp"))) {
+                val name = packageName(entry.name)
+                if (!entry.isDirectory && !entry.name.contains("__MACOSX/") && !name.startsWith(".") && (name.endsWith(".json", true) || name.substringAfterLast('.').lowercase() in listOf("png", "jpg", "jpeg", "webp"))) {
                     val target = File(staging, "${files.size}/$name").apply { parentFile!!.mkdirs() }
                     target.outputStream().use { out ->
                         val buffer = ByteArray(65536)

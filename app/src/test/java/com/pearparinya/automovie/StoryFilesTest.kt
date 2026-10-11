@@ -21,6 +21,18 @@ class StoryFilesTest {
         assertNull(StoryFiles.coverName("EP00_COVER_9x16.png"))
         assertNull(StoryFiles.sceneNumber("EP01_COVER_9x16.png"))
     }
+    @Test fun flexiblePackageNamesKeepSceneAndCoverRoles() {
+        assertEquals(1 to 2, StoryFiles.sceneNumber("EP_01_SC_002.png"))
+        assertEquals(3 to 4, StoryFiles.sceneNumber("EP 03 Scene 004.jpg"))
+        assertEquals("EP02_COVER_9x16", StoryFiles.coverName("EP02-cover-9-16.png"))
+        assertEquals("EP01_SC001.png", StoryFiles.packageName("เรื่อง/EP01/SC001.png"))
+        assertEquals("EP03_COVER_16x9.png", StoryFiles.packageName("EP03/COVER_16x9.png"))
+        assertTrue(StoryFiles.isMaster("GAWIN_MASTER.png"))
+        assertTrue(StoryFiles.isMaster("RINLADA_MASTER(1).png"))
+        assertTrue(StoryFiles.isMaster("CHARACTER_01.png"))
+        assertFalse(StoryFiles.isMaster("EP01_SC001.png"))
+        assertNull(StoryFiles.sceneNumber("EP00_SC001.png"))
+    }
     @Test fun thaiTitleSurvivesExport() {
         assertEquals("กุญแจบ้านที่ให้คนอื่น.zip", StoryFiles.zipName("กุญแจบ้านที่ให้คนอื่น"))
         assertEquals("รัก_ร้าว_ครั้งสุดท้าย.zip", StoryFiles.zipName("รัก/ร้าว:ครั้งสุดท้าย"))

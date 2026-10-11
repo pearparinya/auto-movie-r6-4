@@ -171,12 +171,12 @@ class StudioActivity : AppCompatActivity() {
                         contentResolver.openInputStream(uri)!!.use { input -> files.addAll(StoryFiles.unpack(input, File(staging, files.size.toString())).map { Uri.fromFile(it) }) }
                     } else files.add(uri)
                 }
-                val scripts = files.filter { displayName(it).endsWith(".json", true) }
+                val scripts = files.filter { displayName(it).equals("story.json", true) }
                 require(scripts.size <= 1) { "เลือก story.json ของเรื่องเดียวเท่านั้น" }
                 val pictures = files.filter { displayName(it).substringAfterLast('.').lowercase() in listOf("png", "jpg", "jpeg", "webp") || contentResolver.getType(it)?.startsWith("image/") == true }
                 val masters = pictures.filter { Regex("^CHARACTER_\\d+\\.", RegexOption.IGNORE_CASE).containsMatchIn(displayName(it)) }
                 val covers = pictures.filter { StoryFiles.coverName(displayName(it)) != null }
-                val scenes = pictures - masters.toSet() - covers.toSet()
+                val scenes = pictures.filter { !StoryFiles.isMaster(displayName(it)) } - covers.toSet()
                 require(scripts.isNotEmpty() || pictures.isNotEmpty()) { "ไม่พบ story.json หรือภาพในไฟล์ที่เลือก กรุณาเลือก ZIP ชุดงาน หรือ JSON/PNG/JPG" }
                 val candidate = scripts.firstOrNull()?.let { contentResolver.openInputStream(it)!!.bufferedReader().use { reader -> JSONObject(reader.readText().removePrefix("\uFEFF")) } }
                 val destinationStory = candidate ?: plan ?: error("ยังไม่มีบท กรุณานำเข้า story.json ก่อน")
@@ -325,9 +325,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.35", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.36", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 035 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 036 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -729,7 +729,16 @@ class StudioActivity : AppCompatActivity() {
         if (assignments.values.map { key(it) }.distinct().size != assignments.size) return notice("มีไฟล์ชื่อฉากซ้ำในชุดที่เลือก กรุณาเลือกหนึ่งภาพต่อฉากครับ")
         val occupied = assignments.values.map { key(it) }.toSet()
         val available = scenes.filter { key(it) !in occupied && !image(it).exists() }
-        if (unknown.size > available.size) return notice("ไฟล์ที่ไม่มีเลขฉากมากกว่าฉากที่ยังขาด กรุณาตั้งชื่อ EP01_SC001.png เพื่อจับคู่ให้ถูกต้องครับ")
+        if (unknown.size > available.size) {
+            val named = uris.filter { StoryFiles.sceneNumber(displayName(it)) != null }
+            val skipped = unknown.joinToString("\n") { displayName(it) }
+            if (named.isEmpty()) return notice("ยังจับคู่ภาพไม่ได้ กรุณาใช้ชื่อ EP01_SC001.png หรือโฟลเดอร์ EP01/SC001.png\nไฟล์ที่ต้องตรวจ:\n$skipped")
+            AlertDialog.Builder(this).setTitle("พบภาพอื่นในชุดงาน")
+                .setMessage("นำเข้าภาพที่ตรงเลขฉากได้ ${named.size} ไฟล์ ส่วน ${unknown.size} ไฟล์ต่อไปนี้ยังจับคู่ไม่ได้ จะเว้นไว้เพื่อไม่ใส่ผิดฉาก:\n$skipped")
+                .setPositiveButton("นำเข้าภาพที่จับคู่ได้") { _, _ -> importImages(named) }
+                .setNegativeButton("ยกเลิก", null).showDirector()
+            return
+        }
         unknown.forEachIndexed { i, uri -> assignments[uri] = available[i] }
         if (unknown.isNotEmpty() && !confirmedOrder) {
             val list = uris.joinToString("\n") { "${displayName(it)} → ${key(assignments.getValue(it))}" }

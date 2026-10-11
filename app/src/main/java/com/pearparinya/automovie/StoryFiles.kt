@@ -7,11 +7,11 @@ import java.util.zip.ZipInputStream
 /** File formats shared by ChatGPT packages and Studio exports. */
 internal object StoryFiles {
     fun zipName(title: String): String = title.replace(Regex("[\\\\/:*?\"<>|\\p{Cntrl}]"), "_").trim().take(100).ifBlank { "เรื่องใหม่" } + ".zip"
-    fun sceneNumber(name: String): Pair<Int, Int>? = Regex("EP(\\d+)[ _-]*SC(?:ENE)?(\\d+)", RegexOption.IGNORE_CASE).find(name)?.let {
+    fun sceneNumber(name: String): Pair<Int, Int>? { return Regex("EP(\\d+)[ _-]*SC(?:ENE)?(\\d+)", RegexOption.IGNORE_CASE).find(name)?.let {
         val ep = it.groupValues[1].toIntOrNull() ?: return null
         val scene = it.groupValues[2].toIntOrNull() ?: return null
         ep to scene
-    }
+    } }
     fun unpack(input: InputStream, staging: File, maxBytes: Long = 512L * 1024 * 1024): List<File> {
         val files = mutableListOf<File>()
         var total = 0L

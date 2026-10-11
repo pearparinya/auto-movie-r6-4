@@ -10,6 +10,11 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.widget.*
+import android.view.Gravity
+import android.content.res.ColorStateList
+import android.graphics.PorterDuff
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -27,6 +32,15 @@ class StudioActivity : AppCompatActivity() {
     private var plan: JSONObject? = null
     private var importing = false
     private lateinit var root: LinearLayout
+    private val navy = Color.rgb(12,15,38)
+    private val gold = Color.rgb(255,190,74)
+    private val ice = Color.rgb(248,247,255)
+    private val muted = Color.rgb(190,188,214)
+    private fun dp(n: Int) = (n * resources.displayMetrics.density).toInt()
+    private fun backdrop(top: Int, bottom: Int, border: Int? = null) = GradientDrawable(GradientDrawable.Orientation.TL_BR,intArrayOf(top,bottom)).apply {
+        cornerRadius = dp(16).toFloat()
+        if (border != null) setStroke(dp(1),border)
+    }
     private val categories = listOf(
         "The Broken Vows | บันทึกรอยร้าวชีวิตคู่",
         "Sweet Revenge | เกมรักซ่อนลวง บทเรียนรสแซ่บ",
@@ -82,50 +96,110 @@ class StudioActivity : AppCompatActivity() {
     }
     private fun render() {
         plan = File(project, "story.json").takeIf { it.exists() }?.let { JSONObject(it.readText()) }
-        val scroll = ScrollView(this).apply { setBackgroundColor(Color.rgb(244,246,251)) }
-        root = LinearLayout(this).apply { orientation = 1; setPadding(24,48,24,32) }
-        scroll.addView(root); setContentView(scroll)
-        label("STORY STUDIO", 30, true)
-        label("สร้างเรื่อง • จัดฉาก • พร้อมใช้ใน Flow", 16)
-        label("สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย", 14)
-        label("STUDIO 1.0 • BUILD 720", 12)
-        val p = plan
-        if (p == null) label("เริ่มต้นเรื่องใหม่ หรือกลับไปทำงานเดิมได้ด้านล่าง", 18)
-        else {
-            val scenes = rows(p); val count = scenes.count { image(it).exists() }
-            label(p.getString("title"), 23, true)
-            label(p.getString("category"), 14)
-            label("${p.getJSONArray("episodes").length()} EP • ${scenes.size} ฉาก • มีภาพ $count/${scenes.size}", 17)
-            root.addView(ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply { max = scenes.size; progress = count })
+        window.statusBarColor = navy
+        window.navigationBarColor = navy
+        ViewCompat.getWindowInsetsController(window.decorView)?.apply {
+            isAppearanceLightStatusBars = false
+            isAppearanceLightNavigationBars = false
         }
-        button("① วางแผนเรื่องทั้งหมดใน ChatGPT") { planning() }
-        button("② นำเข้าแผนเรื่องครบทุก EP") { planPicker.launch(arrayOf("application/json", "text/*", "application/octet-stream")) }
-        button("③ คำสั่งสร้างภาพ • ทั้งเรื่อง") { wholeStoryCommands() }
+        val scroll = ScrollView(this).apply { setBackgroundColor(navy); isFillViewport = true; clipToPadding = false }
+        root = LinearLayout(this).apply { orientation = 1; setPadding(dp(16),dp(12),dp(16),dp(24)) }
+        scroll.addView(root); setContentView(scroll)
+        ViewCompat.setOnApplyWindowInsetsListener(scroll) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left,bars.top,bars.right,bars.bottom)
+            insets
+        }
+        ViewCompat.requestApplyInsets(scroll)
+        val header = LinearLayout(this).apply {
+            orientation = 0; gravity = Gravity.CENTER_VERTICAL; setPadding(dp(12),dp(14),dp(12),dp(14))
+            background = backdrop(Color.rgb(28,30,66),navy,Color.rgb(64,62,108))
+        }
+        header.addView(ImageView(this).apply {
+            setImageResource(R.mipmap.ic_launcher); scaleType = ImageView.ScaleType.FIT_CENTER
+            layoutParams = LinearLayout.LayoutParams(dp(66),dp(66)).apply { marginEnd = dp(12) }
+        })
+        val heading = LinearLayout(this).apply { orientation = 1; layoutParams = LinearLayout.LayoutParams(0,-2,1f) }
+        heading.addView(TextView(this).apply { text = "STORY STUDIO"; textSize = 23f; setTextColor(gold); setTypeface(null,Typeface.BOLD) })
+        heading.addView(TextView(this).apply { text = "ระบบจัดหนังครบทั้งเรื่อง"; textSize = 15f; setTextColor(ice); setPadding(0,dp(3),0,dp(3)) })
+        heading.addView(TextView(this).apply { text = "STUDIO 1.1 • BUILD 721"; textSize = 12f; setTextColor(gold) })
+        header.addView(heading); root.addView(header)
+        label("สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย", 13)
+        label("พัฒนาโดย : นายปริญญา จันทร์จักษุ", 11)
+        val p = plan
+        val summary = LinearLayout(this).apply {
+            orientation = 1; setPadding(dp(14),dp(12),dp(14),dp(12))
+            background = backdrop(Color.rgb(46,35,87),Color.rgb(26,27,58))
+            layoutParams = LinearLayout.LayoutParams(-1,-2).apply { setMargins(0,dp(8),0,dp(12)) }
+        }
+        fun summaryText(value: String, size: Float, color: Int, bold: Boolean = false) {
+            summary.addView(TextView(this).apply { text = value; textSize = size; setTextColor(color); setPadding(0,dp(3),0,dp(3)); if (bold) setTypeface(null,Typeface.BOLD) })
+        }
+        if (p == null) {
+            summaryText("🎬 พร้อมสร้างเรื่องใหม่",19f,ice,true)
+            summaryText("วางเรื่องครบทุก EP แล้วจัดภาพพร้อมใช้ใน Flow",13f,muted)
+        } else {
+            val scenes = rows(p); val count = scenes.count { image(it).exists() }
+            summaryText(p.getString("title"),20f,ice,true)
+            summaryText(p.getString("category"),12f,muted)
+            summaryText("${p.getJSONArray("episodes").length()} EP  •  ${scenes.size} ฉาก  •  ภาพ $count/${scenes.size}",14f,gold,true)
+            summary.addView(ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal).apply {
+                max = scenes.size; progress = count
+                progressTintList = ColorStateList.valueOf(Color.rgb(35,219,195))
+                progressBackgroundTintList = ColorStateList.valueOf(Color.rgb(58,53,92))
+                layoutParams = LinearLayout.LayoutParams(-1,dp(8)).apply { topMargin = dp(8) }
+            })
+        }
+        root.addView(summary)
+        label("✨ สร้างเรื่อง • จัดภาพ • ส่งออก", 16, true)
+        button("① ✨ วางแผนเรื่องทั้งหมด") { planning() }
+        button("② 📋 นำเข้าแผนเรื่องครบทุก EP") { planPicker.launch(arrayOf("application/json", "text/*", "application/octet-stream")) }
+        button("③ 🎨 สร้างภาพใน ChatGPT") { wholeStoryCommands() }
         button("เลือกคำสั่งภาพรายฉาก", false) { sceneCommands() }
-        button("④ นำเข้าภาพทั้งเรื่อง") { if (plan == null) notice("นำเข้าแผนเรื่องก่อนครับ") else imagesPicker.launch(arrayOf("image/*")) }
-        button("⑤ ตรวจงานทั้งเรื่อง") { review() }
-        button("⑥ ดาวน์โหลด ZIP ทั้งเรื่อง") {
+        button("④ 🖼 นำเข้าภาพทั้งเรื่อง") { if (plan == null) notice("นำเข้าแผนเรื่องก่อนครับ") else imagesPicker.launch(arrayOf("image/*")) }
+        button("⑤ ✓ ตรวจงานทั้งเรื่อง") { review() }
+        button("⑥ 📦 ดาวน์โหลด ZIP ทั้งเรื่อง") {
             val current = plan
             if (current == null) notice("นำเข้าแผนเรื่องก่อนครับ")
             else if (rows(current).any { !image(it).exists() }) notice("ยังมีฉากขาดภาพ ตรวจงานและนำเข้าให้ครบก่อนส่งออก")
             else zipPicker.launch("STORY-STUDIO-${System.currentTimeMillis()}.zip")
         }
-        button("เปิดเรื่องที่บันทึกไว้", false) {
+        label("เครื่องมือและงานที่บันทึก", 14, true)
+        button("📂 เปิดเรื่องที่บันทึกไว้", false) {
             val folders = base.listFiles()?.filter { File(it,"story.json").exists() } ?: emptyList()
             AlertDialog.Builder(this).setTitle("เรื่องของคุณ").setItems(folders.map { JSONObject(File(it,"story.json").readText()).getString("title") }.toTypedArray()) { _, i -> prefs.edit().putString("project",folders[i].name).apply(); render() }.show()
         }
-        button("งานเดิม • ตัวละคร MASTER • Update", false) { startActivity(Intent(this, MainActivity::class.java)) }
-        button("วิธีใช้งาน", false) { notice("ให้ ChatGPT วางเรื่องครบทุก EP และส่ง story.json กลับมา นำเข้าแผนก่อนสร้างภาพ จากนั้นนำเข้าภาพทุก EP พร้อมกัน ชื่อไฟล์ EP01_SC001.png จะจับคู่ได้อัตโนมัติ ไฟล์ชื่ออื่นให้เลือกฉากเอง ภาพถูกเก็บในแอปและส่งออก ZIP ได้เมื่อครบทุกฉาก\n\nการสร้างบทและภาพทำใน ChatGPT โดยผู้ใช้ แอปนี้ไม่ได้เรียก API และไม่รับประกันความเหมือนตัวละคร 100%") }
+        button("👥 ตัวละคร MASTER • งานเดิม • Update", false) { startActivity(Intent(this, MainActivity::class.java)) }
+        button("❓ วิธีใช้งาน", false) { notice("ให้ ChatGPT วางเรื่องครบทุก EP และส่ง story.json กลับมา นำเข้าแผนก่อนสร้างภาพ จากนั้นนำเข้าภาพทุก EP พร้อมกัน ชื่อไฟล์ EP01_SC001.png จะจับคู่ได้อัตโนมัติ ไฟล์ชื่ออื่นให้เลือกฉากเอง ภาพถูกเก็บในแอปและส่งออก ZIP ได้เมื่อครบทุกฉาก\n\nการสร้างบทและภาพทำใน ChatGPT โดยผู้ใช้ แอปนี้ไม่ได้เรียก API และไม่รับประกันความเหมือนตัวละคร 100%") }
     }
     private fun label(value: String, size: Int, bold: Boolean = false) {
-        root.addView(TextView(this).apply { text = value; textSize = size.toFloat(); setTextColor(Color.rgb(25,34,58)); setPadding(8,12,8,12); if (bold) setTypeface(null, Typeface.BOLD) })
+        root.addView(TextView(this).apply {
+            text = value; textSize = size.toFloat(); setTextColor(if (bold) gold else muted)
+            setPadding(dp(4),dp(4),dp(4),dp(4)); if (bold) setTypeface(null, Typeface.BOLD)
+        })
     }
     private fun button(value: String, primary: Boolean = true, action: () -> Unit) {
+        val colors = when {
+            !primary -> intArrayOf(Color.rgb(38,36,76),Color.rgb(27,28,59))
+            value.startsWith("①") -> intArrayOf(Color.rgb(255,204,86),Color.rgb(255,174,38))
+            value.startsWith("②") -> intArrayOf(Color.rgb(42,153,246),Color.rgb(27,101,211))
+            value.startsWith("③") -> intArrayOf(Color.rgb(164,96,246),Color.rgb(111,65,209))
+            value.startsWith("④") -> intArrayOf(Color.rgb(40,220,164),Color.rgb(10,183,133))
+            value.startsWith("⑤") -> intArrayOf(Color.rgb(35,205,216),Color.rgb(14,163,182))
+            else -> intArrayOf(Color.rgb(255,203,81),Color.rgb(255,166,39))
+        }
+        val darkText = primary && !value.startsWith("②") && !value.startsWith("③")
         root.addView(Button(this).apply {
-            text = value; isAllCaps = false; textSize = 16f; setTextColor(if (primary) Color.WHITE else Color.rgb(35,60,120))
-            background = GradientDrawable().apply { cornerRadius = 24f; setColor(if (primary) Color.rgb(51,76,175) else Color.rgb(224,231,250)) }
-            layoutParams = LinearLayout.LayoutParams(-1,-2).apply { setMargins(0,10,0,10) }
-            setPadding(16,22,16,22); setOnClickListener { if (!importing) action() else Toast.makeText(this@StudioActivity,"กำลังนำเข้าภาพ กรุณารอสักครู่",Toast.LENGTH_SHORT).show() }
+            text = value; isAllCaps = false; textSize = if (primary) 16f else 14f
+            setTypeface(null,if (primary) Typeface.BOLD else Typeface.NORMAL)
+            setTextColor(if (darkText) navy else ice)
+            backgroundTintList = null
+            background = backdrop(colors[0],colors[1],if (primary) null else Color.rgb(62,58,106))
+            elevation = dp(if (primary) 3 else 0).toFloat()
+            minHeight = dp(if (primary) 54 else 44); minimumHeight = minHeight
+            layoutParams = LinearLayout.LayoutParams(-1,-2).apply { setMargins(0,dp(5),0,dp(5)) }
+            setPadding(dp(10),dp(10),dp(10),dp(10))
+            setOnClickListener { if (!importing) action() else Toast.makeText(this@StudioActivity,"กำลังนำเข้าภาพ กรุณารอสักครู่",Toast.LENGTH_SHORT).show() }
         })
     }
     private fun notice(text: String) { AlertDialog.Builder(this).setMessage(text).setPositiveButton("ตกลง", null).show() }

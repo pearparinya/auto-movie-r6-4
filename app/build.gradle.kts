@@ -11,8 +11,8 @@ android {
         applicationId = "com.pearparinya.automovie"
         minSdk = 26
         targetSdk = 35
-        versionCode = 749
-        versionName = "6.58"
+        versionCode = 750
+        versionName = "1.30"
     }
 
     sourceSets {
@@ -37,16 +37,6 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-}
-
-// BUILD 719 feature transform: BUILD 718 + per-character identity lock + prop continuity.
-val applyBuild719 by tasks.registering(Exec::class) {
-    workingDir(rootProject.projectDir)
-    commandLine("python3", "scripts/apply_build719.py")
-}
-
-tasks.matching { it.name == "preBuild" }.configureEach {
-    dependsOn(applyBuild719)
 }
 
 dependencies {

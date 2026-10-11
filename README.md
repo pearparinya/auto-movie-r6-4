@@ -1,16 +1,7 @@
-# AUTO-MOVIE ENGINE 2.0 — R6.4 Android Portable
+# DIRECTOR X
 
-Android starter runtime for AUTO-MOVIE R6.4.
+Android app for planning stories, sharing character references with ChatGPT, and preparing scene packages for Flow.
 
-## Cloud APK build
-GitHub Actions runs `R6.4 Cloud Build APK` on every push to `main`, or manually with **Run workflow**.
-The generated debug APK is uploaded as the artifact `auto-movie-r6-4-debug-apk`.
+The launcher opens `StudioActivity`. The channel picker shows the saved กวิน, รินลดา and มายด์ MASTER portraits for the main channel, and a fictional cast image for other channels.
 
-## Current runtime
-- Android native Kotlin app
-- R6.4 version metadata
-- Thai command input screen
-- 8-second scene workflow status
-- GitHub Actions APK build
-
-This is a clean installable runtime foundation. External ChatGPT/Flow/Veo service integration requires separately configured APIs/authorized services; ChatGPT Plus credentials are not embedded in the APK.
+Version metadata lives in `app/build.gradle.kts`. GitHub Actions runs unit tests, builds and signs the release APK, and publishes the current release for the in-app updater. The old build-time source transformations have been removed; builds compile the committed source directly.

@@ -1,4 +1,4 @@
-name: AUTO-MOVIE Release Signed APK
+name: DIRECTOR X Release Signed APK
 
 on:
   workflow_dispatch:
@@ -52,9 +52,9 @@ jobs:
 
           printf '%s' "$KEYSTORE_BASE64" \
             | base64 --decode \
-            > "$RUNNER_TEMP/auto-movie-release.jks"
+            > "$RUNNER_TEMP/director-x-release.jks"
 
-          if [ ! -s "$RUNNER_TEMP/auto-movie-release.jks" ]; then
+          if [ ! -s "$RUNNER_TEMP/director-x-release.jks" ]; then
             echo "Failed to restore release keystore."
             exit 1
           fi
@@ -72,7 +72,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
           keytool -list \
-            -keystore "$RUNNER_TEMP/auto-movie-release.jks" \
+            -keystore "$RUNNER_TEMP/director-x-release.jks" \
             -storepass "$STORE_PASSWORD" \
             -alias "$KEY_ALIAS" \
             > /dev/null
@@ -86,7 +86,7 @@ jobs:
       - name: Check Android project files
         shell: bash
         run: |
-          echo "Checking AUTO-MOVIE project..."
+          echo "Checking DIRECTOR X project..."
 
           test -f "settings.gradle.kts" || {
             echo "Missing: settings.gradle.kts"
@@ -104,13 +104,13 @@ jobs:
             exit 1
           }
 
-          test -f "app/src/main/java/com/pearparinya/automovie/MainActivity.kt" || {
-            echo "Missing: MainActivity.kt"
+          test -f "app/src/main/java/com/pearparinya/automovie/StudioActivity.kt" || {
+            echo "Missing: StudioActivity.kt"
             find app/src/main -type f | sort
             exit 1
           }
 
-          echo "AUTO-MOVIE project files verified."
+          echo "DIRECTOR X project files verified."
 
       # ============================================================
       # BUILD RELEASE
@@ -129,7 +129,7 @@ jobs:
           [ -n "$VERSION_CODE" ] || { echo "Unable to read versionCode."; exit 1; }
           echo "version=$VERSION_NAME" >> "$GITHUB_OUTPUT"
           echo "build=$VERSION_CODE" >> "$GITHUB_OUTPUT"
-          echo "Building AUTO-MOVIE R$VERSION_NAME • BUILD $VERSION_CODE"
+          echo "Building DIRECTOR X R$VERSION_NAME • BUILD $VERSION_CODE"
 
       - name: Build release APK
         shell: bash
@@ -184,10 +184,10 @@ jobs:
             exit 1
           fi
 
-          SIGNED_APK="$RUNNER_TEMP/AUTO-MOVIE-R${{ steps.app_version.outputs.version }}-release.apk"
+          SIGNED_APK="$RUNNER_TEMP/DIRECTOR-X-${{ steps.app_version.outputs.version }}-release.apk"
 
           "$APKSIGNER" sign \
-            --ks "$RUNNER_TEMP/auto-movie-release.jks" \
+            --ks "$RUNNER_TEMP/director-x-release.jks" \
             --ks-key-alias "$KEY_ALIAS" \
             --ks-pass "pass:$STORE_PASSWORD" \
             --key-pass "pass:$KEY_PASSWORD" \
@@ -199,7 +199,7 @@ jobs:
             exit 1
           }
 
-          echo "AUTO-MOVIE R${{ steps.app_version.outputs.version }} APK signed."
+          echo "DIRECTOR X R${{ steps.app_version.outputs.version }} APK signed."
 
       # ============================================================
       # VERIFY SIGNATURE
@@ -217,9 +217,9 @@ jobs:
 
           "$BUILD_TOOLS/apksigner" verify \
             --verbose \
-            "$RUNNER_TEMP/AUTO-MOVIE-R${{ steps.app_version.outputs.version }}-release.apk"
+            "$RUNNER_TEMP/DIRECTOR-X-${{ steps.app_version.outputs.version }}-release.apk"
 
-          echo "AUTO-MOVIE R${{ steps.app_version.outputs.version }} signature verified."
+          echo "DIRECTOR X R${{ steps.app_version.outputs.version }} signature verified."
 
       # ============================================================
       # UPLOAD
@@ -230,11 +230,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          echo "Deleting old AUTO-MOVIE APK artifacts..."
+          echo "Deleting old DIRECTOR X APK artifacts..."
           gh api --paginate \
             -H "Accept: application/vnd.github+json" \
             "/repos/${{ github.repository }}/actions/artifacts?per_page=100" \
-            --jq '.artifacts[] | select(.name | startswith("AUTO-MOVIE-R")) | .id' \
+            --jq '.artifacts[] | select(.name | startswith("DIRECTOR-X-") or startswith("AUTO-MOVIE-R")) | .id' \
           | while read -r ARTIFACT_ID; do
               [ -z "$ARTIFACT_ID" ] && continue
               # Another workflow run can delete the same artifact between
@@ -246,13 +246,13 @@ jobs:
                 echo "Artifact $ARTIFACT_ID was already removed or unavailable; continuing."
               fi
             done
-          echo "Old AUTO-MOVIE APK artifacts deleted."
+          echo "Old DIRECTOR X APK artifacts deleted."
 
       - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: AUTO-MOVIE-R${{ steps.app_version.outputs.version }}-SIGNED-APK
-          path: ${{ runner.temp }}/AUTO-MOVIE-R${{ steps.app_version.outputs.version }}-release.apk
+          name: DIRECTOR-X-${{ steps.app_version.outputs.version }}-SIGNED-APK
+          path: ${{ runner.temp }}/DIRECTOR-X-${{ steps.app_version.outputs.version }}-release.apk
           if-no-files-found: error
           retention-days: 7
 
@@ -271,8 +271,8 @@ jobs:
           VERSION="${{ steps.app_version.outputs.version }}"
           BUILD="${{ steps.app_version.outputs.build }}"
           TAG="R${VERSION}-B${BUILD}"
-          APK="$RUNNER_TEMP/AUTO-MOVIE-R${VERSION}-release.apk"
-          ASSET_NAME="AUTO-MOVIE-R${VERSION}-BUILD-${BUILD}.apk"
+          APK="$RUNNER_TEMP/DIRECTOR-X-${VERSION}-release.apk"
+          ASSET_NAME="DIRECTOR-X-${VERSION}-BUILD-${BUILD}.apk"
           PUBLISH_APK="$RUNNER_TEMP/$ASSET_NAME"
 
           cp "$APK" "$PUBLISH_APK"
@@ -296,8 +296,8 @@ jobs:
 
           gh release create "$TAG" "$PUBLISH_APK" \
             --target "${{ github.sha }}" \
-            --title "DIRECTOR X 1.29 • รุ่น 029" \
-            --notes "DIRECTOR X 1.29 • รุ่น 029 — Update ภายใน Studio โดยตรง | BUILD: ${BUILD}" \
+            --title "DIRECTOR X 1.30 • รุ่น 030" \
+            --notes "DIRECTOR X 1.30 • รุ่น 030 — Update ภายใน Studio โดยตรง | BUILD: ${BUILD}" \
             --latest
 
           echo "Verifying published build release..."

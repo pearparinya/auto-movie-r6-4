@@ -198,7 +198,7 @@ class StudioActivity : AppCompatActivity() {
         val heading = LinearLayout(this).apply { orientation = 1; gravity = Gravity.CENTER; layoutParams = LinearLayout.LayoutParams(-2,-2) }
         heading.addView(TextView(this).apply { text = "STORY STUDIO"; textSize = 22f; setTextColor(gold); setTypeface(null,Typeface.BOLD) })
         heading.addView(TextView(this).apply { text = "ระบบจัดหนังครบทั้งเรื่อง"; textSize = 13f; setTextColor(ice); setPadding(0,dp(3),0,dp(3)) })
-        heading.addView(TextView(this).apply { text = "เวอร์ชัน 1.8 • รุ่น 008"; textSize = 12f; setTextColor(gold) })
+        heading.addView(TextView(this).apply { text = "เวอร์ชัน 1.9 • รุ่น 009"; textSize = 12f; setTextColor(gold) })
         header.addView(heading); root.addView(header)
         label("สร้างละครได้ทุกแนว • เลือกช่องก่อนเริ่ม", 13)
         val p = plan
@@ -326,21 +326,54 @@ class StudioActivity : AppCompatActivity() {
         shareText("เรื่อง ${p.getString("title")}\n${if (p.optString("character_mode") == "new") "ใช้ CHARACTER MASTER ใหม่ของเรื่องนี้ คงใบหน้าใหม่และรูปร่างตรงรายคน ถ้ายังไม่ได้แนบ MASTER ใหม่ ให้ขอไฟล์ CHARACTER ก่อนสร้างภาพ" else "ใช้ภาพ MASTER ตามชื่อของแต่ละคน คงใบหน้า ผม รูปร่าง"} กำหนดชุดตามคำสั่งแต่ละฉาก ภาพ 9:16 หนึ่งฉากหนึ่งภาพ ไม่ทำภาพรวมหลายฉาก เรียงสร้างตามรายการครบทุก EP หากติดข้อจำกัดให้แจ้งฉากล่าสุดเพื่อทำต่อ ไม่ข้ามฉาก\n\n$commands")
     }
     private fun planning() {
-        AlertDialog.Builder(this).setTitle("เลือกช่องสำหรับเรื่องใหม่")
-            .setItems(arrayOf(originalChannel, "ช่องอื่น • สร้างละครได้ทุกแนว")) { _, index ->
-                if (index == 0) chooseGenre(originalChannel, "original") else {
-                    val name = EditText(this).apply {
-                        hint = "ชื่อช่องของคุณ"
-                        setText(prefs.getString("other_channel", ""))
-                    }
-                    AlertDialog.Builder(this).setTitle("ชื่อช่องอื่น").setView(name)
-                        .setPositiveButton("เลือกแนวละคร") { _, _ ->
-                            val channel = name.text.toString().trim().ifBlank { "ช่องละครของฉัน" }
-                            prefs.edit().putString("other_channel", channel).apply()
-                            chooseGenre(channel, "new")
-                        }.setNegativeButton("ยกเลิก", null).show()
-                }
-            }.setNegativeButton("ยกเลิก", null).show()
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(18), dp(18), dp(10))
+            background = backdrop(navy, Color.rgb(27,24,57))
+        }
+        panel.addView(TextView(this).apply {
+            text = "🎬 เลือกช่องสร้างเรื่อง"; textSize = 20f
+            setTextColor(gold); setTypeface(null, Typeface.BOLD)
+            gravity = Gravity.CENTER; setPadding(0, 0, 0, dp(14))
+        })
+        val dialog = AlertDialog.Builder(this).setView(panel).create()
+        fun option(title: String, detail: String, colors: IntArray, action: () -> Unit) {
+            panel.addView(TextView(this).apply {
+                text = title; textSize = 17f; setTextColor(navy)
+                setTypeface(null, Typeface.BOLD); gravity = Gravity.CENTER_VERTICAL
+                setSingleLine(true)
+                androidx.core.widget.TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(this, 12, 17, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
+                setPadding(dp(14), dp(12), dp(14), dp(12)); minHeight = dp(54)
+                background = backdrop(colors[0], colors[1])
+                layoutParams = LinearLayout.LayoutParams(-1, -2)
+                setOnClickListener { dialog.dismiss(); action() }
+            })
+            panel.addView(TextView(this).apply {
+                text = detail; textSize = 12f; setTextColor(muted)
+                setPadding(dp(4), dp(5), dp(4), dp(16))
+            })
+        }
+        option("① 🏠 สตอรี่หลังบ้าน", "ดราม่าผัวเมีย • ใช้ตัวละครเดิม", intArrayOf(Color.rgb(255,204,86), Color.rgb(255,174,38))) {
+            chooseGenre(originalChannel, "original")
+        }
+        option("② 🎭 ช่องอื่น • ทุกแนว", "ตั้งชื่อช่องเอง • สร้างใบหน้าตัวละครใหม่", intArrayOf(Color.rgb(73,218,242), Color.rgb(32,169,228))) {
+            val name = EditText(this).apply {
+                hint = "ชื่อช่องของคุณ"; setText(prefs.getString("other_channel", ""))
+            }
+            AlertDialog.Builder(this).setTitle("ชื่อช่องอื่น").setView(name)
+                .setPositiveButton("เลือกแนวละคร") { _, _ ->
+                    val channel = name.text.toString().trim().ifBlank { "ช่องละครของฉัน" }
+                    prefs.edit().putString("other_channel", channel).apply()
+                    chooseGenre(channel, "new")
+                }.setNegativeButton("ยกเลิก", null).show()
+        }
+        panel.addView(TextView(this).apply {
+            text = "ยกเลิก"; textSize = 14f; setTextColor(muted)
+            gravity = Gravity.CENTER; minHeight = dp(48)
+            setOnClickListener { dialog.dismiss() }
+        })
+        dialog.show()
+        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
     }
     private fun chooseGenre(channel: String, mode: String) {
         val choices = if (mode == "original") categories else otherGenres

@@ -11,8 +11,8 @@ android {
         applicationId = "com.pearparinya.automovie"
         minSdk = 26
         targetSdk = 35
-        versionCode = 739
-        versionName = "6.48"
+        versionCode = 740
+        versionName = "6.49"
     }
 
     sourceSets {
@@ -50,6 +50,7 @@ tasks.matching { it.name == "preBuild" }.configureEach {
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")

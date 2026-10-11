@@ -228,12 +228,6 @@ class StudioActivity : AppCompatActivity() {
     private fun rows(p: JSONObject): List<JSONObject> {
         val result = mutableListOf<JSONObject>()
         val eps = p.getJSONArray("episodes")
-        if (p.optInt("schema_version", 1) >= 2) {
-            require(p.optString("channel").isNotBlank()) { "บทขาดชื่อช่อง" }
-            require(p.optString("tagline").isNotBlank()) { "บทขาดคำโปรยเรื่อง" }
-            require(p.getInt("episode_count") == eps.length()) { "จำนวน EP ไม่ตรงกับบท" }
-            require(p.getInt("scene_count") == (0 until eps.length()).sumOf { eps.getJSONObject(it).getJSONArray("scenes").length() }) { "จำนวนซีนรวมไม่ตรงกับบท" }
-        }
         for (i in 0 until eps.length()) {
             val ep = eps.getJSONObject(i)
             val scenes = ep.getJSONArray("scenes")
@@ -251,6 +245,12 @@ class StudioActivity : AppCompatActivity() {
         if (mode == "new") require(p.optString("channel").isNotBlank()) { "กรุณาระบุชื่อช่องในบท" }
         val eps = p.getJSONArray("episodes")
         require(eps.length() > 0) { "ไม่มี EP" }
+        if (p.optInt("schema_version", 1) >= 2) {
+            require(p.optString("channel").isNotBlank()) { "บทขาดชื่อช่อง" }
+            require(p.optString("tagline").isNotBlank()) { "บทขาดคำโปรยเรื่อง" }
+            require(p.getInt("episode_count") == eps.length()) { "จำนวน EP ไม่ตรงกับบท" }
+            require(p.getInt("scene_count") == (0 until eps.length()).sumOf { eps.getJSONObject(it).getJSONArray("scenes").length() }) { "จำนวนซีนรวมไม่ตรงกับบท" }
+        }
         for (i in 0 until eps.length()) {
             val ep = eps.getJSONObject(i)
             require(ep.getInt("ep") == i + 1) { "EP ต้องเรียงจาก 1" }

@@ -130,7 +130,7 @@ class StudioActivity : AppCompatActivity() {
                 if (candidate != null) {
                     validate(candidate)
                     // Reimporting the same story must retain images already received.
-                    val sameStory = plan?.let { old -> old.toString() == candidate.toString() } == true
+                    val sameStory = plan?.let { old -> old.optString("title") == candidate.optString("title") && old.optString("category") == candidate.optString("category") && rows(old).map { it.toString() } == rows(candidate).map { it.toString() } } == true
                     val folder = if (sameStory) project else File(base, UUID.randomUUID().toString()).apply { mkdirs() }
                     importNewMasters(masters, folder, candidate)
                     File(folder,"story.json").writeText(candidate.toString(2))
@@ -452,13 +452,15 @@ class StudioActivity : AppCompatActivity() {
     private fun coverFile(name: String, folder: File = project) = File(folder, "covers/$name.img")
     private fun coverCommand(p: JSONObject, ep: JSONObject): String {
         val number = ep.getInt("ep")
-        val title = ep.optString("title").ifBlank { "ตอนที่ $number" }
+        val title = ep.optString("title").ifBlank { "ตั้งชื่อตอนภาษาไทยจากเหตุการณ์ของ EP นี้ ใช้ชื่อเดียวกันทั้งสองปก" }
         return "สร้างปกของ EP $number แยก 2 ไฟล์ EP%02d_COVER_9x16.png (9:16) และ EP%02d_COVER_16x9.png (16:9) จัดองค์ประกอบใหม่ตามสัดส่วนแต่ละภาพ ใช้ MASTER รายคน คงใบหน้า ผม รูปร่าง สัดส่วนอก เอว สะโพกตามต้นฉบับ เปลี่ยนชุดและสถานที่ตามตอน สื่อเหตุการณ์เด่น: %s ข้อความ 3 บรรทัดจัดกึ่งกลางในพื้นที่กลางภาพ เว้นขอบซ้ายขวา 10%% ขอบบนล่าง 20%% อ่านชัดบนมือถือ ไม่ทับใบหน้า บรรทัด 1 (เล็กกว่า): %s | บรรทัด 2 (ใหญ่ที่สุด): %s | บรรทัด 3 (ขนาดรอง): EP %02d • %s ปรับขนาดอักษรให้ข้อความครบในแต่ละบรรทัด".format(number,number,ep.getJSONArray("scenes").getJSONObject(ep.getJSONArray("scenes").length()-1).optString("action"),p.optString("channel",originalChannel),p.getString("title"),number,title)
     }
     private fun sendCoverCommands() {
         val p = plan ?: return notice("นำเข้าบทก่อนสร้างปก")
         val eps = p.getJSONArray("episodes")
-        shareText((0 until eps.length()).joinToString("\n\n") { coverCommand(p,eps.getJSONObject(it)) })
+        val missingTitles = (0 until eps.length()).any { eps.getJSONObject(it).optString("title").isBlank() }
+        val context = if (missingTitles) "บทเก่ายังไม่มีชื่อตอน ให้ตั้งชื่อตอนภาษาไทยทุก EP จากเนื้อหา เพิ่ม title ในแต่ละ episodes และส่ง story.json ที่อัปเดตพร้อมปก โดยคงข้อมูลฉากเดิมทั้งหมด\n${p.toString(2)}\n\n" else ""
+        shareText(context + (0 until eps.length()).joinToString("\n\n") { coverCommand(p,eps.getJSONObject(it)) })
     }
     private fun planning() {
         val panel = LinearLayout(this).apply {

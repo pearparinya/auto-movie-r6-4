@@ -302,9 +302,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.25", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.26", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 025 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 026 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -521,7 +521,11 @@ class StudioActivity : AppCompatActivity() {
         for (target in packages) {
             val direct = Intent(intent).setPackage(target)
             try {
-                startActivity(direct)
+                val launch = packageManager.getLaunchIntentForPackage(target)
+                    ?: throw android.content.ActivityNotFoundException()
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+                // Open ChatGPT's own task before its share receiver.
+                startActivities(arrayOf(launch, direct))
                 if (lockCreation) { File(project,"command_sent").writeText("sent"); render() }
                 return
             } catch (_: android.content.ActivityNotFoundException) {

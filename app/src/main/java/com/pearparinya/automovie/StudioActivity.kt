@@ -156,7 +156,7 @@ class StudioActivity : AppCompatActivity() {
         val heading = LinearLayout(this).apply { orientation = 1; gravity = Gravity.CENTER; layoutParams = LinearLayout.LayoutParams(-2,-2) }
         heading.addView(TextView(this).apply { text = "STORY STUDIO"; textSize = 22f; setTextColor(gold); setTypeface(null,Typeface.BOLD) })
         heading.addView(TextView(this).apply { text = "ระบบจัดหนังครบทั้งเรื่อง"; textSize = 13f; setTextColor(ice); setPadding(0,dp(3),0,dp(3)) })
-        heading.addView(TextView(this).apply { text = "เวอร์ชัน 1.4 • รุ่น 004"; textSize = 12f; setTextColor(gold) })
+        heading.addView(TextView(this).apply { text = "เวอร์ชัน 1.5 • รุ่น 005"; textSize = 12f; setTextColor(gold) })
         header.addView(heading); root.addView(header)
         label("สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย", 13)
         val p = plan
@@ -281,11 +281,17 @@ class StudioActivity : AppCompatActivity() {
         shareText("เรื่อง ${p.getString("title")}\nใช้ภาพ MASTER ตามชื่อของแต่ละคน คงใบหน้า ผม รูปร่าง กำหนดชุดตามคำสั่งแต่ละฉาก ภาพ 9:16 หนึ่งฉากหนึ่งภาพ ไม่ทำภาพรวมหลายฉาก เรียงสร้างตามรายการครบทุก EP หากติดข้อจำกัดให้แจ้งฉากล่าสุดเพื่อทำต่อ ไม่ข้ามฉาก\n\n$commands")
     }
     private fun planning() {
+        AlertDialog.Builder(this).setTitle("เลือกหมวดหมู่ของเรื่อง")
+            .setItems(categories.toTypedArray()) { _, index -> planningForCategory(categories[index]) }
+            .setNegativeButton("ยกเลิก", null).show()
+    }
+    private fun planningForCategory(category: String) {
         val idea = EditText(this).apply { hint = "แนวคิดเรื่อง (เว้นว่างให้คิดอัตโนมัติ)" }
-        AlertDialog.Builder(this).setTitle("สร้างหนังหนึ่งเรื่องจนจบ").setView(idea).setPositiveButton("ส่งคำสั่ง") { _, _ ->
+        AlertDialog.Builder(this).setTitle(category).setMessage("สร้างเรื่องจนจบครบทุก EP\nเว้นแนวคิดว่างได้ ระบบจะคิดเรื่องในหมวดที่เลือก").setView(idea).setPositiveButton("ส่งคำสั่ง") { _, _ ->
             shareText("""วางเรื่องละครไทยสมจริงให้ช่อง สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย จนจบทุก EP ในชุดเดียว
 แนวคิด: ${idea.text.toString().ifBlank { "คิดเรื่องใหม่อัตโนมัติ" }}
-เลือกชื่อเรื่องและหนึ่งหมวดจาก: ${categories.joinToString("\n")}
+หมวดหมู่ที่ผู้ใช้เลือก: $category
+สร้างชื่อเรื่องและพล็อตให้ตรงหมวดนี้ ใช้ค่า category ใน story.json เป็น "$category" ตรงทุกตัวอักษร
 ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ตัวละครหลัก กวิน รินลดา มายด์ อ้างอิง MASTER ของแต่ละคนเพื่อคงใบหน้า ผม รูปร่าง ระบุชุดใหม่ สถานที่ การกระทำอย่างกระชับ รักษาความต่อเนื่อง จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน
 ส่งไฟล์ story.json เป็น JSON ไม่มี markdown โครงสร้าง:
 {"title":"ชื่อเรื่อง","category":"ชื่อหมวดเต็มตรงรายการ","bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"scenes":[{"scene":1,"action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","image_prompt":"คำสั่งภาพพร้อมระบุ MASTER ชุด สถานที่ การกระทำ","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}

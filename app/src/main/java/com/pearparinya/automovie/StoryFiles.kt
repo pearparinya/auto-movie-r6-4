@@ -12,6 +12,10 @@ internal object StoryFiles {
         val scene = it.groupValues[2].toIntOrNull() ?: return null
         ep to scene
     } }
+    fun coverName(name: String): String? = Regex("^EP(\\d+)_COVER_(9x16|16x9)\\.(png|jpe?g|webp)$", RegexOption.IGNORE_CASE).matchEntire(name)?.let {
+        val ep = it.groupValues[1].toIntOrNull()
+        if (ep == null || ep < 1) null else "EP%02d_COVER_%s".format(ep, it.groupValues[2].lowercase())
+    }
     fun unpack(input: InputStream, staging: File, maxBytes: Long = 512L * 1024 * 1024): List<File> {
         val files = mutableListOf<File>()
         var total = 0L

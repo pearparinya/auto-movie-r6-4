@@ -14,6 +14,13 @@ class StoryFilesTest {
         ZipOutputStream(out).use { zip -> entries.forEach { (name, data) -> zip.putNextEntry(ZipEntry(name)); zip.write(data.toByteArray()); zip.closeEntry() } }
         return out.toByteArray()
     }
+    @Test fun coversAreSeparateFromSceneImages() {
+        assertEquals("EP03_COVER_9x16", StoryFiles.coverName("EP03_COVER_9x16.png"))
+        assertEquals("EP01_COVER_16x9", StoryFiles.coverName("ep1_cover_16X9.JPG"))
+        assertNull(StoryFiles.coverName("EP01_SC001.png"))
+        assertNull(StoryFiles.coverName("EP00_COVER_9x16.png"))
+        assertNull(StoryFiles.sceneNumber("EP01_COVER_9x16.png"))
+    }
     @Test fun thaiTitleSurvivesExport() {
         assertEquals("กุญแจบ้านที่ให้คนอื่น.zip", StoryFiles.zipName("กุญแจบ้านที่ให้คนอื่น"))
         assertEquals("รัก_ร้าว_ครั้งสุดท้าย.zip", StoryFiles.zipName("รัก/ร้าว:ครั้งสุดท้าย"))

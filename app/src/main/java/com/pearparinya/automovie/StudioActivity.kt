@@ -218,9 +218,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.17", 24, 16, gold, true, 1)
+        brandLine("DIRECTOR X 1.18", 24, 16, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 20, 16, ice, true, 3)
-        brandLine("รุ่น 017 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 018 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         label("สร้างละครได้ทุกแนว • เลือกช่องก่อนเริ่ม", 13)
@@ -405,23 +405,36 @@ class StudioActivity : AppCompatActivity() {
                 setPadding(dp(10),dp(12),dp(10),dp(12))
                 background = backdrop(colors[0],colors[1],Color.argb(150,255,255,255))
                 elevation = dp(5).toFloat()
-                layoutParams = LinearLayout.LayoutParams(-1,-2).apply { bottomMargin = dp(16) }
+                layoutParams = LinearLayout.LayoutParams(-1,-2).apply { bottomMargin = dp(12) }
                 isClickable = true; isFocusable = true
                 contentDescription = "$title $detail"
                 setOnClickListener { dialog.dismiss(); action() }
             }
-            card.addView(ImageView(this).apply {
-                setImageResource(if (title == originalChannel) R.drawable.studio_channel else R.drawable.studio_genres); scaleType = ImageView.ScaleType.FIT_CENTER
-                layoutParams = LinearLayout.LayoutParams(dp(64),dp(64))
+            val top = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+                layoutParams = LinearLayout.LayoutParams(-1,-2)
+                setPadding(dp(4),0,dp(4),dp(8))
+            }
+            top.addView(ImageView(this).apply {
+                setImageResource(if (title == originalChannel) R.drawable.studio_channel else R.drawable.studio_genres)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                layoutParams = LinearLayout.LayoutParams(dp(44),dp(44))
                 contentDescription = title
             })
-            card.addView(TextView(this).apply {
-                text = if (title == originalChannel) "①" else "②"
-                textSize = 30f; gravity = Gravity.CENTER; setTextColor(navy)
-                setPadding(0,0,0,dp(6))
+            top.addView(android.view.View(this).apply {
+                layoutParams = LinearLayout.LayoutParams(0,1,1f)
             })
+            top.addView(TextView(this).apply {
+                text = if (title == originalChannel) "1" else "2"
+                textSize = 20f; gravity = Gravity.CENTER; setTextColor(navy)
+                setTypeface(null,Typeface.BOLD)
+                background = backdrop(Color.argb(65,255,255,255),Color.argb(45,255,255,255))
+                layoutParams = LinearLayout.LayoutParams(dp(36),dp(36))
+                contentDescription = "ช่องหมายเลข $text"
+            })
+            card.addView(top)
             card.addView(TextView(this).apply {
-                text = title; textSize = 18f; setTextColor(navy)
+                text = title; textSize = 16f; setTextColor(navy)
                 setTypeface(null, Typeface.BOLD); gravity = Gravity.CENTER
                 layoutParams = LinearLayout.LayoutParams(-1,-2)
                 setSingleLine(true)
@@ -430,7 +443,7 @@ class StudioActivity : AppCompatActivity() {
                     val available = label.width - label.paddingLeft - label.paddingRight - dp(4)
                     if (available > 0) {
                         val paint = android.text.TextPaint(label.paint)
-                        var pixels = 18f * resources.displayMetrics.scaledDensity
+                        var pixels = 16f * resources.displayMetrics.scaledDensity
                         paint.textSize = pixels
                         while (paint.measureText(title) > available && pixels > 1f) {
                             pixels -= 0.5f; paint.textSize = pixels

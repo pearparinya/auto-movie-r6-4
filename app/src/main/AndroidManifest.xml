@@ -11,7 +11,7 @@
 
     <application
         android:theme="@style/Theme.AutoMovie"
-        android:label="AUTO-MOVIE"
+        android:label="STORY STUDIO"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:allowBackup="true"
@@ -28,7 +28,7 @@
         </provider>
 
         <activity
-            android:name=".MainActivity"
+            android:name=".StudioActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTask"
             android:alwaysRetainTaskState="true"
@@ -41,6 +41,7 @@
 
         </activity>
 
+        <activity android:name=".MainActivity" android:exported="false" android:screenOrientation="portrait" />
     </application>
 
 </manifest>

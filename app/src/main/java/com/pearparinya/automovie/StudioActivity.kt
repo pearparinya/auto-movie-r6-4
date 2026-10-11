@@ -31,6 +31,7 @@ class StudioActivity : AppCompatActivity() {
     private val project get() = File(base, prefs.getString("project", "draft")!!).apply { mkdirs() }
     private var plan: JSONObject? = null
     private var importing = false
+    private val updater = StudioUpdater(this)
     private lateinit var root: LinearLayout
     private val navy = Color.rgb(12,15,38)
     private val gold = Color.rgb(255,190,74)
@@ -155,7 +156,7 @@ class StudioActivity : AppCompatActivity() {
         val heading = LinearLayout(this).apply { orientation = 1; gravity = Gravity.CENTER; layoutParams = LinearLayout.LayoutParams(-2,-2) }
         heading.addView(TextView(this).apply { text = "STORY STUDIO"; textSize = 22f; setTextColor(gold); setTypeface(null,Typeface.BOLD) })
         heading.addView(TextView(this).apply { text = "ระบบจัดหนังครบทั้งเรื่อง"; textSize = 13f; setTextColor(ice); setPadding(0,dp(3),0,dp(3)) })
-        heading.addView(TextView(this).apply { text = "STUDIO 1.3 • BUILD 723"; textSize = 12f; setTextColor(gold) })
+        heading.addView(TextView(this).apply { text = "เวอร์ชัน 1.4 • รุ่น 004"; textSize = 12f; setTextColor(gold) })
         header.addView(heading); root.addView(header)
         label("สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย", 13)
         val p = plan
@@ -197,10 +198,11 @@ class StudioActivity : AppCompatActivity() {
             }
         }
         label("ZIP เดียว • ภาพทุกฉาก + คำสั่ง Flow + บทพูด",12)
-        button("⚙ ตัวละคร • Update • ตัวเลือก",false) { toolsMenu() }
+        button("↻ Update STORY STUDIO",false) { updater.check() }
+        button("⚙ ตัวละคร • ตัวเลือก",false) { toolsMenu() }
     }
     private fun toolsMenu() {
-        AlertDialog.Builder(this).setTitle("ตัวเลือก").setItems(arrayOf("ตัวละคร MASTER / งานเดิม / Update", "ดูภาพและบทในเรื่องนี้", "เลือกเรื่องที่บันทึก", "ส่งคำสั่งภาพทั้งเรื่อง", "วิธีใช้งาน")) { _, index ->
+        AlertDialog.Builder(this).setTitle("ตัวเลือก").setItems(arrayOf("ตัวละคร MASTER / งานเดิม", "ดูภาพและบทในเรื่องนี้", "เลือกเรื่องที่บันทึก", "ส่งคำสั่งภาพทั้งเรื่อง", "วิธีใช้งาน")) { _, index ->
             when (index) {
                 0 -> startActivity(Intent(this,MainActivity::class.java))
                 1 -> review()

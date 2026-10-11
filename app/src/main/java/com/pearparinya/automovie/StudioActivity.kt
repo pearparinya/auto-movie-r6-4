@@ -550,7 +550,7 @@ class StudioActivity : AppCompatActivity() {
         val index = scenes.indexOfFirst { key(it) == key(scene) }
         val previous = scenes.getOrNull(index - 1)?.optString("action").orEmpty()
         val next = scenes.getOrNull(index + 1)?.optString("action").orEmpty()
-        return "สร้างภาพหนึ่งภาพฉาก ${key(scene)} เรื่อง ${p.getString("title")}\\n${storyVisualGuide(p.optString("character_mode","original"))}\\nคำสั่งภาพตามบท: ${scene.getString("image_prompt")}\\nเหตุการณ์ฉากนี้: ${scene.getString("action")}\\nบทพูดและอารมณ์: ${scene.optString("dialogue")}\\nเหตุการณ์ก่อนหน้า: $previous\\nจุดส่งต่อฉากถัดไป: $next\\nสร้างเฉพาะเหตุการณ์ฉากนี้ หนึ่งฉากหนึ่งภาพ ตั้งชื่อ ${key(scene)}.png"
+        return "สร้างภาพหนึ่งภาพฉาก ${key(scene)} เรื่อง ${p.getString("title")}\n${storyVisualGuide(p.optString("character_mode","original"))}\nคำสั่งภาพตามบท: ${scene.getString("image_prompt")}\nเหตุการณ์ฉากนี้: ${scene.getString("action")}\nบทพูดและอารมณ์: ${scene.optString("dialogue")}\nเหตุการณ์ก่อนหน้า: $previous\nจุดส่งต่อฉากถัดไป: $next\nสร้างเฉพาะเหตุการณ์ฉากนี้ หนึ่งฉากหนึ่งภาพ ตั้งชื่อ ${key(scene)}.png"
     }
     private fun wholeStoryCommands() {
         val p = plan ?: return notice("นำเข้าแผนเรื่องก่อนครับ")
@@ -559,7 +559,7 @@ class StudioActivity : AppCompatActivity() {
             val ep = episodes.getJSONObject(i)
             rows(p).filter { it.getInt("ep") == ep.getInt("ep") }.joinToString("\n\n") { s -> storySceneCommand(p,s) } + "\n\n" + coverCommand(p,ep)
         }
-        shareText("สร้างและแสดงภาพจริงตามรายการของเรื่อง ${p.getString("title")} เรียงครบทุก EP หนึ่งฉากหนึ่งภาพ เมื่อสร้างภาพฉากสุดท้ายของแต่ละ EP แล้วสร้างปกตามคำสั่งปกแยกต่างหาก หากติดข้อจำกัดให้แจ้งฉากล่าสุดเพื่อทำต่อ\\n\\n$commands")
+        shareText("สร้างและแสดงภาพจริงตามรายการของเรื่อง ${p.getString("title")} เรียงครบทุก EP หนึ่งฉากหนึ่งภาพ เมื่อสร้างภาพฉากสุดท้ายของแต่ละ EP แล้วสร้างปกตามคำสั่งปกแยกต่างหาก หากติดข้อจำกัดให้แจ้งฉากล่าสุดเพื่อทำต่อ\n\n$commands")
     }
     private fun coverNames(p: JSONObject): List<String> {
         val eps = p.getJSONArray("episodes")

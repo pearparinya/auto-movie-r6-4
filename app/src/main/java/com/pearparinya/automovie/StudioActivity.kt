@@ -372,7 +372,7 @@ class StudioActivity : AppCompatActivity() {
             minHeight = dp(if (primary) 46 else 38); minimumHeight = minHeight
             layoutParams = LinearLayout.LayoutParams(-1,-2).apply { setMargins(0,dp(4),0,dp(4)) }
             setPadding(dp(10),dp(6),dp(10),dp(6))
-            setOnClickListener { if (enabled && !importing) action() else Toast.makeText(this@StudioActivity,"กำลังนำเข้าภาพ กรุณารอสักครู่",Toast.LENGTH_SHORT).show() }
+            setOnClickListener { if (!importing) action() else Toast.makeText(this@StudioActivity,"กำลังนำเข้าภาพ กรุณารอสักครู่",Toast.LENGTH_SHORT).show() }
         })
     }
     private fun notice(text: String) { AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setMessage(text).setPositiveButton("ตกลง", null).show() }
@@ -441,7 +441,7 @@ class StudioActivity : AppCompatActivity() {
                 background = backdrop(colors[0],colors[1],Color.argb(150,255,255,255))
                 elevation = dp(5).toFloat()
                 layoutParams = LinearLayout.LayoutParams(-1,-2).apply { bottomMargin = dp(12) }
-                isEnabled = enabled; isClickable = enabled; isFocusable = enabled; alpha = if (enabled) 1f else 0.45f
+                isClickable = true; isFocusable = true
                 contentDescription = "$title $detail"
                 setOnClickListener { dialog.dismiss(); action() }
             }
@@ -550,7 +550,7 @@ class StudioActivity : AppCompatActivity() {
                 setPadding(dp(14),dp(14),dp(14),dp(14)); minHeight = dp(60)
                 background = backdrop(shades[0],shades[1],Color.argb(120,255,255,255))
                 layoutParams = LinearLayout.LayoutParams(-1,-2).apply { bottomMargin = dp(10) }
-                isEnabled = enabled; isClickable = enabled; isFocusable = enabled; alpha = if (enabled) 1f else 0.45f
+                isClickable = true; isFocusable = true
                 val attribute = android.util.TypedValue()
                 theme.resolveAttribute(android.R.attr.selectableItemBackground,attribute,true)
                 foreground = getDrawable(attribute.resourceId)

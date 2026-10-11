@@ -302,9 +302,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.27", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.28", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 027 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 028 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -539,14 +539,27 @@ class StudioActivity : AppCompatActivity() {
         }
         notice("ไม่พบแอป ChatGPT ที่รับคำสั่งและรูปภาพได้ กรุณาติดตั้งหรืออัปเดตแอป ChatGPT แล้วลองอีกครั้ง")
     }
+    private fun storyVisualGuide(mode: String): String {
+        val master = if (mode == "new")
+            "ใช้ CHARACTER MASTER ใหม่ของเรื่องนี้ตรงรายคน คงใบหน้า ผม รูปร่าง และสัดส่วนร่างกายตาม MASTER ใหม่"
+        else "ใช้ภาพ MASTER ที่แนบตรงรายคน คงใบหน้า ผม รูปร่าง และสัดส่วนร่างกายตามต้นฉบับ"
+        return "$master เปลี่ยนเป็นชุดที่ระบุในบทให้เหมาะกับสถานการณ์ ระบุสถานที่ สิ่งของ การกระทำ สีหน้า และทิศทางสายตาของแต่ละคนให้ชัดเจน ทุกคนสนใจเหตุการณ์หรือคู่สนทนาตามบท ภาพละครไทยสมจริง แสงและรายละเอียดชัด แนวตั้ง 9:16 จัดระยะภาพให้เห็นการกระทำและตัวละครครบตามฉาก รักษาชุด สถานที่ และสิ่งของต่อเนื่องในเหตุการณ์เดียวกัน สร้างภาพด้วยเครื่องมือสร้างภาพและแสดงภาพจริงในแชต ภาพฉากไม่มีข้อความหรือตราสัญลักษณ์ ถ้าขาด MASTER ให้ขอต้นฉบับก่อนสร้าง ถ้าสร้างภาพไม่ได้ให้แจ้งตามจริง"
+    }
+    private fun storySceneCommand(p: JSONObject, scene: JSONObject): String {
+        val scenes = rows(p)
+        val index = scenes.indexOfFirst { key(it) == key(scene) }
+        val previous = scenes.getOrNull(index - 1)?.optString("action").orEmpty()
+        val next = scenes.getOrNull(index + 1)?.optString("action").orEmpty()
+        return "สร้างภาพหนึ่งภาพฉาก ${key(scene)} เรื่อง ${p.getString("title")}\\n${storyVisualGuide(p.optString("character_mode","original"))}\\nคำสั่งภาพตามบท: ${scene.getString("image_prompt")}\\nเหตุการณ์ฉากนี้: ${scene.getString("action")}\\nบทพูดและอารมณ์: ${scene.optString("dialogue")}\\nเหตุการณ์ก่อนหน้า: $previous\\nจุดส่งต่อฉากถัดไป: $next\\nสร้างเฉพาะเหตุการณ์ฉากนี้ หนึ่งฉากหนึ่งภาพ ตั้งชื่อ ${key(scene)}.png"
+    }
     private fun wholeStoryCommands() {
         val p = plan ?: return notice("นำเข้าแผนเรื่องก่อนครับ")
         val episodes = p.getJSONArray("episodes")
         val commands = (0 until episodes.length()).joinToString("\n\n") { i ->
             val ep = episodes.getJSONObject(i)
-            rows(p).filter { it.getInt("ep") == ep.getInt("ep") }.joinToString("\n\n") { s -> "${key(s)}.png\n${s.getString("image_prompt")}" } + "\n\n" + coverCommand(p,ep)
+            rows(p).filter { it.getInt("ep") == ep.getInt("ep") }.joinToString("\n\n") { s -> storySceneCommand(p,s) } + "\n\n" + coverCommand(p,ep)
         }
-        shareText("เรื่อง ${p.getString("title")}\n${if (p.optString("character_mode") == "new") "ใช้ CHARACTER MASTER ใหม่ของเรื่องนี้ คงใบหน้าใหม่ รูปร่าง และสัดส่วนอก เอว สะโพกตรง MASTER รายคน ถ้ายังไม่ได้แนบ MASTER ใหม่ ให้ขอไฟล์ CHARACTER ก่อนสร้างภาพ" else "ใช้ภาพ MASTER ตามชื่อของแต่ละคน คงใบหน้า ผม รูปร่าง สัดส่วนอก เอว และสะโพกตาม MASTER รายคน"} กำหนดชุดตามคำสั่งแต่ละฉาก ภาพ 9:16 หนึ่งฉากหนึ่งภาพ ไม่ทำภาพรวมหลายฉาก เรียงสร้างตามรายการครบทุก EP หากติดข้อจำกัดให้แจ้งฉากล่าสุดเพื่อทำต่อ ไม่ข้ามฉาก\n\n$commands")
+        shareText("สร้างและแสดงภาพจริงตามรายการของเรื่อง ${p.getString("title")} เรียงครบทุก EP หนึ่งฉากหนึ่งภาพ เมื่อสร้างภาพฉากสุดท้ายของแต่ละ EP แล้วสร้างปกตามคำสั่งปกแยกต่างหาก หากติดข้อจำกัดให้แจ้งฉากล่าสุดเพื่อทำต่อ\\n\\n$commands")
     }
     private fun coverNames(p: JSONObject): List<String> {
         val eps = p.getJSONArray("episodes")
@@ -674,10 +687,10 @@ class StudioActivity : AppCompatActivity() {
 หมวดหมู่ที่ผู้ใช้เลือก: $category
 ตั้งชื่อเรื่องเป็นภาษาไทยเท่านั้น ใส่ชื่อภาษาไทยในค่า title ของ story.json และตั้งชื่อไฟล์ ZIP เป็นชื่อเรื่องภาษาไทย.zip ห้ามใช้ชื่อหมวดภาษาอังกฤษเป็นชื่อเรื่องหรือชื่อ ZIP
 สร้างชื่อเรื่องและพล็อตให้ตรงหมวดนี้ ใช้ค่า category ใน story.json เป็น "$category" ตรงทุกตัวอักษร
-ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ${if (mode == "original") "ตัวละครหลัก กวิน รินลดา มายด์ อ้างอิง MASTER ของแต่ละคนเพื่อคงใบหน้า ผม รูปร่าง สัดส่วนอก เอว และสะโพกตาม MASTER รายคน" else "สร้างชื่อและใบหน้าตัวละครใหม่สำหรับเรื่องนี้ ใช้ภาพที่แนบอ้างอิงเฉพาะรูปร่างและสัดส่วนของตัวละครผู้ใหญ่ ไม่ใช้ชื่อหรือใบหน้าเดิม สร้างภาพ MASTER ใหม่ก่อนสร้างฉาก ตั้งชื่อ CHARACTER_01.png, CHARACTER_02.png ตามจำนวนที่ต้องใช้ แล้วใช้ใบหน้าใหม่เดิมอย่างต่อเนื่องทุกฉาก เก็บรายละเอียดตัวละครและชื่อไฟล์ MASTER ใน bible"} ยึด MASTER เป็นหลักสำหรับสัดส่วนร่างกายรวมถึงขนาดและรูปทรงหน้าอกให้เหมือนหรือใกล้เคียงต้นฉบับโดยอยู่ใต้ชุดตามฉาก ระบุชุดใหม่ สถานที่ การกระทำอย่างกระชับ รักษาความต่อเนื่อง จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน
+ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ${if (mode == "original") "ตัวละครหลัก กวิน รินลดา มายด์ อ้างอิง MASTER ของแต่ละคนเพื่อคงใบหน้า ผม รูปร่าง สัดส่วนอก เอว และสะโพกตาม MASTER รายคน" else "สร้างชื่อและใบหน้าตัวละครใหม่สำหรับเรื่องนี้ ใช้ภาพที่แนบอ้างอิงเฉพาะรูปร่างและสัดส่วนของตัวละครผู้ใหญ่ ไม่ใช้ชื่อหรือใบหน้าเดิม สร้างภาพ MASTER ใหม่ก่อนสร้างฉาก ตั้งชื่อ CHARACTER_01.png, CHARACTER_02.png ตามจำนวนที่ต้องใช้ แล้วใช้ใบหน้าใหม่เดิมอย่างต่อเนื่องทุกฉาก เก็บรายละเอียดตัวละครและชื่อไฟล์ MASTER ใน bible"}\n${storyVisualGuide(mode)}\nเขียน image_prompt แต่ละฉากอย่างกระชับ: ตัวละครและ MASTER รายคน → ชุดรายคน → สถานที่และสิ่งของ → การกระทำ → สีหน้าและสายตา ระบุรายละเอียดชุดและสถานที่จริงในแต่ละฉากเพื่อสร้างซ้ำได้ เหตุการณ์ทุกฉากมาจากบทของเรื่องนี้ จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน
 ส่งไฟล์ story.json เป็น JSON ไม่มี markdown โครงสร้าง:
-{"channel":${JSONObject.quote(channel)},"character_mode":"$mode","title":"ชื่อเรื่อง","category":"ชื่อหมวดเต็มตรงรายการ","bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"title":"ชื่อตอนภาษาไทย","scenes":[{"scene":1,"action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","image_prompt":"คำสั่งภาพพร้อมระบุ MASTER ชุด สถานที่ การกระทำ","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}
-เพิ่ม EP และฉากเท่าที่เรื่องต้องใช้ เรียงเลขจาก 1 ไม่กำหนดจำนวนตายตัว หลังวางบททั้งเรื่อง ส่งไฟล์ story.json แล้วสร้างภาพแยกหนึ่งฉากหนึ่งไฟล์ตามลำดับครบทุก EP จนจบ ตั้งชื่อ EP01_SC001.png ตามเลข EP และฉาก ไม่ทำภาพรวมหลายฉาก ${if (mode == "original") "ใช้ MASTER ที่แนบให้ตรงรายคน" else "ใช้ CHARACTER MASTER ใหม่ที่สร้างสำหรับเรื่องนี้ตรงรายคน"} พร้อมคำสั่งสำหรับ Flow / Veo 3.1 Lite ทุกฉาก ผู้ใช้ต้องการบทและภาพพร้อมนำไปทำวิดีโอ
+{"channel":${JSONObject.quote(channel)},"character_mode":"$mode","title":"ชื่อเรื่อง","category":"ชื่อหมวดเต็มตรงรายการ","bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"title":"ชื่อตอนภาษาไทย","scenes":[{"scene":1,"action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","image_prompt":"สร้างภาพฉากตามบท ใช้ MASTER รายคน คงใบหน้า ผม รูปร่าง ระบุชุด สถานที่ สิ่งของ การกระทำ สีหน้า และสายตา ภาพละครไทยสมจริง 9:16","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}
+เพิ่ม EP และฉากเท่าที่เรื่องต้องใช้ เรียงเลขจาก 1 ไม่กำหนดจำนวนตายตัว หลังวางบททั้งเรื่อง ส่งไฟล์ story.json แล้วใช้เครื่องมือสร้างภาพและแสดงภาพจริงในแชตแยกหนึ่งฉากหนึ่งไฟล์ตามลำดับครบทุก EP จนจบ ตั้งชื่อ EP01_SC001.png ตามเลข EP และฉาก ไม่ทำภาพรวมหลายฉาก ${if (mode == "original") "ใช้ MASTER ที่แนบให้ตรงรายคน" else "ใช้ CHARACTER MASTER ใหม่ที่สร้างสำหรับเรื่องนี้ตรงรายคน"} พร้อมคำสั่งสำหรับ Flow / Veo 3.1 Lite ทุกฉาก ผู้ใช้ต้องการบทและภาพพร้อมนำไปทำวิดีโอ
 หลังสร้างฉากสุดท้ายของแต่ละ EP ให้สร้างปกแยก 2 ไฟล์ทันที: EP01_COVER_9x16.png ขนาด 9:16 และ EP01_COVER_16x9.png ขนาด 16:9 เปลี่ยนเลขตาม EP จัดองค์ประกอบแต่ละสัดส่วนใหม่ ใช้ตัวละครจาก MASTER รายคน สื่อเหตุการณ์เด่นของตอนนั้น ข้อความภาษาไทย 3 บรรทัดจัดกึ่งกลางในพื้นที่กลางภาพ เว้นขอบซ้ายขวาอย่างน้อย 10% และขอบบนล่าง 20%: บรรทัด 1 ชื่อช่อง (เล็กกว่า), บรรทัด 2 ชื่อเรื่อง (ใหญ่ที่สุด), บรรทัด 3 EP 01 • ชื่อตอน (ขนาดรอง) ปรับขนาดอักษรให้ครบทั้งบรรทัด อ่านชัดบนมือถือ ไม่ทับใบหน้า ชื่อเรื่องและชื่อตอนต้องตรง story.json รวมปกทุก EP ใน ZIP ชื่อเรื่องภาษาไทยด้วย""", lockCreation = true, useNewMasters = false)
         }.setNegativeButton("ยกเลิก",null).showDirector()
     }
@@ -686,7 +699,7 @@ class StudioActivity : AppCompatActivity() {
         val scenes = rows(p)
         choiceMenu("🎬 เลือกฉากเพื่อส่งคำสั่งภาพ", scenes.map { "🎞️ " + key(it) }) { index ->
             val s = scenes[index]
-            shareText("สร้างภาพฉาก ${key(s)} เรื่อง ${p.getString("title")}\n${s.getString("image_prompt")}\nใช้ภาพ MASTER ที่แนบของแต่ละคน คงใบหน้า ทรงผม รูปร่าง และสัดส่วนอก เอว สะโพกตาม MASTER รายคน เปลี่ยนชุดตามฉาก ภาพแนวตั้ง 9:16 ละครไทยสมจริง ไม่มีข้อความในภาพ บันทึกชื่อ ${key(s)}.png\nหากยังไม่มี MASTER ให้ขอภาพต้นฉบับก่อนสร้าง")
+            shareText(storySceneCommand(p,s))
         }
     }
     @Deprecated("Android legacy back callback")

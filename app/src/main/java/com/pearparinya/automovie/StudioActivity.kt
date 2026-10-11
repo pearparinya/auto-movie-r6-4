@@ -302,9 +302,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.28", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.29", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 028 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 029 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -606,12 +606,48 @@ class StudioActivity : AppCompatActivity() {
                 layoutParams = LinearLayout.LayoutParams(-1,-2)
                 setPadding(dp(4),0,dp(4),dp(8))
             }
-            top.addView(ImageView(this).apply {
-                setImageResource(if (title == "🎬 " + originalChannel) R.drawable.studio_channel else R.drawable.studio_genres)
-                scaleType = ImageView.ScaleType.FIT_CENTER
-                layoutParams = LinearLayout.LayoutParams(dp(44),dp(44))
-                contentDescription = title
-            })
+            if (title == "🎬 " + originalChannel) {
+                listOf("gawin" to "กวิน", "rinlada" to "รินลดา", "mind" to "มายด์").forEach { (key, name) ->
+                    val portrait = LinearLayout(this).apply {
+                        orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
+                        layoutParams = LinearLayout.LayoutParams(dp(62), -2)
+                    }
+                    val photo = File(filesDir, "character_masters/$key.master")
+                    val bitmap = runCatching {
+                        val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                        android.graphics.BitmapFactory.decodeFile(photo.path, bounds)
+                        val options = android.graphics.BitmapFactory.Options()
+                        while (bounds.outWidth / options.inSampleSize > 384 || bounds.outHeight / options.inSampleSize > 512)
+                            options.inSampleSize *= 2
+                        android.graphics.BitmapFactory.decodeFile(photo.path, options)
+                    }.getOrNull()
+                    if (bitmap != null) portrait.addView(ImageView(this).apply {
+                        setImageBitmap(bitmap)
+                        scaleType = ImageView.ScaleType.CENTER_CROP
+                        background = backdrop(navy, navy, Color.WHITE); clipToOutline = true
+                        layoutParams = LinearLayout.LayoutParams(dp(54), dp(64))
+                        contentDescription = "ภาพ MASTER ของ $name"
+                    }) else portrait.addView(TextView(this).apply {
+                        text = if (key == "gawin") "👨" else "👩"; textSize = 27f; gravity = Gravity.CENTER
+                        setTextColor(navy); background = backdrop(Color.argb(80,255,255,255),Color.argb(80,255,255,255))
+                        layoutParams = LinearLayout.LayoutParams(dp(54), dp(64))
+                        contentDescription = "$name ยังไม่ได้บันทึกภาพ MASTER"
+                    })
+                    portrait.addView(TextView(this).apply {
+                        text = name; textSize = 10f; setTextColor(navy); gravity = Gravity.CENTER
+                        setTypeface(null, Typeface.BOLD); setPadding(0, dp(3), 0, 0)
+                    })
+                    top.addView(portrait)
+                }
+            } else {
+                top.addView(ImageView(this).apply {
+                    setImageResource(R.drawable.fictional_cast)
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                    background = backdrop(navy, navy, Color.WHITE); clipToOutline = true
+                    layoutParams = LinearLayout.LayoutParams(dp(88),dp(88))
+                    contentDescription = "ภาพตัวอย่างนักแสดงสมมุติ ใบหน้าจริงของเรื่องจะสร้างใหม่ตามแนวที่เลือก"
+                })
+            }
             top.addView(android.view.View(this).apply {
                 layoutParams = LinearLayout.LayoutParams(0,1,1f)
             })

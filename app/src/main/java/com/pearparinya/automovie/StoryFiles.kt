@@ -7,6 +7,11 @@ import java.util.zip.ZipInputStream
 /** File formats shared by ChatGPT packages and Studio exports. */
 internal object StoryFiles {
     fun zipName(title: String): String = title.replace(Regex("[\\\\/:*?\"<>|\\p{Cntrl}]"), "_").trim().take(100).ifBlank { "เรื่องใหม่" } + ".zip"
+    fun episodeFlow(ep: Int, title: String, scenes: List<Triple<String, String, String>>): String =
+        "EP %02d • %s\nFlow / Veo 3.1 Lite • 8 วินาทีต่อซีน • 9:16\n\n".format(ep, title) +
+            scenes.joinToString("\n\n--------------------\n\n") { (name, script, prompt) ->
+                "$name\n$script\n\nคำสั่ง Flow (คัดลอกเฉพาะบล็อกนี้):\n$prompt"
+            }
     private val separators = "[ _.-]*"
     fun sceneNumber(name: String): Pair<Int, Int>? = Regex("EP${separators}(\\d+)${separators}SC(?:ENE)?${separators}(\\d+)", RegexOption.IGNORE_CASE).find(name)?.let {
         val ep = it.groupValues[1].toIntOrNull() ?: return null

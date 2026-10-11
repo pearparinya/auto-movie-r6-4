@@ -33,6 +33,16 @@ class StoryFilesTest {
         assertFalse(StoryFiles.isMaster("EP01_SC001.png"))
         assertNull(StoryFiles.sceneNumber("EP00_SC001.png"))
     }
+    @Test fun episodeFlowKeepsEverySceneAndItsDialogueInOrder() {
+        val text = StoryFiles.episodeFlow(1, "คืนครบรอบ", listOf(
+            Triple("EP01_SC001", "รินลดาพูดว่า: กลับมาแล้ว", "Prompt first"),
+            Triple("EP01_SC002", "กวินพูดว่า: ขอโทษ", "Prompt second")))
+        assertTrue(text.contains("EP 01 • คืนครบรอบ"))
+        assertTrue(text.contains("รินลดาพูดว่า: กลับมาแล้ว"))
+        assertTrue(text.indexOf("EP01_SC001") < text.indexOf("EP01_SC002"))
+        assertTrue(text.indexOf("Prompt first") < text.indexOf("Prompt second"))
+        assertFalse(text.contains("EP02_"))
+    }
     @Test fun thaiTitleSurvivesExport() {
         assertEquals("กุญแจบ้านที่ให้คนอื่น.zip", StoryFiles.zipName("กุญแจบ้านที่ให้คนอื่น"))
         assertEquals("รัก_ร้าว_ครั้งสุดท้าย.zip", StoryFiles.zipName("รัก/ร้าว:ครั้งสุดท้าย"))

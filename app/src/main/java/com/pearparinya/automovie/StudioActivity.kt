@@ -302,9 +302,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.30", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.31", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 030 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 031 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -590,106 +590,63 @@ class StudioActivity : AppCompatActivity() {
             gravity = Gravity.CENTER; setPadding(0, 0, 0, dp(14))
         })
         val dialog = AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setView(panel).create()
-        fun option(title: String, detail: String, colors: IntArray, action: () -> Unit) {
+        fun option(mainChannel: Boolean, title: String, colors: IntArray, action: () -> Unit) {
             val card = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
-                setPadding(dp(10),dp(12),dp(10),dp(12))
-                background = backdrop(colors[0],colors[1],Color.argb(150,255,255,255))
-                elevation = dp(5).toFloat()
-                layoutParams = LinearLayout.LayoutParams(-1,-2).apply { bottomMargin = dp(12) }
+                orientation = LinearLayout.VERTICAL
+                background = backdrop(colors[0], colors[1], Color.argb(150,255,255,255))
+                clipToOutline = true; elevation = dp(5).toFloat()
+                layoutParams = LinearLayout.LayoutParams(-1,-2).apply { bottomMargin = dp(14) }
                 isClickable = true; isFocusable = true
-                contentDescription = "$title $detail"
+                contentDescription = title.replace("\n", " ")
                 setOnClickListener { dialog.dismiss(); action() }
             }
-            val top = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-                layoutParams = LinearLayout.LayoutParams(-1,-2)
-                setPadding(dp(4),0,dp(4),dp(8))
+            val photos = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL; gravity = Gravity.START
+                layoutParams = LinearLayout.LayoutParams(-1, dp(160))
             }
-            if (title == "🎬 " + originalChannel) {
-                listOf("gawin" to "กวิน", "rinlada" to "รินลดา", "mind" to "มายด์").forEach { (key, name) ->
-                    val portrait = LinearLayout(this).apply {
-                        orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
-                        layoutParams = LinearLayout.LayoutParams(dp(62), -2)
-                    }
+            if (mainChannel) {
+                listOf(Triple("gawin", "กวิน", R.drawable.channel_gawin),
+                    Triple("rinlada", "รินลดา", R.drawable.channel_rinlada),
+                    Triple("mind", "มายด์", R.drawable.channel_mind)).forEach { (key, name, fallback) ->
                     val photo = File(filesDir, "character_masters/$key.master")
                     val bitmap = runCatching {
                         val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
                         android.graphics.BitmapFactory.decodeFile(photo.path, bounds)
-                        val options = android.graphics.BitmapFactory.Options()
+                        val options = android.graphics.BitmapFactory.Options().apply { inSampleSize = 1 }
                         while (bounds.outWidth / options.inSampleSize > 384 || bounds.outHeight / options.inSampleSize > 512)
                             options.inSampleSize *= 2
                         android.graphics.BitmapFactory.decodeFile(photo.path, options)
                     }.getOrNull()
-                    if (bitmap != null) portrait.addView(ImageView(this).apply {
-                        setImageBitmap(bitmap)
+                    photos.addView(ImageView(this).apply {
+                        if (bitmap != null) setImageBitmap(bitmap) else setImageResource(fallback)
                         scaleType = ImageView.ScaleType.CENTER_CROP
-                        background = backdrop(navy, navy, Color.WHITE); clipToOutline = true
-                        layoutParams = LinearLayout.LayoutParams(dp(54), dp(64))
-                        contentDescription = "ภาพ MASTER ของ $name"
-                    }) else portrait.addView(TextView(this).apply {
-                        text = if (key == "gawin") "👨" else "👩"; textSize = 27f; gravity = Gravity.CENTER
-                        setTextColor(navy); background = backdrop(Color.argb(80,255,255,255),Color.argb(80,255,255,255))
-                        layoutParams = LinearLayout.LayoutParams(dp(54), dp(64))
-                        contentDescription = "$name ยังไม่ได้บันทึกภาพ MASTER"
+                        layoutParams = LinearLayout.LayoutParams(0, -1, 1f)
+                        contentDescription = "รูปตัวละคร $name"
                     })
-                    portrait.addView(TextView(this).apply {
-                        text = name; textSize = 10f; setTextColor(navy); gravity = Gravity.CENTER
-                        setTypeface(null, Typeface.BOLD); setPadding(0, dp(3), 0, 0)
-                    })
-                    top.addView(portrait)
                 }
             } else {
-                top.addView(ImageView(this).apply {
+                photos.addView(ImageView(this).apply {
                     setImageResource(R.drawable.fictional_cast)
                     scaleType = ImageView.ScaleType.CENTER_CROP
-                    background = backdrop(navy, navy, Color.WHITE); clipToOutline = true
-                    layoutParams = LinearLayout.LayoutParams(dp(88),dp(88))
-                    contentDescription = "ภาพตัวอย่างนักแสดงสมมุติ ใบหน้าจริงของเรื่องจะสร้างใหม่ตามแนวที่เลือก"
+                    layoutParams = LinearLayout.LayoutParams(-1, -1)
+                    contentDescription = "รูปตัวละครสมมุติสำหรับช่องอื่น"
                 })
             }
-            top.addView(android.view.View(this).apply {
-                layoutParams = LinearLayout.LayoutParams(0,1,1f)
-            })
-            top.addView(TextView(this).apply {
-                text = if (title == "🎬 " + originalChannel) "1" else "2"
-                textSize = 20f; gravity = Gravity.CENTER; setTextColor(navy)
-                setTypeface(null,Typeface.BOLD)
-                background = backdrop(Color.argb(65,255,255,255),Color.argb(45,255,255,255))
-                layoutParams = LinearLayout.LayoutParams(dp(36),dp(36))
-                contentDescription = "ช่องหมายเลข $text"
-            })
-            card.addView(top)
+            card.addView(photos)
             card.addView(TextView(this).apply {
-                text = title; textSize = 16f; setTextColor(navy)
+                text = title; textSize = 18f; setTextColor(navy)
                 setTypeface(null, Typeface.BOLD); gravity = Gravity.CENTER
+                setPadding(dp(10), dp(12), dp(10), dp(14))
                 layoutParams = LinearLayout.LayoutParams(-1,-2)
-                setSingleLine(true)
-                addOnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
-                    val label = view as TextView
-                    val available = label.width - label.paddingLeft - label.paddingRight - dp(4)
-                    if (available > 0) {
-                        val paint = android.text.TextPaint(label.paint)
-                        var pixels = 16f * resources.displayMetrics.scaledDensity
-                        paint.textSize = pixels
-                        while (paint.measureText(title) > available && pixels > 1f) {
-                            pixels -= 0.5f; paint.textSize = pixels
-                        }
-                        if (kotlin.math.abs(label.textSize - pixels) > 0.25f)
-                            label.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, pixels)
-                    }
-                }
-            })
-            card.addView(TextView(this).apply {
-                text = detail; textSize = 11f; gravity = Gravity.CENTER; setTextColor(navy)
-                setPadding(0,dp(6),0,0)
+                setSingleLine(false); maxLines = 2
+                setAutoSizeTextTypeUniformWithConfiguration(14, 18, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
             panel.addView(card)
         }
-        option("🎬 " + originalChannel, "ดราม่าผัวเมีย • ใช้ตัวละครเดิม", intArrayOf(Color.rgb(255,204,86), Color.rgb(255,174,38))) {
+        option(true, "🎬 สตอรี่หลังบ้าน\nซีรีส์สั้นดราม่าผัวเมีย", intArrayOf(Color.rgb(255,204,86), Color.rgb(255,174,38))) {
             chooseGenre(originalChannel, "original")
         }
-        option("🌈 ช่องอื่น • สร้างละครได้ทุกแนว", "ตั้งชื่อช่องเอง • สร้างใบหน้าตัวละครใหม่", intArrayOf(Color.rgb(73,218,242), Color.rgb(32,169,228))) {
+        option(false, "🌈 ช่องอื่น\nสร้างละครได้ทุกแนว", intArrayOf(Color.rgb(73,218,242), Color.rgb(32,169,228))) {
             val name = EditText(this).apply {
                 hint = "ชื่อช่องของคุณ"; setText(prefs.getString("other_channel", ""))
             }

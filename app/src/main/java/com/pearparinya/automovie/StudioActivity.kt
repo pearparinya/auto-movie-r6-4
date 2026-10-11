@@ -25,6 +25,7 @@ class StudioActivity : AppCompatActivity() {
     private val prefs get() = getSharedPreferences("studio", MODE_PRIVATE)
     private val project get() = File(base, prefs.getString("project", "draft")!!).apply { mkdirs() }
     private var plan: JSONObject? = null
+    private var importing = false
     private lateinit var root: LinearLayout
     private val categories = listOf(
         "The Broken Vows | บันทึกรอยร้าวชีวิตคู่",
@@ -124,7 +125,7 @@ class StudioActivity : AppCompatActivity() {
             text = value; isAllCaps = false; textSize = 16f; setTextColor(if (primary) Color.WHITE else Color.rgb(35,60,120))
             background = GradientDrawable().apply { cornerRadius = 24f; setColor(if (primary) Color.rgb(51,76,175) else Color.rgb(224,231,250)) }
             layoutParams = LinearLayout.LayoutParams(-1,-2).apply { setMargins(0,10,0,10) }
-            setPadding(16,22,16,22); setOnClickListener { action() }
+            setPadding(16,22,16,22); setOnClickListener { if (!importing) action() else Toast.makeText(this@StudioActivity,"กำลังนำเข้าภาพ กรุณารอสักครู่",Toast.LENGTH_SHORT).show() }
         })
     }
     private fun notice(text: String) { AlertDialog.Builder(this).setMessage(text).setPositiveButton("ตกลง", null).show() }
@@ -181,12 +182,16 @@ class StudioActivity : AppCompatActivity() {
             shareText("สร้างภาพฉาก ${key(s)} เรื่อง ${p.getString("title")}\n${s.getString("image_prompt")}\nใช้ภาพ MASTER ที่แนบของแต่ละคน คงใบหน้า ทรงผม และรูปร่าง เปลี่ยนชุดตามฉาก ภาพแนวตั้ง 9:16 ละครไทยสมจริง ไม่มีข้อความในภาพ บันทึกชื่อ ${key(s)}.png\nหากยังไม่มี MASTER ให้ขอภาพต้นฉบับก่อนสร้าง")
         }.show()
     }
+    @Deprecated("Android legacy back callback")
+    override fun onBackPressed() { if (!importing) super.onBackPressed() }
     private fun displayName(uri: Uri): String = contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null,null,null)?.use { if (it.moveToFirst()) it.getString(0) else "" } ?: ""
     private fun importImages(uris: List<Uri>) {
         val scenes = rows(plan!!)
+        val importFolder = project
+        importing = true
         val remaining = uris.toMutableList()
         fun next() {
-            if (remaining.isEmpty()) { render(); return }
+            if (remaining.isEmpty()) { importing = false; render(); return }
             val uri = remaining.removeAt(0)
             val name = displayName(uri)
             val match = Regex("EP(\\d+)[ _-]*SC(?:ENE)?(\\d+)",RegexOption.IGNORE_CASE).find(name)
@@ -194,7 +199,7 @@ class StudioActivity : AppCompatActivity() {
             fun save(s: JSONObject) {
                 Thread {
                     try {
-                        val target = image(s); target.parentFile!!.mkdirs()
+                        val target = File(importFolder,"images/${key(s)}.img"); target.parentFile!!.mkdirs()
                         val tmp = File(target.parentFile,"${target.name}.tmp")
                         contentResolver.openInputStream(uri)!!.use { src -> tmp.outputStream().use { src.copyTo(it) } }
                         require(tmp.length() > 0) { "ไฟล์ภาพว่าง" }

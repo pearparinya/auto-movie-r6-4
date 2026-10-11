@@ -218,9 +218,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.13", 24, 16, gold, true, 1)
+        brandLine("DIRECTOR X 1.14", 24, 16, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 20, 16, ice, true, 3)
-        brandLine("รุ่น 013 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 014 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         label("สร้างละครได้ทุกแนว • เลือกช่องก่อนเริ่ม", 13)
@@ -399,25 +399,38 @@ class StudioActivity : AppCompatActivity() {
         })
         val dialog = AlertDialog.Builder(this).setView(panel).create()
         fun option(title: String, detail: String, colors: IntArray, action: () -> Unit) {
-            panel.addView(TextView(this).apply {
-                text = title; textSize = 17f; setTextColor(navy)
-                setTypeface(null, Typeface.BOLD); gravity = Gravity.CENTER_VERTICAL
-                setSingleLine(true)
-                androidx.core.widget.TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(this, 12, 17, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
-                setPadding(dp(14), dp(12), dp(14), dp(12)); minHeight = dp(54)
-                background = backdrop(colors[0], colors[1])
-                layoutParams = LinearLayout.LayoutParams(-1, -2)
+            val card = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
+                setPadding(dp(10),dp(12),dp(10),dp(12))
+                background = backdrop(colors[0],colors[1],Color.argb(150,255,255,255))
+                elevation = dp(5).toFloat()
+                layoutParams = LinearLayout.LayoutParams(-1,-2).apply { bottomMargin = dp(16) }
+                isClickable = true; isFocusable = true
+                contentDescription = "$title $detail"
                 setOnClickListener { dialog.dismiss(); action() }
+            }
+            card.addView(TextView(this).apply {
+                text = if (title == originalChannel) "①  🏠 🎬" else "②  🎭 ✨"
+                textSize = 30f; gravity = Gravity.CENTER; setTextColor(navy)
+                setPadding(0,0,0,dp(6))
             })
-            panel.addView(TextView(this).apply {
-                text = detail; textSize = 12f; setTextColor(muted)
-                setPadding(dp(4), dp(5), dp(4), dp(16))
+            card.addView(TextView(this).apply {
+                text = title; textSize = 18f; setTextColor(navy)
+                setTypeface(null, Typeface.BOLD); gravity = Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(-1,-2)
+                setSingleLine(true)
+                androidx.core.widget.TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(this, 9, 18, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
+            card.addView(TextView(this).apply {
+                text = detail; textSize = 11f; gravity = Gravity.CENTER; setTextColor(navy)
+                setPadding(0,dp(6),0,0)
+            })
+            panel.addView(card)
         }
-        option("① 🏠 สตอรี่หลังบ้าน", "ดราม่าผัวเมีย • ใช้ตัวละครเดิม", intArrayOf(Color.rgb(255,204,86), Color.rgb(255,174,38))) {
+        option(originalChannel, "ดราม่าผัวเมีย • ใช้ตัวละครเดิม", intArrayOf(Color.rgb(255,204,86), Color.rgb(255,174,38))) {
             chooseGenre(originalChannel, "original")
         }
-        option("② 🎭 ช่องอื่น • ทุกแนว", "ตั้งชื่อช่องเอง • สร้างใบหน้าตัวละครใหม่", intArrayOf(Color.rgb(73,218,242), Color.rgb(32,169,228))) {
+        option("ช่องอื่น • สร้างละครได้ทุกแนว", "ตั้งชื่อช่องเอง • สร้างใบหน้าตัวละครใหม่", intArrayOf(Color.rgb(73,218,242), Color.rgb(32,169,228))) {
             val name = EditText(this).apply {
                 hint = "ชื่อช่องของคุณ"; setText(prefs.getString("other_channel", ""))
             }
@@ -435,6 +448,7 @@ class StudioActivity : AppCompatActivity() {
         })
         dialog.show()
         dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(resources.displayMetrics.widthPixels - dp(24), -2)
     }
     private fun chooseGenre(channel: String, mode: String) {
         val choices = if (mode == "original") categories else otherGenres

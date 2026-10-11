@@ -201,7 +201,7 @@ class StudioActivity : AppCompatActivity() {
             isAppearanceLightNavigationBars = false
         }
         val scroll = ScrollView(this).apply { background = backdrop(Color.rgb(19,23,54), Color.rgb(9,12,29)); isFillViewport = true; clipToPadding = false }
-        root = LinearLayout(this).apply { orientation = 1; setPadding(dp(14),dp(4),dp(14),dp(8)) }
+        root = LinearLayout(this).apply { orientation = 1; setPadding(dp(10),dp(2),dp(10),dp(4)) }
         scroll.addView(root)
         val host = LinearLayout(this).apply { orientation = 1; setBackgroundColor(navy) }
         host.addView(scroll,LinearLayout.LayoutParams(-1,0,1f))
@@ -221,13 +221,13 @@ class StudioActivity : AppCompatActivity() {
         val header = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(14), dp(14), dp(14), dp(14))
+            setPadding(dp(8), dp(6), dp(8), dp(6))
             background = backdrop(Color.rgb(43,38,81), navy, Color.rgb(141,112,62)); elevation = dp(6).toFloat()
         }
         header.addView(ImageView(this).apply {
             setImageResource(R.drawable.director_mark)
             scaleType = ImageView.ScaleType.FIT_CENTER
-            layoutParams = LinearLayout.LayoutParams(dp(88), dp(88)).apply { marginEnd = dp(12) }
+            layoutParams = LinearLayout.LayoutParams(dp(56), dp(56)).apply { marginEnd = dp(8) }
             contentDescription = "DIRECTOR X"
         })
         val heading = LinearLayout(this).apply {
@@ -249,12 +249,12 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.21", 24, 16, gold, true, 1)
-        brandLine("ผู้กำกับอัจฉริยะ", 20, 16, ice, true, 3)
-        brandLine("รุ่น 021 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("DIRECTOR X 1.22", 20, 14, gold, true, 1)
+        brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
+        brandLine("รุ่น 022 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
-        label("สร้างละครได้ทุกแนว • เลือกช่องก่อนเริ่ม", 13)
+        
         val p = plan
         val summary = LinearLayout(this).apply {
             orientation = 1; setPadding(dp(10),dp(6),dp(10),dp(6))
@@ -268,7 +268,7 @@ class StudioActivity : AppCompatActivity() {
             summaryText(if (File(project,"command_sent").exists()) "ส่งไป ChatGPT แล้ว • รอรับบทและภาพในขั้นตอน 2" else "🎬 พร้อมสร้างเรื่องใหม่ • ครบทุก EP",14f,ice,true)
         } else {
             val scenes = rows(p); val count = scenes.count { image(it).exists() }
-            summaryText(p.getString("title"),20f,ice,true)
+            summaryText(p.getString("title"),17f,ice,true)
             summaryText(p.optString("channel", originalChannel),12f,muted)
             summaryText(p.getString("category"),12f,muted)
             summaryText("${p.getJSONArray("episodes").length()} EP  •  ${scenes.size} ฉาก  •  ภาพ $count/${scenes.size}",14f,gold,true)
@@ -305,7 +305,46 @@ class StudioActivity : AppCompatActivity() {
                 .setPositiveButton("เริ่มเรื่องใหม่") { _,_ -> prefs.edit().putString("project", UUID.randomUUID().toString()).apply(); render() }.setNegativeButton("ทำเรื่องเดิมต่อ",null).show()
         }
         button("↻ Update DIRECTOR X",false) { updater.check() }
-        button("⚙ ตัวละคร • ตัวเลือก",false) { toolsMenu() }
+        splitActions("ตัวละคร • ตัวเลือก", "ทดลองสร้างรูป", { toolsMenu() }, { testImageMenu() })
+    }
+    private fun splitActions(left: String, right: String, leftAction: () -> Unit, rightAction: () -> Unit) {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(-1,-2).apply { topMargin = dp(3); bottomMargin = dp(3) }
+        }
+        listOf(left to leftAction, right to rightAction).forEachIndexed { index, item ->
+            row.addView(Button(this).apply {
+                text = item.first; isAllCaps = false; textSize = 12f
+                setTextColor(ice); gravity = Gravity.CENTER
+                minWidth = 0; minimumWidth = 0; minHeight = dp(48); minimumHeight = dp(48)
+                setPadding(dp(4),dp(5),dp(4),dp(5))
+                backgroundTintList = null
+                background = backdrop(Color.rgb(38,36,76),Color.rgb(27,28,59),Color.rgb(62,58,106))
+                layoutParams = LinearLayout.LayoutParams(0,-2,1f).apply { if (index == 0) marginEnd = dp(3) else marginStart = dp(3) }
+                setOnClickListener { if (!importing) item.second() }
+            })
+        }
+        root.addView(row)
+    }
+    private fun testImageMenu() {
+        AlertDialog.Builder(this).setTitle("ทดลองสร้างรูป 1 ภาพ")
+            .setItems(arrayOf("ตัวละครเดิม • กวิน รินลดา มายด์", "ตัวละครสมมุติ • สร้างคนใหม่อัตโนมัติ")) { _, choice ->
+                if (choice == 0) AlertDialog.Builder(this).setTitle("เลือกจำนวนตัวละครในภาพ")
+                    .setItems(arrayOf("สุ่ม 1 คน จาก 3 คน", "ทั้ง 3 คน ในภาพเดียว")) { _, count -> sendTestImage(count == 1) }.setNegativeButton("ยกเลิก",null).show()
+                else shareText("ทดลองสร้างภาพหนึ่งภาพ ตัวละครสมมุติผู้ใหญ่หนึ่งคน ตั้งชื่อภาษาไทยและออกแบบใบหน้าใหม่อัตโนมัติ เลือกเพศ ชุดสุภาพ สถานที่ และการกระทำเอง ภาพละครไทยสมจริง 9:16 มองเห็นใบหน้าและรูปร่างตั้งแต่ศีรษะถึงต้นขา แสงชัด ภาพไม่มีตัวหนังสือ ตั้งชื่อไฟล์ TEST_CHARACTER.png หลังสร้างภาพแจ้งชื่อตัวละคร ชุด สถานที่ และการกระทำสั้น ๆ", useNewMasters = false, includeMasters = false)
+            }.setNegativeButton("ยกเลิก",null).show()
+    }
+    private fun sendTestImage(allThree: Boolean) {
+        val cast = listOf("gawin" to "กวิน", "rinlada" to "รินลดา", "mind" to "มายด์")
+        val selected = if (allThree) cast else listOf(cast.random())
+        if (selected.any { !File(filesDir,"character_masters/${it.first}.master").exists() }) {
+            AlertDialog.Builder(this).setTitle("เพิ่มภาพ MASTER ก่อนทดสอบ")
+                .setMessage("ต้องมีต้นฉบับของ ${selected.joinToString { it.second }} เพื่อเปรียบเทียบใบหน้าและรูปร่าง")
+                .setPositiveButton("เพิ่มภาพตัวละคร") { _,_ -> characterMasters() }.setNegativeButton("ยกเลิก",null).show()
+            return
+        }
+        val names = selected.joinToString { it.second }
+        shareText("ทดลองสร้างภาพหนึ่งภาพ ตัวละคร: $names ใช้ MASTER ของแต่ละคนที่แนบเป็นต้นฉบับ คงใบหน้า ผม รูปร่าง สัดส่วนอก เอว สะโพก รวมถึงขนาดและรูปทรงหน้าอกให้เหมือนหรือใกล้เคียง MASTER รายคน เปลี่ยนเป็นชุดสุภาพใหม่โดยเลือกสีและชุดรายคนเอง เลือกสถานที่และการกระทำเล็กน้อยอัตโนมัติ ภาพละครไทยสมจริง 9:16 มองเห็นทุกคนตั้งแต่ศีรษะถึงต้นขา ใบหน้าและรูปร่างชัดเจน ทุกคนอยู่ในภาพเดียว ไม่มีตัวหนังสือ ตั้งชื่อ TEST_CHARACTER.png หลังสร้างภาพแจ้งชื่อ ชุด สถานที่ และการกระทำสั้น ๆ", useNewMasters = false, selectedMasterKeys = selected.map { it.first })
     }
     private fun stepCard(number: Int, icon: String, title: String, detail: String, enabled: Boolean = true, action: () -> Unit) {
         val colors = when (number) {
@@ -316,10 +355,10 @@ class StudioActivity : AppCompatActivity() {
         val ink = if (number == 1) navy else ice
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(12),dp(14),dp(12),dp(14))
+            setPadding(dp(10),dp(8),dp(10),dp(8))
             background = backdrop(colors[0],colors[1],Color.argb(110,255,255,255))
             elevation = dp(5).toFloat()
-            layoutParams = LinearLayout.LayoutParams(-1,-2).apply { topMargin = dp(8); bottomMargin = dp(8) }
+            layoutParams = LinearLayout.LayoutParams(-1,-2).apply { topMargin = dp(3); bottomMargin = dp(3) }
             isEnabled = enabled; isClickable = enabled; isFocusable = enabled; alpha = if (enabled) 1f else 0.45f
             val attribute = android.util.TypedValue()
             theme.resolveAttribute(android.R.attr.selectableItemBackground,attribute,true)
@@ -329,7 +368,7 @@ class StudioActivity : AppCompatActivity() {
         }
         card.addView(ImageView(this).apply {
             setImageResource(when (number) { 1 -> R.drawable.studio_movie; 2 -> R.drawable.studio_images; else -> R.drawable.studio_package }); scaleType = ImageView.ScaleType.FIT_CENTER
-            layoutParams = LinearLayout.LayoutParams(dp(52),dp(52))
+            layoutParams = LinearLayout.LayoutParams(dp(36),dp(36))
             contentDescription = title
         })
         val words = LinearLayout(this).apply {
@@ -337,7 +376,7 @@ class StudioActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(0,-2,1f).apply { marginStart = dp(6) }
         }
         words.addView(TextView(this).apply {
-            text = "$number  $title"; textSize = 18f; setTypeface(null,Typeface.BOLD); setTextColor(ink)
+            text = "$number  $title"; textSize = 16f; setTypeface(null,Typeface.BOLD); setTextColor(ink)
         })
         words.addView(TextView(this).apply {
             text = detail; textSize = 11f; setTextColor(ink); setPadding(0,dp(5),0,0)
@@ -402,10 +441,10 @@ class StudioActivity : AppCompatActivity() {
             catch (e: Exception) { runOnUiThread { dialog.dismiss(); notice("ดำเนินการไม่สำเร็จ: ${e.message}") } }
         }.start()
     }
-    private fun shareText(text: String, lockCreation: Boolean = false, useNewMasters: Boolean = plan?.optString("character_mode") == "new") {
+    private fun shareText(text: String, lockCreation: Boolean = false, useNewMasters: Boolean = plan?.optString("character_mode") == "new", includeMasters: Boolean = true, selectedMasterKeys: List<String>? = null) {
         val uris = arrayListOf<Uri>()
-        val sources = if (useNewMasters) File(project, "masters").listFiles()?.toList() ?: emptyList()
-            else listOf("gawin", "rinlada", "mind").map { File(filesDir, "character_masters/$it.master") }
+        val sources = if (!includeMasters) emptyList<File>() else if (useNewMasters) File(project, "masters").listFiles()?.toList() ?: emptyList()
+            else (selectedMasterKeys ?: listOf("gawin", "rinlada", "mind")).map { File(filesDir, "character_masters/$it.master") }
         for (source in sources) {
             val name = if (useNewMasters) source.nameWithoutExtension else source.nameWithoutExtension + "_MASTER"
             if (source.exists()) {

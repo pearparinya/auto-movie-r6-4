@@ -131,6 +131,18 @@ class StudioActivity : AppCompatActivity() {
             }
     }
     private val otherGenres = listOf("ดราม่าชีวิต", "ครอบครัว", "โรแมนติก", "ตลก", "สืบสวน", "ระทึกขวัญ", "สยองขวัญ", "แฟนตาซี", "แอ็กชัน", "อบอุ่นหัวใจ")
+    private val smartDirector = "ระบบกำกับละครอัจฉริยะ"
+    private val genreLabels = listOf(
+        "🎭 ดราม่าชีวิต\nต่อสู้ชีวิตและการเริ่มต้นใหม่",
+        "🏡 ครอบครัว\nความรักและความผูกพันในบ้าน",
+        "💕 โรแมนติก\nเรื่องรักและความสัมพันธ์",
+        "😂 ตลก\nเรื่องสนุก ชวนยิ้มและหัวเราะ",
+        "🔎 สืบสวน\nตามเบาะแส เปิดเผยความจริง",
+        "😱 ระทึกขวัญ\nลุ้นทุกฉาก ปริศนาและอันตราย",
+        "👻 สยองขวัญ\nเรื่องลี้ลับและความน่ากลัว",
+        "✨ แฟนตาซี\nโลกจินตนาการและพลังวิเศษ",
+        "🔥 แอ็กชัน\nภารกิจ การไล่ล่าและการต่อสู้",
+        "🌷 อบอุ่นหัวใจ\nความหวัง การช่วยเหลือและกำลังใจ")
     private val originalChannel = "สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย"
     private val planPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) background {
@@ -302,9 +314,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.31", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.32", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 031 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 032 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -532,6 +544,8 @@ class StudioActivity : AppCompatActivity() {
                 // Open ChatGPT's own task before its share receiver.
                 startActivities(arrayOf(launch, direct))
                 if (lockCreation) { File(project,"command_sent").writeText("sent"); render() }
+                // Keep DIRECTOR X behind ChatGPT's own task, including its share UI.
+                moveTaskToBack(true)
                 return
             } catch (_: android.content.ActivityNotFoundException) {
                 // Try the other supported ChatGPT package.
@@ -646,16 +660,8 @@ class StudioActivity : AppCompatActivity() {
         option(true, "🎬 สตอรี่หลังบ้าน\nซีรีส์สั้นดราม่าผัวเมีย", intArrayOf(Color.rgb(255,204,86), Color.rgb(255,174,38))) {
             chooseGenre(originalChannel, "original")
         }
-        option(false, "🌈 ช่องอื่น\nสร้างละครได้ทุกแนว", intArrayOf(Color.rgb(73,218,242), Color.rgb(32,169,228))) {
-            val name = EditText(this).apply {
-                hint = "ชื่อช่องของคุณ"; setText(prefs.getString("other_channel", ""))
-            }
-            AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setTitle("ชื่อช่องอื่น").setView(name)
-                .setPositiveButton("เลือกแนวละคร") { _, _ ->
-                    val channel = name.text.toString().trim().ifBlank { "ช่องละครของฉัน" }
-                    prefs.edit().putString("other_channel", channel).apply()
-                    chooseGenre(channel, "new")
-                }.setNegativeButton("ยกเลิก", null).showDirector()
+        option(false, "🎬 ระบบกำกับละครอัจฉริยะ\nสร้างละครครบทุกแนว", intArrayOf(Color.rgb(73,218,242), Color.rgb(32,169,228))) {
+            chooseGenre(prefs.getString("other_channel", "")?.takeIf { it.isNotBlank() } ?: smartDirector, "new")
         }
         panel.addView(TextView(this).apply {
             text = "ยกเลิก"; textSize = 14f; setTextColor(muted)
@@ -668,7 +674,9 @@ class StudioActivity : AppCompatActivity() {
     }
     private fun chooseGenre(channel: String, mode: String) {
         val choices = if (mode == "original") categories else otherGenres
-        choiceMenu("🎬 เลือกหมวดหมู่\n$channel", choices.mapIndexed { index, category -> "${menuIcon(index)} $category" }) { index ->
+        val labels = if (mode == "original") choices.mapIndexed { index, category -> "${menuIcon(index)} $category" } else genreLabels
+        val title = if (mode == "original") "🎬 เลือกหมวดหมู่\n$channel" else "🎬 $smartDirector\nเลือกแนวละคร • 10 แนว"
+        choiceMenu(title, labels) { index ->
             planningForCategory(choices[index],channel,mode)
         }
     }

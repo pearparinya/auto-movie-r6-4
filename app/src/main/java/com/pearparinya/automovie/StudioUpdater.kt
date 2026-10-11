@@ -25,10 +25,18 @@ class StudioUpdater(private val activity: AppCompatActivity) {
         else message("ยังไม่ได้อนุญาตติดตั้งอัปเดต กด Update เพื่อลองอีกครั้งครับ")
     }
     private fun message(text: String) = AlertDialog.Builder(activity).setTitle("STORY STUDIO").setMessage(text).setPositiveButton("ตกลง",null).show()
-    fun check() {
+    private var lastAutomaticCheck = 0L
+    fun checkAutomatically() {
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (lastAutomaticCheck != 0L && now - lastAutomaticCheck < 30 * 60 * 1000L) return
+        if (busy) return
+        lastAutomaticCheck = now
+        check(true)
+    }
+    fun check(automatic: Boolean = false) {
         if (busy) return
         busy = true
-        val dialog = AlertDialog.Builder(activity).setTitle("STORY STUDIO").setMessage("กำลังตรวจสอบรุ่นใหม่…").setCancelable(false).show()
+        val dialog = if (automatic) null else AlertDialog.Builder(activity).setTitle("STORY STUDIO").setMessage("กำลังตรวจสอบรุ่นใหม่…").setCancelable(false).show()
         Thread {
             try {
                 val connection = connect("https://api.github.com/repos/pearparinya/auto-movie-r6-4/releases/latest?cb=${System.currentTimeMillis()}")
@@ -42,12 +50,17 @@ class StudioUpdater(private val activity: AppCompatActivity) {
                 val url = asset.getString("browser_download_url")
                 require(url.startsWith("https://github.com/pearparinya/auto-movie-r6-4/releases/download/")) { "แหล่งดาวน์โหลดไม่ถูกต้อง" }
                 activity.runOnUiThread {
-                    busy = false; dialog.dismiss()
-                    if (build <= local) message("คุณใช้ STORY STUDIO รุ่นล่าสุดแล้วครับ")
-                    else AlertDialog.Builder(activity).setTitle("STORY STUDIO รุ่นใหม่พร้อมแล้ว").setMessage("ดาวน์โหลดและติดตั้งทับเพื่ออัปเดต งานที่บันทึกไว้จะยังอยู่")
+                    busy = false; dialog?.dismiss()
+                    if (activity.isFinishing || activity.isDestroyed) return@runOnUiThread
+                    if (automatic && !activity.lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) {
+                        lastAutomaticCheck = 0L
+                        return@runOnUiThread
+                    }
+                    if (build <= local) { if (!automatic) message("คุณใช้ STORY STUDIO รุ่นล่าสุดแล้วครับ") }
+                    else AlertDialog.Builder(activity).setTitle("STORY STUDIO รุ่นใหม่พร้อมแล้ว").setMessage("${release.optString("name", "รุ่นใหม่")}\nดาวน์โหลดและติดตั้งทับเพื่ออัปเดต งานที่บันทึกไว้จะยังอยู่")
                         .setPositiveButton("อัปเดต") { _,_ -> download(url,build,asset.optLong("size",-1)) }.setNegativeButton("ภายหลัง",null).show()
                 }
-            } catch (e: Exception) { activity.runOnUiThread { busy = false; dialog.dismiss(); message("ตรวจสอบอัปเดตไม่สำเร็จ: ${e.message}") } }
+            } catch (e: Exception) { activity.runOnUiThread { busy = false; dialog?.dismiss(); if (!automatic && !activity.isFinishing && !activity.isDestroyed) message("ตรวจสอบอัปเดตไม่สำเร็จ: ${e.message}") } }
         }.start()
     }
     private fun connect(url: String): HttpURLConnection = (URL(url).openConnection() as HttpURLConnection).apply {

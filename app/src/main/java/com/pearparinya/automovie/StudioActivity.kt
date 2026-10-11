@@ -119,6 +119,10 @@ class StudioActivity : AppCompatActivity() {
         if (uri != null) background { export(uri) }
     }
     override fun onCreate(savedInstanceState: Bundle?) { super.onCreate(savedInstanceState); render() }
+    override fun onResume() {
+        super.onResume()
+        if (!importing) updater.checkAutomatically()
+    }
     private fun rows(p: JSONObject): List<JSONObject> {
         val result = mutableListOf<JSONObject>()
         val eps = p.getJSONArray("episodes")
@@ -185,7 +189,7 @@ class StudioActivity : AppCompatActivity() {
         val heading = LinearLayout(this).apply { orientation = 1; gravity = Gravity.CENTER; layoutParams = LinearLayout.LayoutParams(-2,-2) }
         heading.addView(TextView(this).apply { text = "STORY STUDIO"; textSize = 22f; setTextColor(gold); setTypeface(null,Typeface.BOLD) })
         heading.addView(TextView(this).apply { text = "ระบบจัดหนังครบทั้งเรื่อง"; textSize = 13f; setTextColor(ice); setPadding(0,dp(3),0,dp(3)) })
-        heading.addView(TextView(this).apply { text = "เวอร์ชัน 1.6 • รุ่น 006"; textSize = 12f; setTextColor(gold) })
+        heading.addView(TextView(this).apply { text = "เวอร์ชัน 1.7 • รุ่น 007"; textSize = 12f; setTextColor(gold) })
         header.addView(heading); root.addView(header)
         label("สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย", 13)
         val p = plan

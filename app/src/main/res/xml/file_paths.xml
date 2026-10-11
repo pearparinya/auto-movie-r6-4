@@ -9,4 +9,7 @@
     <cache-path
         name="character_master_exports"
         path="character_master_exports/" />
+    <cache-path
+        name="scene_reference_exports"
+        path="scene_reference_exports/" />
 </paths>

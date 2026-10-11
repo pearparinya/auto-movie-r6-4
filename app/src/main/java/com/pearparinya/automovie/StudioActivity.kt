@@ -58,6 +58,30 @@ class StudioActivity : AppCompatActivity() {
             prefs.edit().putString("project", id).commit()
         }
     }
+    private val packagePicker = registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isNotEmpty()) {
+            val plans = uris.filter { displayName(it).endsWith(".json",ignoreCase = true) }
+            val pictures = uris.filter { contentResolver.getType(it)?.startsWith("image/") == true }
+            if (plans.size > 1) notice("เลือกไฟล์บท story.json ของเรื่องเดียวเท่านั้นครับ")
+            else if (plans.isEmpty()) {
+                if (plan == null) notice("เลือกไฟล์บท story.json พร้อมภาพของเรื่องก่อนครับ")
+                else if (pictures.isEmpty()) notice("ไม่พบไฟล์ภาพหรือ story.json")
+                else importImages(pictures)
+            } else {
+                val dialog = AlertDialog.Builder(this).setMessage("กำลังรับบททั้งเรื่อง…").setCancelable(false).show()
+                Thread {
+                    try {
+                        val candidate = contentResolver.openInputStream(plans[0])!!.bufferedReader().use { JSONObject(it.readText().removePrefix("\uFEFF")) }
+                        validate(candidate)
+                        val folder = File(base,UUID.randomUUID().toString()).apply { mkdirs() }
+                        File(folder,"story.json").writeText(candidate.toString(2))
+                        prefs.edit().putString("project",folder.name).commit()
+                        runOnUiThread { dialog.dismiss(); render(); if (pictures.isNotEmpty()) importImages(pictures) else notice("รับบทแล้ว เมื่อได้ภาพให้กดรับบทและภาพอีกครั้ง เลือกภาพทั้งหมดได้เลยครับ") }
+                    } catch (e: Exception) { runOnUiThread { dialog.dismiss(); notice("รับบทไม่สำเร็จ: ${e.message}") } }
+                }.start()
+            }
+        }
+    }
     private val imagesPicker = registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris.isNotEmpty()) importImages(uris)
     }
@@ -121,17 +145,17 @@ class StudioActivity : AppCompatActivity() {
         }
         ViewCompat.requestApplyInsets(host)
         val header = LinearLayout(this).apply {
-            orientation = 0; gravity = Gravity.CENTER_VERTICAL; setPadding(dp(10),dp(8),dp(10),dp(8))
+            orientation = 0; gravity = Gravity.CENTER; setPadding(dp(10),dp(8),dp(10),dp(8))
             background = backdrop(Color.rgb(28,30,66),navy,Color.rgb(64,62,108))
         }
         header.addView(ImageView(this).apply {
             setImageResource(R.mipmap.ic_launcher); scaleType = ImageView.ScaleType.FIT_CENTER
-            layoutParams = LinearLayout.LayoutParams(dp(48),dp(48)).apply { marginEnd = dp(12) }
+            layoutParams = LinearLayout.LayoutParams(dp(60),dp(60)).apply { marginEnd = dp(12) }
         })
-        val heading = LinearLayout(this).apply { orientation = 1; layoutParams = LinearLayout.LayoutParams(0,-2,1f) }
-        heading.addView(TextView(this).apply { text = "STORY STUDIO"; textSize = 21f; setTextColor(gold); setTypeface(null,Typeface.BOLD) })
+        val heading = LinearLayout(this).apply { orientation = 1; gravity = Gravity.CENTER; layoutParams = LinearLayout.LayoutParams(-2,-2) }
+        heading.addView(TextView(this).apply { text = "STORY STUDIO"; textSize = 22f; setTextColor(gold); setTypeface(null,Typeface.BOLD) })
         heading.addView(TextView(this).apply { text = "ระบบจัดหนังครบทั้งเรื่อง"; textSize = 13f; setTextColor(ice); setPadding(0,dp(3),0,dp(3)) })
-        heading.addView(TextView(this).apply { text = "STUDIO 1.2 • BUILD 722"; textSize = 12f; setTextColor(gold) })
+        heading.addView(TextView(this).apply { text = "STUDIO 1.3 • BUILD 723"; textSize = 12f; setTextColor(gold) })
         header.addView(heading); root.addView(header)
         label("สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย", 13)
         val p = plan
@@ -158,27 +182,38 @@ class StudioActivity : AppCompatActivity() {
             })
         }
         root.addView(summary)
-        label("✨ สร้างเรื่อง • จัดภาพ • ส่งออก", 14, true)
-        button("① ✨ วางแผนเรื่องทั้งหมด") { planning() }
-        button("② 📋 นำเข้าแผนเรื่องครบทุก EP") { planPicker.launch(arrayOf("application/json", "text/*", "application/octet-stream")) }
-        button("③ 🎨 สร้างภาพใน ChatGPT") { wholeStoryCommands() }
-        button("เลือกคำสั่งภาพรายฉาก", false) { sceneCommands() }
-        button("④ 🖼 นำเข้าภาพทั้งเรื่อง") { if (plan == null) notice("นำเข้าแผนเรื่องก่อนครับ") else imagesPicker.launch(arrayOf("image/*")) }
-        button("⑤ ✓ ตรวจงานทั้งเรื่อง") { review() }
-        button("⑥ 📦 ดาวน์โหลด ZIP ทั้งเรื่อง") {
+        label("สร้างหนึ่งเรื่องจนจบ • รับภาพ • พร้อมใช้ใน Flow", 14, true)
+        button("① 🎬 สร้างหนังหนึ่งเรื่อง") { planning() }
+        label("ให้ ChatGPT คิดเรื่อง บท และภาพครบทุก EP",12)
+        button("② 🖼 รับบทและภาพทั้งหมด") { packagePicker.launch(arrayOf("*/*")) }
+        label("เลือก story.json และภาพทั้งเรื่อง แอปจัดฉากให้",12)
+        button("③ 📦 ดาวน์โหลดชุด Flow") {
             val current = plan
-            if (current == null) notice("นำเข้าแผนเรื่องก่อนครับ")
-            else if (rows(current).any { !image(it).exists() }) notice("ยังมีฉากขาดภาพ ตรวจงานและนำเข้าให้ครบก่อนส่งออก")
-            else zipPicker.launch("STORY-STUDIO-${System.currentTimeMillis()}.zip")
+            if (current == null) notice("ยังไม่มีบทและภาพ กดรับบทและภาพทั้งหมดก่อนครับ")
+            else {
+                val missing = rows(current).filter { !image(it).exists() }
+                if (missing.isNotEmpty()) notice("ยังขาดภาพ ${missing.size} ฉาก: ${missing.joinToString { key(it) }}\nกดรับบทและภาพทั้งหมดเพื่อเพิ่มภาพครับ")
+                else zipPicker.launch("STORY-STUDIO-${System.currentTimeMillis()}.zip")
+            }
         }
-        label("เครื่องมือและงานที่บันทึก", 14, true)
-        button("📂 เปิดเรื่องที่บันทึกไว้", false) {
-            val folders = base.listFiles()?.filter { File(it,"story.json").exists() } ?: emptyList()
-            AlertDialog.Builder(this).setTitle("เรื่องของคุณ").setItems(folders.map { JSONObject(File(it,"story.json").readText()).getString("title") }.toTypedArray()) { _, i -> prefs.edit().putString("project",folders[i].name).apply(); render() }.show()
-        }
-        button("👥 ตัวละคร MASTER • งานเดิม • Update", false) { startActivity(Intent(this, MainActivity::class.java)) }
-        button("❓ วิธีใช้งาน", false) { notice("ให้ ChatGPT วางเรื่องครบทุก EP และส่ง story.json กลับมา นำเข้าแผนก่อนสร้างภาพ จากนั้นนำเข้าภาพทุก EP พร้อมกัน ชื่อไฟล์ EP01_SC001.png จะจับคู่ได้อัตโนมัติ ไฟล์ชื่ออื่นให้เลือกฉากเอง ภาพถูกเก็บในแอปและส่งออก ZIP ได้เมื่อครบทุกฉาก\n\nการสร้างบทและภาพทำใน ChatGPT โดยผู้ใช้ แอปนี้ไม่ได้เรียก API และไม่รับประกันความเหมือนตัวละคร 100%") }
+        label("ZIP เดียว • ภาพทุกฉาก + คำสั่ง Flow + บทพูด",12)
+        button("⚙ ตัวละคร • Update • ตัวเลือก",false) { toolsMenu() }
     }
+    private fun toolsMenu() {
+        AlertDialog.Builder(this).setTitle("ตัวเลือก").setItems(arrayOf("ตัวละคร MASTER / งานเดิม / Update", "ดูภาพและบทในเรื่องนี้", "เลือกเรื่องที่บันทึก", "ส่งคำสั่งภาพทั้งเรื่อง", "วิธีใช้งาน")) { _, index ->
+            when (index) {
+                0 -> startActivity(Intent(this,MainActivity::class.java))
+                1 -> review()
+                2 -> {
+                    val folders = base.listFiles()?.filter { File(it,"story.json").exists() } ?: emptyList()
+                    AlertDialog.Builder(this).setTitle("เรื่องของคุณ").setItems(folders.map { JSONObject(File(it,"story.json").readText()).getString("title") }.toTypedArray()) { _, i -> prefs.edit().putString("project",folders[i].name).apply(); render() }.show()
+                }
+                3 -> wholeStoryCommands()
+                4 -> notice("1. ตั้งภาพตัวละคร MASTER ครั้งแรก แล้วกดสร้างหนังหนึ่งเรื่อง ส่งคำสั่งไป ChatGPT\n2. บันทึก story.json และภาพแต่ละฉากจาก ChatGPT กดรับบทและภาพทั้งหมด เลือกไฟล์ได้พร้อมกัน\n3. เมื่อภาพครบ ดาวน์โหลด ZIP และนำภาพกับคำสั่งไปใช้ใน Flow / Veo 3.1 Lite 8 วินาที\n\nChatGPT เป็นผู้สร้างบทและภาพ แอปจัดไฟล์และตรวจฉากที่ขาด ไม่ได้สร้างภาพเองผ่าน Plus อัตโนมัติ")
+            }
+        }.show()
+    }
+
     private fun label(value: String, size: Int, bold: Boolean = false) {
         root.addView(TextView(this).apply {
             text = value; textSize = size.toFloat(); setTextColor(if (bold) gold else muted)
@@ -245,14 +280,14 @@ class StudioActivity : AppCompatActivity() {
     }
     private fun planning() {
         val idea = EditText(this).apply { hint = "แนวคิดเรื่อง (เว้นว่างให้คิดอัตโนมัติ)" }
-        AlertDialog.Builder(this).setTitle("สร้างเรื่องใหม่ทั้งเรื่อง").setView(idea).setPositiveButton("ส่งคำสั่ง") { _, _ ->
+        AlertDialog.Builder(this).setTitle("สร้างหนังหนึ่งเรื่องจนจบ").setView(idea).setPositiveButton("ส่งคำสั่ง") { _, _ ->
             shareText("""วางเรื่องละครไทยสมจริงให้ช่อง สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย จนจบทุก EP ในชุดเดียว
 แนวคิด: ${idea.text.toString().ifBlank { "คิดเรื่องใหม่อัตโนมัติ" }}
 เลือกชื่อเรื่องและหนึ่งหมวดจาก: ${categories.joinToString("\n")}
 ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ตัวละครหลัก กวิน รินลดา มายด์ อ้างอิง MASTER ของแต่ละคนเพื่อคงใบหน้า ผม รูปร่าง ระบุชุดใหม่ สถานที่ การกระทำอย่างกระชับ รักษาความต่อเนื่อง จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน
 ส่งไฟล์ story.json เป็น JSON ไม่มี markdown โครงสร้าง:
 {"title":"ชื่อเรื่อง","category":"ชื่อหมวดเต็มตรงรายการ","bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"scenes":[{"scene":1,"action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","image_prompt":"คำสั่งภาพพร้อมระบุ MASTER ชุด สถานที่ การกระทำ","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}
-เพิ่ม EP และฉากเท่าที่เรื่องต้องใช้ เรียงเลขจาก 1 ไม่กำหนดจำนวนตายตัว ขั้นนี้วางแผนและบททั้งเรื่อง ยังไม่สร้างภาพ""")
+เพิ่ม EP และฉากเท่าที่เรื่องต้องใช้ เรียงเลขจาก 1 ไม่กำหนดจำนวนตายตัว หลังวางบททั้งเรื่อง ส่งไฟล์ story.json แล้วสร้างภาพแยกหนึ่งฉากหนึ่งไฟล์ตามลำดับครบทุก EP จนจบ ตั้งชื่อ EP01_SC001.png ตามเลข EP และฉาก ไม่ทำภาพรวมหลายฉาก ใช้ MASTER ที่แนบให้ตรงรายคน พร้อมคำสั่งสำหรับ Flow / Veo 3.1 Lite ทุกฉาก ผู้ใช้ต้องการบทและภาพพร้อมนำไปทำวิดีโอ""")
         }.setNegativeButton("ยกเลิก",null).show()
     }
     private fun sceneCommands() {
@@ -266,8 +301,26 @@ class StudioActivity : AppCompatActivity() {
     @Deprecated("Android legacy back callback")
     override fun onBackPressed() { if (!importing) super.onBackPressed() }
     private fun displayName(uri: Uri): String = contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null,null,null)?.use { if (it.moveToFirst()) it.getString(0) else "" } ?: ""
-    private fun importImages(uris: List<Uri>) {
+    private fun importImages(uris: List<Uri>, confirmedOrder: Boolean = false) {
         val scenes = rows(plan!!)
+        val assignments = linkedMapOf<Uri,JSONObject>()
+        val unknown = mutableListOf<Uri>()
+        for (uri in uris) {
+            val match = Regex("EP(\\d+)[ _-]*SC(?:ENE)?(\\d+)",RegexOption.IGNORE_CASE).find(displayName(uri))
+            val found = match?.let { m -> scenes.find { it.getInt("ep") == m.groupValues[1].toIntOrNull() && it.getInt("scene") == m.groupValues[2].toIntOrNull() } }
+            if (found == null) unknown.add(uri) else assignments[uri] = found
+        }
+        if (assignments.values.map { key(it) }.distinct().size != assignments.size) return notice("มีไฟล์ชื่อฉากซ้ำในชุดที่เลือก กรุณาเลือกหนึ่งภาพต่อฉากครับ")
+        val occupied = assignments.values.map { key(it) }.toSet()
+        val available = scenes.filter { key(it) !in occupied && !image(it).exists() }
+        if (unknown.size > available.size) return notice("ไฟล์ที่ไม่มีเลขฉากมากกว่าฉากที่ยังขาด กรุณาตั้งชื่อ EP01_SC001.png เพื่อจับคู่ให้ถูกต้องครับ")
+        unknown.forEachIndexed { i, uri -> assignments[uri] = available[i] }
+        if (unknown.isNotEmpty() && !confirmedOrder) {
+            val list = uris.joinToString("\n") { "${displayName(it)} → ${key(assignments.getValue(it))}" }
+            val content = TextView(this).apply { text = "บางภาพไม่มีเลขฉาก แอปเสนอเรียงตามลำดับไฟล์ที่เลือก กรุณาตรวจให้ตรงก่อนนำเข้า\n\n$list"; setPadding(dp(16),dp(12),dp(16),dp(12)) }
+            AlertDialog.Builder(this).setTitle("ตรวจลำดับภาพครั้งเดียว").setView(ScrollView(this).apply { addView(content) }).setPositiveButton("ลำดับถูกต้อง") { _,_ -> importImages(uris,true) }.setNegativeButton("ยกเลิก",null).show()
+            return
+        }
         val importFolder = project
         importing = true
         val remaining = uris.toMutableList()
@@ -296,7 +349,7 @@ class StudioActivity : AppCompatActivity() {
                 if (image(s).exists()) AlertDialog.Builder(this).setMessage("${key(s)} มีภาพแล้ว แทนด้วย $name หรือไม่?").setPositiveButton("แทนภาพ") { _,_ -> save(s) }.setNegativeButton("ข้าม") { _,_ -> next() }.setCancelable(false).show()
                 else save(s)
             }
-            if (found != null) assign(found)
+            if (assignments[uri] != null) assign(assignments.getValue(uri))
             else AlertDialog.Builder(this).setTitle("จับคู่ภาพ: $name").setItems(scenes.map { key(it) + if (image(it).exists()) " ✓" else " • ขาดภาพ" }.toTypedArray()) { _, i -> assign(scenes[i]) }.setNegativeButton("ข้าม") { _,_ -> next() }.setCancelable(false).show()
         }
         next()

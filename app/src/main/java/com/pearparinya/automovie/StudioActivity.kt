@@ -48,6 +48,35 @@ class StudioActivity : AppCompatActivity() {
         "Family Secrets | ความลับใต้ชายคา...ที่ไม่มีใครกล้าพูด",
         "Twisted Truth | พล็อตหักมุม...ความจริงใต้เตียง",
         "Healing Hearts | ซ่อมรักหลังบ้าน ซีรีส์ฮีลใจ")
+    private var masterSlot: String?
+        get() = prefs.getString("master_slot", null)
+        set(value) { prefs.edit().putString("master_slot", value).apply() }
+    private val masterPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        val slot = masterSlot
+        if (uri != null && slot in listOf("gawin", "rinlada", "mind")) {
+            try {
+                val folder = File(filesDir, "character_masters").apply { mkdirs() }
+                val temporary = File(folder, "$slot.tmp")
+                contentResolver.openInputStream(uri)!!.use { input -> temporary.outputStream().use { input.copyTo(it) } }
+                val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                android.graphics.BitmapFactory.decodeFile(temporary.path, bounds)
+                require(bounds.outWidth > 0 && bounds.outHeight > 0) { "ไฟล์นี้ไม่ใช่ภาพที่อ่านได้" }
+                require(temporary.renameTo(File(folder, "$slot.master"))) { "บันทึกภาพไม่ได้" }
+                notice("บันทึกภาพตัวละครแล้ว ใช้เป็นต้นฉบับสำหรับเรื่องใหม่ได้เลยครับ")
+            } catch (e: Exception) { notice("รับภาพไม่สำเร็จ: ${e.message}") }
+        }
+        masterSlot = null
+    }
+    private fun characterMasters() {
+        val names = listOf("gawin" to "กวิน", "rinlada" to "รินลดา", "mind" to "มายด์")
+        AlertDialog.Builder(this).setTitle("ภาพต้นฉบับตัวละคร")
+            .setItems(names.map { (key, name) ->
+                "$name • " + if (File(filesDir, "character_masters/$key.master").exists()) "มีภาพแล้ว · แตะเพื่อเปลี่ยน" else "เพิ่มภาพ"
+            }.toTypedArray()) { _, index ->
+                masterSlot = names[index].first
+                masterPicker.launch(arrayOf("image/*"))
+            }.setNegativeButton("ปิด", null).show()
+    }
     private val planPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) background {
             val text = contentResolver.openInputStream(uri)!!.bufferedReader().use { it.readText() }
@@ -156,7 +185,7 @@ class StudioActivity : AppCompatActivity() {
         val heading = LinearLayout(this).apply { orientation = 1; gravity = Gravity.CENTER; layoutParams = LinearLayout.LayoutParams(-2,-2) }
         heading.addView(TextView(this).apply { text = "STORY STUDIO"; textSize = 22f; setTextColor(gold); setTypeface(null,Typeface.BOLD) })
         heading.addView(TextView(this).apply { text = "ระบบจัดหนังครบทั้งเรื่อง"; textSize = 13f; setTextColor(ice); setPadding(0,dp(3),0,dp(3)) })
-        heading.addView(TextView(this).apply { text = "เวอร์ชัน 1.5 • รุ่น 005"; textSize = 12f; setTextColor(gold) })
+        heading.addView(TextView(this).apply { text = "เวอร์ชัน 1.6 • รุ่น 006"; textSize = 12f; setTextColor(gold) })
         header.addView(heading); root.addView(header)
         label("สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย", 13)
         val p = plan
@@ -202,9 +231,9 @@ class StudioActivity : AppCompatActivity() {
         button("⚙ ตัวละคร • ตัวเลือก",false) { toolsMenu() }
     }
     private fun toolsMenu() {
-        AlertDialog.Builder(this).setTitle("ตัวเลือก").setItems(arrayOf("ตัวละคร MASTER / งานเดิม", "ดูภาพและบทในเรื่องนี้", "เลือกเรื่องที่บันทึก", "ส่งคำสั่งภาพทั้งเรื่อง", "วิธีใช้งาน")) { _, index ->
+        AlertDialog.Builder(this).setTitle("ตัวเลือก").setItems(arrayOf("ภาพต้นฉบับตัวละคร", "ดูภาพและบทในเรื่องนี้", "เลือกเรื่องที่บันทึก", "ส่งคำสั่งภาพทั้งเรื่อง", "วิธีใช้งาน")) { _, index ->
             when (index) {
-                0 -> startActivity(Intent(this,MainActivity::class.java))
+                0 -> characterMasters()
                 1 -> review()
                 2 -> {
                     val folders = base.listFiles()?.filter { File(it,"story.json").exists() } ?: emptyList()

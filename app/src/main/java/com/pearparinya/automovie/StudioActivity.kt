@@ -196,7 +196,7 @@ class StudioActivity : AppCompatActivity() {
         header.addView(ImageView(this).apply {
             setImageResource(R.drawable.director_mark)
             scaleType = ImageView.ScaleType.FIT_CENTER
-            layoutParams = LinearLayout.LayoutParams(dp(72), dp(72)).apply { marginEnd = dp(12) }
+            layoutParams = LinearLayout.LayoutParams(dp(88), dp(88)).apply { marginEnd = dp(12) }
             contentDescription = "DIRECTOR X"
         })
         val heading = LinearLayout(this).apply {
@@ -218,9 +218,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.15", 24, 16, gold, true, 1)
+        brandLine("DIRECTOR X 1.16", 24, 16, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 20, 16, ice, true, 3)
-        brandLine("รุ่น 015 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 016 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         label("สร้างละครได้ทุกแนว • เลือกช่องก่อนเริ่ม", 13)
@@ -284,9 +284,10 @@ class StudioActivity : AppCompatActivity() {
             contentDescription = "ขั้นตอน $number $title $detail"
             setOnClickListener { if (!importing) action() else Toast.makeText(this@StudioActivity,"กำลังนำเข้าภาพ กรุณารอสักครู่",Toast.LENGTH_SHORT).show() }
         }
-        card.addView(TextView(this).apply {
-            text = icon; textSize = 30f; gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(dp(44),dp(52))
+        card.addView(ImageView(this).apply {
+            setImageResource(R.drawable.director_mark); scaleType = ImageView.ScaleType.FIT_CENTER
+            layoutParams = LinearLayout.LayoutParams(dp(52),dp(52))
+            contentDescription = "ผู้กำกับ DIRECTOR X"
         })
         val words = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -409,8 +410,13 @@ class StudioActivity : AppCompatActivity() {
                 contentDescription = "$title $detail"
                 setOnClickListener { dialog.dismiss(); action() }
             }
+            card.addView(ImageView(this).apply {
+                setImageResource(R.drawable.director_mark); scaleType = ImageView.ScaleType.FIT_CENTER
+                layoutParams = LinearLayout.LayoutParams(dp(64),dp(64))
+                contentDescription = "ผู้กำกับ DIRECTOR X"
+            })
             card.addView(TextView(this).apply {
-                text = if (title == originalChannel) "①  🏠 🎬" else "②  🎭 ✨"
+                text = if (title == originalChannel) "①" else "②"
                 textSize = 30f; gravity = Gravity.CENTER; setTextColor(navy)
                 setPadding(0,0,0,dp(6))
             })

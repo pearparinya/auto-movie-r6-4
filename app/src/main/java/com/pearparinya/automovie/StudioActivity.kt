@@ -196,9 +196,9 @@ class StudioActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(dp(60),dp(60)).apply { marginEnd = dp(12) }
         })
         val heading = LinearLayout(this).apply { orientation = 1; gravity = Gravity.CENTER; layoutParams = LinearLayout.LayoutParams(0,-2,1f) }
-        heading.addView(TextView(this).apply { text = "STORY STUDIO 1.10"; textSize = 22f; gravity = Gravity.CENTER; setSingleLine(true); layoutParams = LinearLayout.LayoutParams(-1,-2); androidx.core.widget.TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(this, 14, 22, 1, android.util.TypedValue.COMPLEX_UNIT_SP); setTextColor(gold); setTypeface(null,Typeface.BOLD) })
-        heading.addView(TextView(this).apply { text = "จักรวาลเรื่องเล่า"; textSize = 13f; setTextColor(ice); setPadding(0,dp(3),0,dp(3)) })
-        heading.addView(TextView(this).apply { text = "รุ่น 010 • พร้อมใช้ใน Flow"; textSize = 12f; setTextColor(gold) })
+        heading.addView(TextView(this).apply { text = "DIRECTOR X 1.11"; textSize = 22f; gravity = Gravity.CENTER; setSingleLine(true); layoutParams = LinearLayout.LayoutParams(-1,-2); androidx.core.widget.TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(this, 14, 22, 1, android.util.TypedValue.COMPLEX_UNIT_SP); setTextColor(gold); setTypeface(null,Typeface.BOLD) })
+        heading.addView(TextView(this).apply { text = "ผู้กำกับอัจฉริยะ"; textSize = 13f; setTextColor(ice); setPadding(0,dp(3),0,dp(3)) })
+        heading.addView(TextView(this).apply { text = "รุ่น 011 • พร้อมใช้ใน Flow"; textSize = 12f; setTextColor(gold) })
         header.addView(heading); root.addView(header)
         label("สร้างละครได้ทุกแนว • เลือกช่องก่อนเริ่ม", 13)
         val p = plan
@@ -237,11 +237,11 @@ class StudioActivity : AppCompatActivity() {
             else {
                 val missing = rows(current).filter { !image(it).exists() }
                 if (missing.isNotEmpty()) notice("ยังขาดภาพ ${missing.size} ฉาก: ${missing.joinToString { key(it) }}\nกดรับบทและภาพทั้งหมดเพื่อเพิ่มภาพครับ")
-                else zipPicker.launch("STORY-STUDIO-${System.currentTimeMillis()}.zip")
+                else zipPicker.launch("DIRECTOR-X-${System.currentTimeMillis()}.zip")
             }
         }
         label("ZIP เดียว • ภาพทุกฉาก + คำสั่ง Flow + บทพูด",12)
-        button("↻ Update STORY STUDIO",false) { updater.check() }
+        button("↻ Update DIRECTOR X",false) { updater.check() }
         button("⚙ ตัวละคร • ตัวเลือก",false) { toolsMenu() }
     }
     private fun toolsMenu() {

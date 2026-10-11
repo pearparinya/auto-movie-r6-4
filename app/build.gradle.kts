@@ -11,8 +11,8 @@ android {
         applicationId = "com.pearparinya.automovie"
         minSdk = 26
         targetSdk = 35
-        versionCode = 752
-        versionName = "1.32"
+        versionCode = 753
+        versionName = "1.33"
     }
 
     sourceSets {

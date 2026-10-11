@@ -314,9 +314,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.32", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.33", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 032 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 033 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -599,7 +599,7 @@ class StudioActivity : AppCompatActivity() {
             background = backdrop(navy, Color.rgb(27,24,57))
         }
         panel.addView(TextView(this).apply {
-            text = "🎬 เลือกช่องสร้างเรื่อง"; textSize = 20f
+            text = "🎬 เลือกช่องสร้างหนัง"; textSize = 20f
             setTextColor(gold); setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER; setPadding(0, 0, 0, dp(14))
         })
@@ -614,39 +614,14 @@ class StudioActivity : AppCompatActivity() {
                 contentDescription = title.replace("\n", " ")
                 setOnClickListener { dialog.dismiss(); action() }
             }
-            val photos = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL; gravity = Gravity.START
-                layoutParams = LinearLayout.LayoutParams(-1, dp(160))
-            }
-            if (mainChannel) {
-                listOf(Triple("gawin", "กวิน", R.drawable.channel_gawin),
-                    Triple("rinlada", "รินลดา", R.drawable.channel_rinlada),
-                    Triple("mind", "มายด์", R.drawable.channel_mind)).forEach { (key, name, fallback) ->
-                    val photo = File(filesDir, "character_masters/$key.master")
-                    val bitmap = runCatching {
-                        val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                        android.graphics.BitmapFactory.decodeFile(photo.path, bounds)
-                        val options = android.graphics.BitmapFactory.Options().apply { inSampleSize = 1 }
-                        while (bounds.outWidth / options.inSampleSize > 384 || bounds.outHeight / options.inSampleSize > 512)
-                            options.inSampleSize *= 2
-                        android.graphics.BitmapFactory.decodeFile(photo.path, options)
-                    }.getOrNull()
-                    photos.addView(ImageView(this).apply {
-                        if (bitmap != null) setImageBitmap(bitmap) else setImageResource(fallback)
-                        scaleType = ImageView.ScaleType.CENTER_CROP
-                        layoutParams = LinearLayout.LayoutParams(0, -1, 1f)
-                        contentDescription = "รูปตัวละคร $name"
-                    })
-                }
-            } else {
-                photos.addView(ImageView(this).apply {
-                    setImageResource(R.drawable.fictional_cast)
-                    scaleType = ImageView.ScaleType.CENTER_CROP
-                    layoutParams = LinearLayout.LayoutParams(-1, -1)
-                    contentDescription = "รูปตัวละครสมมุติสำหรับช่องอื่น"
-                })
-            }
-            card.addView(photos)
+            card.addView(ImageView(this).apply {
+                setImageResource(if (mainChannel) R.drawable.channel_cast_banner else R.drawable.channel_genres_banner)
+                adjustViewBounds = true
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                layoutParams = LinearLayout.LayoutParams(-1, -2)
+                contentDescription = if (mainChannel) "กวิน รินลดา และมายด์ ภาพครึ่งตัวในฉากเดียวกัน"
+                    else "ภาพแนวสยองขวัญ ตลก และโรแมนติก"
+            })
             card.addView(TextView(this).apply {
                 text = title; textSize = 18f; setTextColor(navy)
                 setTypeface(null, Typeface.BOLD); gravity = Gravity.CENTER

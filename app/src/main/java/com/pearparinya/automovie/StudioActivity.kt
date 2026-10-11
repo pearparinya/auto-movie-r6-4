@@ -169,7 +169,7 @@ class StudioActivity : AppCompatActivity() {
             isAppearanceLightStatusBars = false
             isAppearanceLightNavigationBars = false
         }
-        val scroll = ScrollView(this).apply { setBackgroundColor(navy); isFillViewport = true; clipToPadding = false }
+        val scroll = ScrollView(this).apply { background = backdrop(Color.rgb(19,23,54), Color.rgb(9,12,29)); isFillViewport = true; clipToPadding = false }
         root = LinearLayout(this).apply { orientation = 1; setPadding(dp(14),dp(4),dp(14),dp(8)) }
         scroll.addView(root)
         val host = LinearLayout(this).apply { orientation = 1; setBackgroundColor(navy) }
@@ -178,7 +178,7 @@ class StudioActivity : AppCompatActivity() {
             text = "Flow • Veo 3.1 Lite • 8 วินาที • 9:16\nพัฒนาโดย : นายปริญญา จันทร์จักษุ"
             textSize = 11f; gravity = Gravity.CENTER; setTextColor(muted)
             setPadding(dp(10),dp(6),dp(10),dp(6))
-            background = backdrop(Color.rgb(26,26,53),navy)
+            background = backdrop(Color.rgb(35,32,65),navy,Color.rgb(99,80,45))
         })
         setContentView(host)
         ViewCompat.setOnApplyWindowInsetsListener(host) { v, insets ->
@@ -191,7 +191,7 @@ class StudioActivity : AppCompatActivity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(14), dp(14), dp(14), dp(14))
-            background = backdrop(Color.rgb(28,30,66), navy, Color.rgb(64,62,108))
+            background = backdrop(Color.rgb(43,38,81), navy, Color.rgb(141,112,62)); elevation = dp(6).toFloat()
         }
         header.addView(ImageView(this).apply {
             setImageResource(R.mipmap.ic_launcher)
@@ -218,9 +218,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.12", 24, 16, gold, true, 1)
+        brandLine("DIRECTOR X 1.13", 24, 16, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 20, 16, ice, true, 3)
-        brandLine("รุ่น 012 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 013 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         label("สร้างละครได้ทุกแนว • เลือกช่องก่อนเริ่ม", 13)
@@ -250,11 +250,9 @@ class StudioActivity : AppCompatActivity() {
         }
         root.addView(summary)
         label("สร้างหนึ่งเรื่องจนจบ • รับภาพ • พร้อมใช้ใน Flow", 14, true)
-        button("① 🎬 สร้างหนังหนึ่งเรื่อง") { planning() }
-        label("ให้ ChatGPT คิดเรื่อง บท และภาพครบทุก EP",12)
-        button("② 🖼 รับบทและภาพทั้งหมด") { packagePicker.launch(arrayOf("*/*")) }
-        label("เลือก story.json และภาพทั้งเรื่อง แอปจัดฉากให้",12)
-        button("③ 📦 ดาวน์โหลดชุด Flow") {
+        stepCard(1, "🎬", "สร้างหนังหนึ่งเรื่อง", "เลือกช่องและแนว • สร้างบทครบทุก EP") { planning() }
+        stepCard(2, "🎨", "รับบทและภาพทั้งหมด", "นำเข้า story.json พร้อมภาพ • จัดฉากอัตโนมัติ") { packagePicker.launch(arrayOf("*/*")) }
+        stepCard(3, "📦", "ดาวน์โหลดชุด Flow", "ZIP ทั้งเรื่อง • ภาพ + บทพูด + คำสั่ง Flow") {
             val current = plan
             if (current == null) notice("ยังไม่มีบทและภาพ กดรับบทและภาพทั้งหมดก่อนครับ")
             else {
@@ -263,9 +261,49 @@ class StudioActivity : AppCompatActivity() {
                 else zipPicker.launch("DIRECTOR-X-${System.currentTimeMillis()}.zip")
             }
         }
-        label("ZIP เดียว • ภาพทุกฉาก + คำสั่ง Flow + บทพูด",12)
         button("↻ Update DIRECTOR X",false) { updater.check() }
         button("⚙ ตัวละคร • ตัวเลือก",false) { toolsMenu() }
+    }
+    private fun stepCard(number: Int, icon: String, title: String, detail: String, action: () -> Unit) {
+        val colors = when (number) {
+            1 -> intArrayOf(Color.rgb(255,218,112),Color.rgb(255,173,34))
+            2 -> intArrayOf(Color.rgb(46,189,252),Color.rgb(30,101,221))
+            else -> intArrayOf(Color.rgb(182,107,255),Color.rgb(107,56,204))
+        }
+        val ink = if (number == 1) navy else ice
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(12),dp(14),dp(12),dp(14))
+            background = backdrop(colors[0],colors[1],Color.argb(110,255,255,255))
+            elevation = dp(5).toFloat()
+            layoutParams = LinearLayout.LayoutParams(-1,-2).apply { topMargin = dp(8); bottomMargin = dp(8) }
+            isClickable = true; isFocusable = true
+            val attribute = android.util.TypedValue()
+            theme.resolveAttribute(android.R.attr.selectableItemBackground,attribute,true)
+            foreground = getDrawable(attribute.resourceId)
+            contentDescription = "ขั้นตอน $number $title $detail"
+            setOnClickListener { if (!importing) action() else Toast.makeText(this@StudioActivity,"กำลังนำเข้าภาพ กรุณารอสักครู่",Toast.LENGTH_SHORT).show() }
+        }
+        card.addView(TextView(this).apply {
+            text = icon; textSize = 30f; gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(dp(44),dp(52))
+        })
+        val words = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0,-2,1f).apply { marginStart = dp(6) }
+        }
+        words.addView(TextView(this).apply {
+            text = "$number  $title"; textSize = 18f; setTypeface(null,Typeface.BOLD); setTextColor(ink)
+        })
+        words.addView(TextView(this).apply {
+            text = detail; textSize = 11f; setTextColor(ink); setPadding(0,dp(5),0,0)
+        })
+        card.addView(words)
+        card.addView(TextView(this).apply {
+            text = "›"; textSize = 27f; setTextColor(ink); gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(dp(18),-2)
+        })
+        root.addView(card)
     }
     private fun toolsMenu() {
         AlertDialog.Builder(this).setTitle("ตัวเลือก").setItems(arrayOf("ภาพต้นฉบับตัวละคร", "ดูภาพและบทในเรื่องนี้", "เลือกเรื่องที่บันทึก", "ส่งคำสั่งภาพทั้งเรื่อง", "วิธีใช้งาน")) { _, index ->

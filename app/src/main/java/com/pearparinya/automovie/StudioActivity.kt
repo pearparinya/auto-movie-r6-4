@@ -110,13 +110,27 @@ class StudioActivity : AppCompatActivity() {
                 require(scripts.size <= 1) { "เลือก story.json ของเรื่องเดียวเท่านั้น" }
                 val pictures = files.filter { displayName(it).substringAfterLast('.').lowercase() in listOf("png", "jpg", "jpeg", "webp") || contentResolver.getType(it)?.startsWith("image/") == true }
                 val masters = pictures.filter { Regex("^CHARACTER_\\d+\\.", RegexOption.IGNORE_CASE).containsMatchIn(displayName(it)) }
-                val scenes = pictures - masters.toSet()
+                val covers = pictures.filter { StoryFiles.coverName(displayName(it)) != null }
+                val scenes = pictures - masters.toSet() - covers.toSet()
                 require(scripts.isNotEmpty() || pictures.isNotEmpty()) { "ไม่พบ story.json หรือภาพในไฟล์ที่เลือก กรุณาเลือก ZIP ชุดงาน หรือ JSON/PNG/JPG" }
                 val candidate = scripts.firstOrNull()?.let { contentResolver.openInputStream(it)!!.bufferedReader().use { reader -> JSONObject(reader.readText().removePrefix("\uFEFF")) } }
+                val destinationStory = candidate ?: plan ?: error("ยังไม่มีบท กรุณานำเข้า story.json ก่อน")
+                val checkedCovers = covers.map { uri ->
+                    val name = StoryFiles.coverName(displayName(uri))!!
+                    require(name in coverNames(destinationStory)) { "ปก $name ไม่ตรงกับ EP ในเรื่อง" }
+                    val temp = File(staging,"checked/$name.img").apply { parentFile!!.mkdirs() }
+                    contentResolver.openInputStream(uri)!!.use { input -> temp.outputStream().use { input.copyTo(it) } }
+                    val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    android.graphics.BitmapFactory.decodeFile(temp.path,bounds)
+                    val ratio = if (name.endsWith("9x16")) 9.0 / 16 else 16.0 / 9
+                    require(bounds.outHeight > 0 && kotlin.math.abs(bounds.outWidth.toDouble()/bounds.outHeight - ratio) < 0.04) { "$name ต้องมีสัดส่วน ${if (name.endsWith("9x16")) "9:16" else "16:9"}" }
+                    name to temp
+                }
+                require(checkedCovers.map { it.first }.distinct().size == covers.size) { "มีไฟล์ปกซ้ำ กรุณาเลือกหนึ่งภาพต่อสัดส่วนต่อ EP" }
                 if (candidate != null) {
                     validate(candidate)
                     // Reimporting the same story must retain images already received.
-                    val sameStory = plan?.let { old -> old.toString() == candidate.toString() } == true
+                    val sameStory = plan?.let { old -> old.optString("title") == candidate.optString("title") && old.optString("category") == candidate.optString("category") && rows(old).map { it.toString() } == rows(candidate).map { it.toString() } } == true
                     val folder = if (sameStory) project else File(base, UUID.randomUUID().toString()).apply { mkdirs() }
                     importNewMasters(masters, folder, candidate)
                     File(folder,"story.json").writeText(candidate.toString(2))
@@ -125,9 +139,11 @@ class StudioActivity : AppCompatActivity() {
                     require(plan != null) { "ยังไม่มีบท กรุณานำเข้า story.json หรือ ZIP ที่มีบทก่อน" }
                     importNewMasters(masters)
                 }
+                checkedCovers.forEach { (name, temp) -> coverFile(name).apply { parentFile!!.mkdirs() }.let { temp.copyTo(it,overwrite=true) } }
                 runOnUiThread {
                     importing = false; dialog.dismiss(); render()
                     if (scenes.isNotEmpty()) importImages(scenes)
+                    else if (covers.isNotEmpty()) notice("รับปกแล้ว ${covers.size} ไฟล์ ตรวจจำนวนภาพและปกบนหน้าแรกได้เลย")
                     else notice(if (candidate != null) "รับบทแล้ว ขั้นตอน 2: เพิ่มภาพฉากได้เลย ไม่ต้องเลือก story.json ซ้ำ" else "รับภาพ MASTER แล้ว เพิ่มภาพฉากในขั้นตอน 2 ได้เลย")
                 }
             } catch (e: Exception) { runOnUiThread { importing = false; dialog.dismiss(); render(); notice("นำเข้าบทและภาพไม่สำเร็จ: ${e.message}") } }
@@ -233,9 +249,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.20", 24, 16, gold, true, 1)
+        brandLine("DIRECTOR X 1.21", 24, 16, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 20, 16, ice, true, 3)
-        brandLine("รุ่น 020 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 021 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         label("สร้างละครได้ทุกแนว • เลือกช่องก่อนเริ่ม", 13)
@@ -256,6 +272,8 @@ class StudioActivity : AppCompatActivity() {
             summaryText(p.optString("channel", originalChannel),12f,muted)
             summaryText(p.getString("category"),12f,muted)
             summaryText("${p.getJSONArray("episodes").length()} EP  •  ${scenes.size} ฉาก  •  ภาพ $count/${scenes.size}",14f,gold,true)
+            val names = coverNames(p)
+            summaryText("ปก ${names.count { coverFile(it).exists() }}/${names.size} • ทุก EP มี 9:16 และ 16:9",12f,gold,true)
             summary.addView(ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal).apply {
                 max = scenes.size; progress = count
                 progressTintList = ColorStateList.valueOf(Color.rgb(35,219,195))
@@ -265,11 +283,11 @@ class StudioActivity : AppCompatActivity() {
         }
         root.addView(summary)
         val sent = p != null || File(project,"command_sent").exists()
-        val complete = p != null && rows(p).all { image(it).exists() }
-        label(if (complete) "ขั้นตอน 3 • ภาพครบแล้ว พร้อมบันทึกชุด Flow" else if (sent) "ขั้นตอน 2 • รับไฟล์จาก ChatGPT กลับเข้าแอป" else "ขั้นตอน 1 • เลือกเรื่องแล้วส่งไป ChatGPT", 14, true)
+        val complete = p != null && rows(p).all { image(it).exists() } && coverNames(p).all { coverFile(it).exists() }
+        label(if (complete) "ขั้นตอน 3 • ภาพและปกครบแล้ว พร้อมบันทึก" else if (sent) "ขั้นตอน 2 • รับไฟล์จาก ChatGPT กลับเข้าแอป" else "ขั้นตอน 1 • เลือกเรื่องแล้วส่งไป ChatGPT", 14, true)
         stepCard(1, "🎬", if (sent) "ส่งคำสั่งแล้ว ✓" else "สร้างเรื่องและส่งไป ChatGPT", if (sent) "ล็อกการสร้างซ้ำ • เริ่มเรื่องใหม่ใช้ปุ่มด้านล่าง" else "เลือกช่องและแนว • ชื่อเรื่องภาษาไทย", enabled = !sent) { planning() }
         stepCard(2, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "เพิ่มภาพฉาก / รับ ZIP", "เลือก ZIP หรือ story.json และภาพ • มีบทแล้วเพิ่มเฉพาะภาพได้") { packagePicker.launch(arrayOf("*/*")) }
-        stepCard(3, "📦", "บันทึกชุด Flow", if (complete) "พร้อมบันทึก ZIP ชื่อเรื่องภาษาไทย" else "ปลดล็อกเมื่อมีบทและภาพครบทุกฉาก", enabled = complete) {
+        stepCard(3, "📦", "บันทึกชุด Flow", if (complete) "พร้อมบันทึก ZIP ชื่อเรื่องภาษาไทย" else "ปลดล็อกเมื่อภาพฉากและปกทั้งสองแบบครบ", enabled = complete) {
             val current = plan ?: return@stepCard
             val title = current.getString("title")
             if (!Regex("[ก-๙]").containsMatchIn(title)) {
@@ -281,6 +299,7 @@ class StudioActivity : AppCompatActivity() {
                 }.setNegativeButton("ยกเลิก",null).show()
             } else zipPicker.launch(StoryFiles.zipName(title))
         }
+        if (p != null) button("🎨 สร้างปกทุก EP • 9:16 และ 16:9",false) { sendCoverCommands() }
         if (sent) button("＋ เริ่มเรื่องใหม่",false) {
             AlertDialog.Builder(this).setTitle("เริ่มเรื่องใหม่?").setMessage("เรื่องปัจจุบันเก็บไว้ในรายการเรื่องที่บันทึก สามารถกลับมาทำต่อได้")
                 .setPositiveButton("เริ่มเรื่องใหม่") { _,_ -> prefs.edit().putString("project", UUID.randomUUID().toString()).apply(); render() }.setNegativeButton("ทำเรื่องเดิมต่อ",null).show()
@@ -419,8 +438,29 @@ class StudioActivity : AppCompatActivity() {
     }
     private fun wholeStoryCommands() {
         val p = plan ?: return notice("นำเข้าแผนเรื่องก่อนครับ")
-        val commands = rows(p).joinToString("\n\n") { s -> "${key(s)}.png\n${s.getString("image_prompt")}" }
-        shareText("เรื่อง ${p.getString("title")}\n${if (p.optString("character_mode") == "new") "ใช้ CHARACTER MASTER ใหม่ของเรื่องนี้ คงใบหน้าใหม่และรูปร่างตรงรายคน ถ้ายังไม่ได้แนบ MASTER ใหม่ ให้ขอไฟล์ CHARACTER ก่อนสร้างภาพ" else "ใช้ภาพ MASTER ตามชื่อของแต่ละคน คงใบหน้า ผม รูปร่าง"} กำหนดชุดตามคำสั่งแต่ละฉาก ภาพ 9:16 หนึ่งฉากหนึ่งภาพ ไม่ทำภาพรวมหลายฉาก เรียงสร้างตามรายการครบทุก EP หากติดข้อจำกัดให้แจ้งฉากล่าสุดเพื่อทำต่อ ไม่ข้ามฉาก\n\n$commands")
+        val episodes = p.getJSONArray("episodes")
+        val commands = (0 until episodes.length()).joinToString("\n\n") { i ->
+            val ep = episodes.getJSONObject(i)
+            rows(p).filter { it.getInt("ep") == ep.getInt("ep") }.joinToString("\n\n") { s -> "${key(s)}.png\n${s.getString("image_prompt")}" } + "\n\n" + coverCommand(p,ep)
+        }
+        shareText("เรื่อง ${p.getString("title")}\n${if (p.optString("character_mode") == "new") "ใช้ CHARACTER MASTER ใหม่ของเรื่องนี้ คงใบหน้าใหม่ รูปร่าง และสัดส่วนอก เอว สะโพกตรง MASTER รายคน ถ้ายังไม่ได้แนบ MASTER ใหม่ ให้ขอไฟล์ CHARACTER ก่อนสร้างภาพ" else "ใช้ภาพ MASTER ตามชื่อของแต่ละคน คงใบหน้า ผม รูปร่าง สัดส่วนอก เอว และสะโพกตาม MASTER รายคน"} กำหนดชุดตามคำสั่งแต่ละฉาก ภาพ 9:16 หนึ่งฉากหนึ่งภาพ ไม่ทำภาพรวมหลายฉาก เรียงสร้างตามรายการครบทุก EP หากติดข้อจำกัดให้แจ้งฉากล่าสุดเพื่อทำต่อ ไม่ข้ามฉาก\n\n$commands")
+    }
+    private fun coverNames(p: JSONObject): List<String> {
+        val eps = p.getJSONArray("episodes")
+        return (0 until eps.length()).flatMap { i -> listOf("9x16", "16x9").map { ratio -> "EP%02d_COVER_%s".format(eps.getJSONObject(i).getInt("ep"), ratio) } }
+    }
+    private fun coverFile(name: String, folder: File = project) = File(folder, "covers/$name.img")
+    private fun coverCommand(p: JSONObject, ep: JSONObject): String {
+        val number = ep.getInt("ep")
+        val title = ep.optString("title").ifBlank { "ตั้งชื่อตอนภาษาไทยจากเหตุการณ์ของ EP นี้ ใช้ชื่อเดียวกันทั้งสองปก" }
+        return "สร้างปกของ EP $number แยก 2 ไฟล์ EP%02d_COVER_9x16.png (9:16) และ EP%02d_COVER_16x9.png (16:9) จัดองค์ประกอบใหม่ตามสัดส่วนแต่ละภาพ ใช้ MASTER รายคน คงใบหน้า ผม รูปร่าง สัดส่วนอก เอว สะโพกตามต้นฉบับ เปลี่ยนชุดและสถานที่ตามตอน สื่อเหตุการณ์เด่น: %s ข้อความ 3 บรรทัดจัดกึ่งกลางในพื้นที่กลางภาพ เว้นขอบซ้ายขวา 10%% ขอบบนล่าง 20%% อ่านชัดบนมือถือ ไม่ทับใบหน้า บรรทัด 1 (เล็กกว่า): %s | บรรทัด 2 (ใหญ่ที่สุด): %s | บรรทัด 3 (ขนาดรอง): EP %02d • %s ปรับขนาดอักษรให้ข้อความครบในแต่ละบรรทัด".format(number,number,ep.getJSONArray("scenes").getJSONObject(ep.getJSONArray("scenes").length()-1).optString("action"),p.optString("channel",originalChannel),p.getString("title"),number,title)
+    }
+    private fun sendCoverCommands() {
+        val p = plan ?: return notice("นำเข้าบทก่อนสร้างปก")
+        val eps = p.getJSONArray("episodes")
+        val missingTitles = (0 until eps.length()).any { eps.getJSONObject(it).optString("title").isBlank() }
+        val context = if (missingTitles) "บทเก่ายังไม่มีชื่อตอน ให้ตั้งชื่อตอนภาษาไทยทุก EP จากเนื้อหา เพิ่ม title ในแต่ละ episodes และส่ง story.json ที่อัปเดตพร้อมปก โดยคงข้อมูลฉากเดิมทั้งหมด\n${p.toString(2)}\n\n" else ""
+        shareText(context + (0 until eps.length()).joinToString("\n\n") { coverCommand(p,eps.getJSONObject(it)) })
     }
     private fun planning() {
         val panel = LinearLayout(this).apply {
@@ -577,10 +617,11 @@ class StudioActivity : AppCompatActivity() {
 หมวดหมู่ที่ผู้ใช้เลือก: $category
 ตั้งชื่อเรื่องเป็นภาษาไทยเท่านั้น ใส่ชื่อภาษาไทยในค่า title ของ story.json และตั้งชื่อไฟล์ ZIP เป็นชื่อเรื่องภาษาไทย.zip ห้ามใช้ชื่อหมวดภาษาอังกฤษเป็นชื่อเรื่องหรือชื่อ ZIP
 สร้างชื่อเรื่องและพล็อตให้ตรงหมวดนี้ ใช้ค่า category ใน story.json เป็น "$category" ตรงทุกตัวอักษร
-ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ${if (mode == "original") "ตัวละครหลัก กวิน รินลดา มายด์ อ้างอิง MASTER ของแต่ละคนเพื่อคงใบหน้า ผม รูปร่าง" else "สร้างชื่อและใบหน้าตัวละครใหม่สำหรับเรื่องนี้ ใช้ภาพที่แนบอ้างอิงเฉพาะรูปร่างและสัดส่วนของตัวละครผู้ใหญ่ ไม่ใช้ชื่อหรือใบหน้าเดิม สร้างภาพ MASTER ใหม่ก่อนสร้างฉาก ตั้งชื่อ CHARACTER_01.png, CHARACTER_02.png ตามจำนวนที่ต้องใช้ แล้วใช้ใบหน้าใหม่เดิมอย่างต่อเนื่องทุกฉาก เก็บรายละเอียดตัวละครและชื่อไฟล์ MASTER ใน bible"} ระบุชุดใหม่ สถานที่ การกระทำอย่างกระชับ รักษาความต่อเนื่อง จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน
+ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ${if (mode == "original") "ตัวละครหลัก กวิน รินลดา มายด์ อ้างอิง MASTER ของแต่ละคนเพื่อคงใบหน้า ผม รูปร่าง สัดส่วนอก เอว และสะโพกตาม MASTER รายคน" else "สร้างชื่อและใบหน้าตัวละครใหม่สำหรับเรื่องนี้ ใช้ภาพที่แนบอ้างอิงเฉพาะรูปร่างและสัดส่วนของตัวละครผู้ใหญ่ ไม่ใช้ชื่อหรือใบหน้าเดิม สร้างภาพ MASTER ใหม่ก่อนสร้างฉาก ตั้งชื่อ CHARACTER_01.png, CHARACTER_02.png ตามจำนวนที่ต้องใช้ แล้วใช้ใบหน้าใหม่เดิมอย่างต่อเนื่องทุกฉาก เก็บรายละเอียดตัวละครและชื่อไฟล์ MASTER ใน bible"} ยึด MASTER เป็นหลักสำหรับสัดส่วนร่างกายรวมถึงขนาดและรูปทรงหน้าอกให้เหมือนหรือใกล้เคียงต้นฉบับโดยอยู่ใต้ชุดตามฉาก ระบุชุดใหม่ สถานที่ การกระทำอย่างกระชับ รักษาความต่อเนื่อง จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน
 ส่งไฟล์ story.json เป็น JSON ไม่มี markdown โครงสร้าง:
-{"channel":${JSONObject.quote(channel)},"character_mode":"$mode","title":"ชื่อเรื่อง","category":"ชื่อหมวดเต็มตรงรายการ","bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"scenes":[{"scene":1,"action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","image_prompt":"คำสั่งภาพพร้อมระบุ MASTER ชุด สถานที่ การกระทำ","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}
-เพิ่ม EP และฉากเท่าที่เรื่องต้องใช้ เรียงเลขจาก 1 ไม่กำหนดจำนวนตายตัว หลังวางบททั้งเรื่อง ส่งไฟล์ story.json แล้วสร้างภาพแยกหนึ่งฉากหนึ่งไฟล์ตามลำดับครบทุก EP จนจบ ตั้งชื่อ EP01_SC001.png ตามเลข EP และฉาก ไม่ทำภาพรวมหลายฉาก ${if (mode == "original") "ใช้ MASTER ที่แนบให้ตรงรายคน" else "ใช้ CHARACTER MASTER ใหม่ที่สร้างสำหรับเรื่องนี้ตรงรายคน"} พร้อมคำสั่งสำหรับ Flow / Veo 3.1 Lite ทุกฉาก ผู้ใช้ต้องการบทและภาพพร้อมนำไปทำวิดีโอ""", lockCreation = true, useNewMasters = false)
+{"channel":${JSONObject.quote(channel)},"character_mode":"$mode","title":"ชื่อเรื่อง","category":"ชื่อหมวดเต็มตรงรายการ","bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"title":"ชื่อตอนภาษาไทย","scenes":[{"scene":1,"action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","image_prompt":"คำสั่งภาพพร้อมระบุ MASTER ชุด สถานที่ การกระทำ","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}
+เพิ่ม EP และฉากเท่าที่เรื่องต้องใช้ เรียงเลขจาก 1 ไม่กำหนดจำนวนตายตัว หลังวางบททั้งเรื่อง ส่งไฟล์ story.json แล้วสร้างภาพแยกหนึ่งฉากหนึ่งไฟล์ตามลำดับครบทุก EP จนจบ ตั้งชื่อ EP01_SC001.png ตามเลข EP และฉาก ไม่ทำภาพรวมหลายฉาก ${if (mode == "original") "ใช้ MASTER ที่แนบให้ตรงรายคน" else "ใช้ CHARACTER MASTER ใหม่ที่สร้างสำหรับเรื่องนี้ตรงรายคน"} พร้อมคำสั่งสำหรับ Flow / Veo 3.1 Lite ทุกฉาก ผู้ใช้ต้องการบทและภาพพร้อมนำไปทำวิดีโอ
+หลังสร้างฉากสุดท้ายของแต่ละ EP ให้สร้างปกแยก 2 ไฟล์ทันที: EP01_COVER_9x16.png ขนาด 9:16 และ EP01_COVER_16x9.png ขนาด 16:9 เปลี่ยนเลขตาม EP จัดองค์ประกอบแต่ละสัดส่วนใหม่ ใช้ตัวละครจาก MASTER รายคน สื่อเหตุการณ์เด่นของตอนนั้น ข้อความภาษาไทย 3 บรรทัดจัดกึ่งกลางในพื้นที่กลางภาพ เว้นขอบซ้ายขวาอย่างน้อย 10% และขอบบนล่าง 20%: บรรทัด 1 ชื่อช่อง (เล็กกว่า), บรรทัด 2 ชื่อเรื่อง (ใหญ่ที่สุด), บรรทัด 3 EP 01 • ชื่อตอน (ขนาดรอง) ปรับขนาดอักษรให้ครบทั้งบรรทัด อ่านชัดบนมือถือ ไม่ทับใบหน้า ชื่อเรื่องและชื่อตอนต้องตรง story.json รวมปกทุก EP ใน ZIP ชื่อเรื่องภาษาไทยด้วย""", lockCreation = true, useNewMasters = false)
         }.setNegativeButton("ยกเลิก",null).show()
     }
     private fun sceneCommands() {
@@ -588,7 +629,7 @@ class StudioActivity : AppCompatActivity() {
         val scenes = rows(p)
         AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setTitle("เลือกฉากเพื่อส่งคำสั่งภาพ").setItems(scenes.map { key(it) }.toTypedArray()) { _, index ->
             val s = scenes[index]
-            shareText("สร้างภาพฉาก ${key(s)} เรื่อง ${p.getString("title")}\n${s.getString("image_prompt")}\nใช้ภาพ MASTER ที่แนบของแต่ละคน คงใบหน้า ทรงผม และรูปร่าง เปลี่ยนชุดตามฉาก ภาพแนวตั้ง 9:16 ละครไทยสมจริง ไม่มีข้อความในภาพ บันทึกชื่อ ${key(s)}.png\nหากยังไม่มี MASTER ให้ขอภาพต้นฉบับก่อนสร้าง")
+            shareText("สร้างภาพฉาก ${key(s)} เรื่อง ${p.getString("title")}\n${s.getString("image_prompt")}\nใช้ภาพ MASTER ที่แนบของแต่ละคน คงใบหน้า ทรงผม รูปร่าง และสัดส่วนอก เอว สะโพกตาม MASTER รายคน เปลี่ยนชุดตามฉาก ภาพแนวตั้ง 9:16 ละครไทยสมจริง ไม่มีข้อความในภาพ บันทึกชื่อ ${key(s)}.png\nหากยังไม่มี MASTER ให้ขอภาพต้นฉบับก่อนสร้าง")
         }.show()
     }
     @Deprecated("Android legacy back callback")
@@ -633,7 +674,7 @@ class StudioActivity : AppCompatActivity() {
         importing = true
         val remaining = uris.toMutableList()
         fun next() {
-            if (remaining.isEmpty()) { importing = false; render(); val missing = rows(plan!!).count { !image(it).exists() }; notice(if (missing == 0) "รับภาพครบแล้ว ขั้นตอน 3: บันทึกชุด Flow ได้เลย" else "รับภาพแล้ว ยังขาด $missing ฉาก เพิ่มภาพต่อในขั้นตอน 2 ได้เลย"); return }
+            if (remaining.isEmpty()) { importing = false; render(); val missing = rows(plan!!).count { !image(it).exists() }; val missingCovers = coverNames(plan!!).count { !coverFile(it).exists() }; notice(if (missing == 0 && missingCovers == 0) "รับภาพและปกครบแล้ว ขั้นตอน 3: บันทึกชุด Flow ได้เลย" else if (missing == 0) "ภาพฉากครบแล้ว ยังขาดปก $missingCovers ไฟล์ กดสร้างปกทุก EP แล้วรับไฟล์กลับในขั้นตอน 2" else "รับภาพแล้ว ยังขาด $missing ฉาก เพิ่มภาพต่อในขั้นตอน 2 ได้เลย"); return }
             val uri = remaining.removeAt(0)
             val name = displayName(uri)
             val match = StoryFiles.sceneNumber(name)
@@ -680,6 +721,14 @@ class StudioActivity : AppCompatActivity() {
             put("story.json",p.toString(2).toByteArray())
             File(project, "masters").listFiles()?.forEach { master -> put("characters/${master.name}", master.readBytes()) }
             put("README.txt","${p.getString("title")}\n${p.getString("category")}\nนำภาพและ flow.txt ของแต่ละฉากไปใช้ใน Flow • 8 วินาที • 9:16".toByteArray())
+            for (name in coverNames(p)) {
+                val file = coverFile(name)
+                require(file.exists()) { "ยังขาดปก $name" }
+                val opts = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                android.graphics.BitmapFactory.decodeFile(file.path,opts)
+                val ext = when(opts.outMimeType) { "image/jpeg" -> "jpg"; "image/webp" -> "webp"; else -> "png" }
+                put("covers/$name.$ext",file.readBytes())
+            }
             for (s in rows(p)) {
                 val path = "EP%02d/%s".format(s.getInt("ep"),key(s))
                 val file = image(s)

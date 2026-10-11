@@ -42,6 +42,60 @@ class StudioActivity : AppCompatActivity() {
         cornerRadius = dp(16).toFloat()
         if (border != null) setStroke(dp(1),border)
     }
+    private val menuColors = arrayOf(
+        intArrayOf(Color.rgb(255,218,112),Color.rgb(255,177,58)),
+        intArrayOf(Color.rgb(119,232,250),Color.rgb(63,184,235)),
+        intArrayOf(Color.rgb(219,195,255),Color.rgb(176,143,244)),
+        intArrayOf(Color.rgb(128,240,202),Color.rgb(63,200,160)),
+        intArrayOf(Color.rgb(255,185,209),Color.rgb(245,139,175)))
+    private fun menuIcon(index: Int) = listOf("🎭", "🎨", "📚", "🎬", "💡")[index % 5]
+    private fun choiceMenu(title: String, choices: List<String>, cancel: String = "✖️ ยกเลิก",
+        cancelable: Boolean = true, onCancel: (() -> Unit)? = null, action: (Int) -> Unit) {
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL; setPadding(dp(16),dp(18),dp(16),dp(12))
+            background = backdrop(navy,Color.rgb(32,28,65),Color.rgb(110,99,155))
+        }
+        panel.addView(TextView(this).apply {
+            text = title; textSize = 20f; setTextColor(gold); setTypeface(null,Typeface.BOLD)
+            setPadding(0,0,0,dp(14))
+        })
+        val list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val scroll = ScrollView(this).apply { addView(list) }
+        panel.addView(scroll,LinearLayout.LayoutParams(-1,-2))
+        val dialog = AlertDialog.Builder(this).setView(panel).setCancelable(cancelable).create()
+        choices.forEachIndexed { index, value ->
+            val shades = menuColors[index % menuColors.size]
+            list.addView(TextView(this).apply {
+                text = value; textSize = 16f; setTextColor(navy); setTypeface(null,Typeface.BOLD)
+                gravity = Gravity.CENTER_VERTICAL; minHeight = dp(60)
+                setPadding(dp(14),dp(14),dp(14),dp(14))
+                background = backdrop(shades[0],shades[1],Color.argb(160,255,255,255))
+                layoutParams = LinearLayout.LayoutParams(-1,-2).apply { bottomMargin = dp(10) }
+                isClickable = true; isFocusable = true
+                val attr = android.util.TypedValue()
+                theme.resolveAttribute(android.R.attr.selectableItemBackground,attr,true)
+                foreground = getDrawable(attr.resourceId)
+                setOnClickListener { dialog.dismiss(); action(index) }
+            })
+        }
+        if (choices.isEmpty()) list.addView(TextView(this).apply {
+            text = "📭 ยังไม่มีรายการ"; textSize = 16f; setTextColor(ice); setPadding(0,dp(12),0,dp(12))
+        })
+        panel.addView(TextView(this).apply {
+            text = cancel; textSize = 16f; setTextColor(ice); gravity = Gravity.CENTER
+            minHeight = dp(48); background = backdrop(Color.rgb(64,65,97),Color.rgb(45,45,76))
+            isFocusable = true; setOnClickListener { dialog.dismiss(); onCancel?.invoke() }
+        })
+        dialog.setOnCancelListener { onCancel?.invoke() }
+        dialog.show()
+        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(resources.displayMetrics.widthPixels - dp(24),-2)
+        panel.post {
+            val maximum = (resources.displayMetrics.heightPixels * 0.85f).toInt()
+            val available = maximum - (panel.height - scroll.height)
+            if (scroll.height > available) scroll.layoutParams = LinearLayout.LayoutParams(-1,available.coerceAtLeast(dp(80)))
+        }
+    }
     private val categories = listOf(
         "The Broken Vows | บันทึกรอยร้าวชีวิตคู่",
         "Sweet Revenge | เกมรักซ่อนลวง บทเรียนรสแซ่บ",
@@ -69,13 +123,12 @@ class StudioActivity : AppCompatActivity() {
     }
     private fun characterMasters() {
         val names = listOf("gawin" to "กวิน", "rinlada" to "รินลดา", "mind" to "มายด์")
-        AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setTitle("ภาพต้นฉบับตัวละคร")
-            .setItems(names.map { (key, name) ->
-                "$name • " + if (File(filesDir, "character_masters/$key.master").exists()) "มีภาพแล้ว · แตะเพื่อเปลี่ยน" else "เพิ่มภาพ"
-            }.toTypedArray()) { _, index ->
+        choiceMenu("🎭 ภาพต้นฉบับตัวละคร", names.map { (key, name) ->
+                "${if (key == "gawin") "👨" else "👩"} $name • " + if (File(filesDir, "character_masters/$key.master").exists()) "มีภาพแล้ว · แตะเพื่อเปลี่ยน" else "เพิ่มภาพ"
+            }) { index ->
                 masterSlot = names[index].first
                 masterPicker.launch(arrayOf("image/*"))
-            }.setNegativeButton("ปิด", null).show()
+            }
     }
     private val otherGenres = listOf("ดราม่าชีวิต", "ครอบครัว", "โรแมนติก", "ตลก", "สืบสวน", "ระทึกขวัญ", "สยองขวัญ", "แฟนตาซี", "แอ็กชัน", "อบอุ่นหัวใจ")
     private val originalChannel = "สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย"
@@ -95,7 +148,7 @@ class StudioActivity : AppCompatActivity() {
     }
     private fun receivePackage(selected: List<Uri>) {
         importing = true
-        val dialog = AlertDialog.Builder(this).setMessage("กำลังตรวจบทและภาพ…").setCancelable(false).show()
+        val dialog = AlertDialog.Builder(this).setMessage("กำลังตรวจบทและภาพ…").setCancelable(false).showDirector()
         Thread {
             try {
                 File(cacheDir,"story_import").deleteRecursively()
@@ -227,7 +280,7 @@ class StudioActivity : AppCompatActivity() {
         header.addView(ImageView(this).apply {
             setImageResource(R.drawable.director_mark)
             scaleType = ImageView.ScaleType.FIT_CENTER
-            layoutParams = LinearLayout.LayoutParams(dp(56), dp(56)).apply { marginEnd = dp(8) }
+            layoutParams = LinearLayout.LayoutParams(dp(104), dp(104)).apply { marginEnd = dp(8) }
             contentDescription = "DIRECTOR X"
         })
         val heading = LinearLayout(this).apply {
@@ -249,9 +302,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.22", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.23", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 022 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 023 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -296,16 +349,16 @@ class StudioActivity : AppCompatActivity() {
                     val thai = input.text.toString().trim()
                     if (!Regex("[ก-๙]").containsMatchIn(thai)) notice("กรุณาใส่ชื่อเรื่องภาษาไทย")
                     else { current.put("title",thai); File(project,"story.json").writeText(current.toString(2)); render(); zipPicker.launch(StoryFiles.zipName(thai)) }
-                }.setNegativeButton("ยกเลิก",null).show()
+                }.setNegativeButton("ยกเลิก",null).showDirector()
             } else zipPicker.launch(StoryFiles.zipName(title))
         }
         if (p != null) button("🎨 สร้างปกทุก EP • 9:16 และ 16:9",false) { sendCoverCommands() }
-        if (sent) button("＋ เริ่มเรื่องใหม่",false) {
+        if (sent) button("✨ เริ่มเรื่องใหม่",false) {
             AlertDialog.Builder(this).setTitle("เริ่มเรื่องใหม่?").setMessage("เรื่องปัจจุบันเก็บไว้ในรายการเรื่องที่บันทึก สามารถกลับมาทำต่อได้")
-                .setPositiveButton("เริ่มเรื่องใหม่") { _,_ -> prefs.edit().putString("project", UUID.randomUUID().toString()).apply(); render() }.setNegativeButton("ทำเรื่องเดิมต่อ",null).show()
+                .setPositiveButton("เริ่มเรื่องใหม่") { _,_ -> prefs.edit().putString("project", UUID.randomUUID().toString()).apply(); render() }.setNegativeButton("ทำเรื่องเดิมต่อ",null).showDirector()
         }
-        button("↻ Update DIRECTOR X",false) { updater.check() }
-        splitActions("ตัวละคร • ตัวเลือก", "ทดลองสร้างรูป", { toolsMenu() }, { testImageMenu() })
+        button("🔄 Update DIRECTOR X",false) { updater.check() }
+        splitActions("🎭 ตัวละคร • ตัวเลือก", "🖼️ ทดลองสร้างรูป", { toolsMenu() }, { testImageMenu() })
     }
     private fun splitActions(left: String, right: String, leftAction: () -> Unit, rightAction: () -> Unit) {
         val row = LinearLayout(this).apply {
@@ -315,11 +368,11 @@ class StudioActivity : AppCompatActivity() {
         listOf(left to leftAction, right to rightAction).forEachIndexed { index, item ->
             row.addView(Button(this).apply {
                 text = item.first; isAllCaps = false; textSize = 12f
-                setTextColor(ice); gravity = Gravity.CENTER
+                setTextColor(navy); setTypeface(null,Typeface.BOLD); gravity = Gravity.CENTER
                 minWidth = 0; minimumWidth = 0; minHeight = dp(48); minimumHeight = dp(48)
                 setPadding(dp(4),dp(5),dp(4),dp(5))
                 backgroundTintList = null
-                background = backdrop(Color.rgb(38,36,76),Color.rgb(27,28,59),Color.rgb(62,58,106))
+                background = backdrop(menuColors[index + 1][0],menuColors[index + 1][1],Color.argb(150,255,255,255))
                 layoutParams = LinearLayout.LayoutParams(0,-2,1f).apply { if (index == 0) marginEnd = dp(3) else marginStart = dp(3) }
                 setOnClickListener { if (!importing) item.second() }
             })
@@ -327,20 +380,22 @@ class StudioActivity : AppCompatActivity() {
         root.addView(row)
     }
     private fun testImageMenu() {
-        AlertDialog.Builder(this).setTitle("ทดลองสร้างรูป 1 ภาพ")
-            .setItems(arrayOf("ตัวละครเดิม • กวิน รินลดา มายด์", "ตัวละครสมมุติ • สร้างคนใหม่อัตโนมัติ")) { _, choice ->
-                if (choice == 0) AlertDialog.Builder(this).setTitle("เลือกจำนวนตัวละครในภาพ")
-                    .setItems(arrayOf("สุ่ม 1 คน จาก 3 คน", "ทั้ง 3 คน ในภาพเดียว")) { _, count -> sendTestImage(count == 1) }.setNegativeButton("ยกเลิก",null).show()
-                else shareText("ทดลองสร้างภาพหนึ่งภาพ ตัวละครสมมุติผู้ใหญ่หนึ่งคน ตั้งชื่อภาษาไทยและออกแบบใบหน้าใหม่อัตโนมัติ เลือกเพศ ชุดสุภาพ สถานที่ และการกระทำเอง ภาพละครไทยสมจริง 9:16 มองเห็นใบหน้าและรูปร่างตั้งแต่ศีรษะถึงต้นขา แสงชัด ภาพไม่มีตัวหนังสือ ตั้งชื่อไฟล์ TEST_CHARACTER.png หลังสร้างภาพแจ้งชื่อตัวละคร ชุด สถานที่ และการกระทำสั้น ๆ", useNewMasters = false, includeMasters = false)
-            }.setNegativeButton("ยกเลิก",null).show()
+        choiceMenu("🖼️ ทดลองสร้างรูป 1 ภาพ", listOf("🎭 ตัวละครเดิม • เลือกคนที่ต้องการ", "✨ ตัวละครสมมุติ • สร้างคนใหม่")) { choice ->
+            if (choice == 0) choiceMenu("🎭 เลือกตัวละครในภาพ", listOf("👨 กวิน • คนเดียว", "👩 รินลดา • คนเดียว", "👩 มายด์ • คนเดียว", "👥 ทั้ง 3 คนในภาพเดียว")) { index ->
+                val keys = listOf("gawin", "rinlada", "mind")
+                sendTestImage(if (index == 3) keys else listOf(keys[index]))
+            }
+            else shareText("ทดลองสร้างภาพหนึ่งภาพ ตัวละครสมมุติผู้ใหญ่หนึ่งคน ตั้งชื่อภาษาไทยและออกแบบใบหน้าใหม่อัตโนมัติ เลือกเพศ ชุดสุภาพ สถานที่ และการกระทำเอง ภาพละครไทยสมจริง 9:16 มองเห็นใบหน้าและรูปร่างตั้งแต่ศีรษะถึงต้นขา แสงชัด ภาพไม่มีตัวหนังสือ ตั้งชื่อไฟล์ TEST_CHARACTER.png หลังสร้างภาพแจ้งชื่อตัวละคร ชุด สถานที่ และการกระทำสั้น ๆ", useNewMasters = false, includeMasters = false)
+        }
     }
-    private fun sendTestImage(allThree: Boolean) {
+    private fun sendTestImage(selectedKeys: List<String>) {
         val cast = listOf("gawin" to "กวิน", "rinlada" to "รินลดา", "mind" to "มายด์")
-        val selected = if (allThree) cast else listOf(cast.random())
+        val selected = cast.filter { it.first in selectedKeys }
+        require(selected.isNotEmpty())
         if (selected.any { !File(filesDir,"character_masters/${it.first}.master").exists() }) {
             AlertDialog.Builder(this).setTitle("เพิ่มภาพ MASTER ก่อนทดสอบ")
                 .setMessage("ต้องมีต้นฉบับของ ${selected.joinToString { it.second }} เพื่อเปรียบเทียบใบหน้าและรูปร่าง")
-                .setPositiveButton("เพิ่มภาพตัวละคร") { _,_ -> characterMasters() }.setNegativeButton("ยกเลิก",null).show()
+                .setPositiveButton("เพิ่มภาพตัวละคร") { _,_ -> characterMasters() }.setNegativeButton("ยกเลิก",null).showDirector()
             return
         }
         val names = selected.joinToString { it.second }
@@ -389,18 +444,18 @@ class StudioActivity : AppCompatActivity() {
         root.addView(card)
     }
     private fun toolsMenu() {
-        AlertDialog.Builder(this).setIcon(R.drawable.studio_settings).setTitle("ตัวเลือก").setItems(arrayOf("ภาพต้นฉบับตัวละคร", "ดูภาพและบทในเรื่องนี้", "เลือกเรื่องที่บันทึก", "ส่งคำสั่งภาพทั้งเรื่อง", "วิธีใช้งาน")) { _, index ->
+        choiceMenu("⚙️ ตัวเลือก", listOf("🎭 ภาพต้นฉบับตัวละคร", "🔎 ดูภาพและบทในเรื่องนี้", "📚 เลือกเรื่องที่บันทึก", "🎬 ส่งคำสั่งภาพทั้งเรื่อง", "💡 วิธีใช้งาน")) { index ->
             when (index) {
                 0 -> characterMasters()
                 1 -> review()
                 2 -> {
                     val folders = base.listFiles()?.filter { File(it,"story.json").exists() } ?: emptyList()
-                    AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setTitle("เรื่องของคุณ").setItems(folders.map { JSONObject(File(it,"story.json").readText()).getString("title") }.toTypedArray()) { _, i -> prefs.edit().putString("project",folders[i].name).apply(); render() }.show()
+                    choiceMenu("📚 เรื่องของคุณ", folders.map { "📖 " + JSONObject(File(it,"story.json").readText()).getString("title") }) { i -> prefs.edit().putString("project",folders[i].name).apply(); render() }
                 }
                 3 -> wholeStoryCommands()
                 4 -> notice("1. ตั้งภาพต้นฉบับตัวละคร แล้วกดสร้างเรื่องและส่งไป ChatGPT เลือกช่องและแนวละคร ส่งไป ChatGPT ช่องเดิมใช้ตัวละครเดิม ช่องอื่นสร้างใบหน้าใหม่โดยอ้างอิงรูปร่าง และใช้ MASTER ใหม่ต่อเนื่องทั้งเรื่อง\n2. บันทึก story.json และภาพแต่ละฉากจาก ChatGPT สำหรับช่องอื่นบันทึกภาพ CHARACTER_01.png เป็นต้นฉบับใหม่ด้วย กดขั้นตอน 2 เลือก ZIP ทั้งชุด หรือ story.json พร้อมภาพ ถ้ามีบทแล้วเพิ่มเฉพาะภาพได้ ไม่ต้องเลือกบทซ้ำ\n3. เมื่อภาพครบ ปุ่มบันทึกชุด Flow จะเปิดให้บันทึก ZIP ชื่อเรื่องภาษาไทย และนำภาพกับคำสั่งไปใช้ใน Flow / Veo 3.1 Lite 8 วินาที\n\nChatGPT เป็นผู้สร้างบทและภาพ แอปจัดไฟล์และตรวจฉากที่ขาด ไม่ได้สร้างภาพเองผ่าน Plus อัตโนมัติ")
             }
-        }.show()
+        }
     }
 
     private fun label(value: String, size: Int, bold: Boolean = false) {
@@ -411,7 +466,7 @@ class StudioActivity : AppCompatActivity() {
     }
     private fun button(value: String, primary: Boolean = true, action: () -> Unit) {
         val colors = when {
-            !primary -> intArrayOf(Color.rgb(38,36,76),Color.rgb(27,28,59))
+            !primary -> if (value.contains("Update")) menuColors[3] else if (value.contains("ปก")) menuColors[1] else menuColors[4]
             value.startsWith("①") -> intArrayOf(Color.rgb(255,204,86),Color.rgb(255,174,38))
             value.startsWith("②") -> intArrayOf(Color.rgb(42,153,246),Color.rgb(27,101,211))
             value.startsWith("③") -> intArrayOf(Color.rgb(164,96,246),Color.rgb(111,65,209))
@@ -419,7 +474,7 @@ class StudioActivity : AppCompatActivity() {
             value.startsWith("⑤") -> intArrayOf(Color.rgb(35,205,216),Color.rgb(14,163,182))
             else -> intArrayOf(Color.rgb(255,203,81),Color.rgb(255,166,39))
         }
-        val darkText = primary && !value.startsWith("②") && !value.startsWith("③")
+        val darkText = !value.startsWith("②") && !value.startsWith("③")
         root.addView(Button(this).apply {
             text = value; isAllCaps = false; textSize = if (primary) 16f else 14f
             setTypeface(null,if (primary) Typeface.BOLD else Typeface.NORMAL)
@@ -433,9 +488,9 @@ class StudioActivity : AppCompatActivity() {
             setOnClickListener { if (!importing) action() else Toast.makeText(this@StudioActivity,"กำลังนำเข้าภาพ กรุณารอสักครู่",Toast.LENGTH_SHORT).show() }
         })
     }
-    private fun notice(text: String) { AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setMessage(text).setPositiveButton("ตกลง", null).show() }
+    private fun notice(text: String) { AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setMessage(text).setPositiveButton("ตกลง", null).showDirector() }
     private fun background(block: () -> Unit) {
-        val dialog = AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setMessage("กำลังจัดไฟล์…").setCancelable(false).show()
+        val dialog = AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setMessage("กำลังจัดไฟล์…").setCancelable(false).showDirector()
         Thread {
             try { block(); runOnUiThread { dialog.dismiss(); render(); notice("เสร็จเรียบร้อย") } }
             catch (e: Exception) { runOnUiThread { dialog.dismiss(); notice("ดำเนินการไม่สำเร็จ: ${e.message}") } }
@@ -530,7 +585,7 @@ class StudioActivity : AppCompatActivity() {
                 setPadding(dp(4),0,dp(4),dp(8))
             }
             top.addView(ImageView(this).apply {
-                setImageResource(if (title == originalChannel) R.drawable.studio_channel else R.drawable.studio_genres)
+                setImageResource(if (title == "🎬 " + originalChannel) R.drawable.studio_channel else R.drawable.studio_genres)
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 layoutParams = LinearLayout.LayoutParams(dp(44),dp(44))
                 contentDescription = title
@@ -539,7 +594,7 @@ class StudioActivity : AppCompatActivity() {
                 layoutParams = LinearLayout.LayoutParams(0,1,1f)
             })
             top.addView(TextView(this).apply {
-                text = if (title == originalChannel) "1" else "2"
+                text = if (title == "🎬 " + originalChannel) "1" else "2"
                 textSize = 20f; gravity = Gravity.CENTER; setTextColor(navy)
                 setTypeface(null,Typeface.BOLD)
                 background = backdrop(Color.argb(65,255,255,255),Color.argb(45,255,255,255))
@@ -573,10 +628,10 @@ class StudioActivity : AppCompatActivity() {
             })
             panel.addView(card)
         }
-        option(originalChannel, "ดราม่าผัวเมีย • ใช้ตัวละครเดิม", intArrayOf(Color.rgb(255,204,86), Color.rgb(255,174,38))) {
+        option("🎬 " + originalChannel, "ดราม่าผัวเมีย • ใช้ตัวละครเดิม", intArrayOf(Color.rgb(255,204,86), Color.rgb(255,174,38))) {
             chooseGenre(originalChannel, "original")
         }
-        option("ช่องอื่น • สร้างละครได้ทุกแนว", "ตั้งชื่อช่องเอง • สร้างใบหน้าตัวละครใหม่", intArrayOf(Color.rgb(73,218,242), Color.rgb(32,169,228))) {
+        option("🌈 ช่องอื่น • สร้างละครได้ทุกแนว", "ตั้งชื่อช่องเอง • สร้างใบหน้าตัวละครใหม่", intArrayOf(Color.rgb(73,218,242), Color.rgb(32,169,228))) {
             val name = EditText(this).apply {
                 hint = "ชื่อช่องของคุณ"; setText(prefs.getString("other_channel", ""))
             }
@@ -585,7 +640,7 @@ class StudioActivity : AppCompatActivity() {
                     val channel = name.text.toString().trim().ifBlank { "ช่องละครของฉัน" }
                     prefs.edit().putString("other_channel", channel).apply()
                     chooseGenre(channel, "new")
-                }.setNegativeButton("ยกเลิก", null).show()
+                }.setNegativeButton("ยกเลิก", null).showDirector()
         }
         panel.addView(TextView(this).apply {
             text = "ยกเลิก"; textSize = 14f; setTextColor(muted)
@@ -598,55 +653,9 @@ class StudioActivity : AppCompatActivity() {
     }
     private fun chooseGenre(channel: String, mode: String) {
         val choices = if (mode == "original") categories else otherGenres
-        val panel = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(16),dp(18),dp(16),dp(8))
-            background = backdrop(navy,Color.rgb(27,24,57))
+        choiceMenu("🎬 เลือกหมวดหมู่\n$channel", choices.mapIndexed { index, category -> "${menuIcon(index)} $category" }) { index ->
+            planningForCategory(choices[index],channel,mode)
         }
-        panel.addView(TextView(this).apply {
-            text = "เลือกหมวดหมู่"; textSize = 20f; setTextColor(gold)
-            setTypeface(null,Typeface.BOLD); gravity = Gravity.CENTER
-        })
-        panel.addView(TextView(this).apply {
-            text = channel; textSize = 12f; setTextColor(muted)
-            gravity = Gravity.CENTER; setPadding(0,dp(6),0,dp(12))
-        })
-        val list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        val scroll = ScrollView(this).apply { addView(list) }
-        panel.addView(scroll,LinearLayout.LayoutParams(-1,-2))
-        val dialog = AlertDialog.Builder(this).setView(panel).create()
-        val palette = arrayOf(
-            intArrayOf(Color.rgb(255,213,104),Color.rgb(255,177,45)),
-            intArrayOf(Color.rgb(89,226,240),Color.rgb(33,177,225)),
-            intArrayOf(Color.rgb(204,177,255),Color.rgb(168,133,240))
-        )
-        choices.forEachIndexed { index, category ->
-            val shades = palette[index % palette.size]
-            list.addView(TextView(this).apply {
-                text = "${index + 1}   $category"; textSize = 15f
-                setTextColor(navy); setTypeface(null,Typeface.BOLD)
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(14),dp(14),dp(14),dp(14)); minHeight = dp(60)
-                background = backdrop(shades[0],shades[1],Color.argb(120,255,255,255))
-                layoutParams = LinearLayout.LayoutParams(-1,-2).apply { bottomMargin = dp(10) }
-                isClickable = true; isFocusable = true
-                val attribute = android.util.TypedValue()
-                theme.resolveAttribute(android.R.attr.selectableItemBackground,attribute,true)
-                foreground = getDrawable(attribute.resourceId)
-                setOnClickListener { dialog.dismiss(); planningForCategory(category,channel,mode) }
-            })
-        }
-        panel.addView(TextView(this).apply {
-            text = "ยกเลิก"; textSize = 15f; setTextColor(muted)
-            gravity = Gravity.CENTER; minHeight = dp(48)
-            setOnClickListener { dialog.dismiss() }
-        })
-        dialog.show()
-        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
-        dialog.window?.setLayout(resources.displayMetrics.widthPixels - dp(24),-2)
-        scroll.layoutParams = LinearLayout.LayoutParams(-1,
-            minOf(dp(440), (resources.displayMetrics.heightPixels * 0.55f).toInt()))
-
     }
     private fun planningForCategory(category: String, channel: String, mode: String) {
         val idea = EditText(this).apply { hint = "แนวคิดเรื่อง (เว้นว่างให้คิดอัตโนมัติ)" }
@@ -661,15 +670,15 @@ class StudioActivity : AppCompatActivity() {
 {"channel":${JSONObject.quote(channel)},"character_mode":"$mode","title":"ชื่อเรื่อง","category":"ชื่อหมวดเต็มตรงรายการ","bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"title":"ชื่อตอนภาษาไทย","scenes":[{"scene":1,"action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","image_prompt":"คำสั่งภาพพร้อมระบุ MASTER ชุด สถานที่ การกระทำ","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}
 เพิ่ม EP และฉากเท่าที่เรื่องต้องใช้ เรียงเลขจาก 1 ไม่กำหนดจำนวนตายตัว หลังวางบททั้งเรื่อง ส่งไฟล์ story.json แล้วสร้างภาพแยกหนึ่งฉากหนึ่งไฟล์ตามลำดับครบทุก EP จนจบ ตั้งชื่อ EP01_SC001.png ตามเลข EP และฉาก ไม่ทำภาพรวมหลายฉาก ${if (mode == "original") "ใช้ MASTER ที่แนบให้ตรงรายคน" else "ใช้ CHARACTER MASTER ใหม่ที่สร้างสำหรับเรื่องนี้ตรงรายคน"} พร้อมคำสั่งสำหรับ Flow / Veo 3.1 Lite ทุกฉาก ผู้ใช้ต้องการบทและภาพพร้อมนำไปทำวิดีโอ
 หลังสร้างฉากสุดท้ายของแต่ละ EP ให้สร้างปกแยก 2 ไฟล์ทันที: EP01_COVER_9x16.png ขนาด 9:16 และ EP01_COVER_16x9.png ขนาด 16:9 เปลี่ยนเลขตาม EP จัดองค์ประกอบแต่ละสัดส่วนใหม่ ใช้ตัวละครจาก MASTER รายคน สื่อเหตุการณ์เด่นของตอนนั้น ข้อความภาษาไทย 3 บรรทัดจัดกึ่งกลางในพื้นที่กลางภาพ เว้นขอบซ้ายขวาอย่างน้อย 10% และขอบบนล่าง 20%: บรรทัด 1 ชื่อช่อง (เล็กกว่า), บรรทัด 2 ชื่อเรื่อง (ใหญ่ที่สุด), บรรทัด 3 EP 01 • ชื่อตอน (ขนาดรอง) ปรับขนาดอักษรให้ครบทั้งบรรทัด อ่านชัดบนมือถือ ไม่ทับใบหน้า ชื่อเรื่องและชื่อตอนต้องตรง story.json รวมปกทุก EP ใน ZIP ชื่อเรื่องภาษาไทยด้วย""", lockCreation = true, useNewMasters = false)
-        }.setNegativeButton("ยกเลิก",null).show()
+        }.setNegativeButton("ยกเลิก",null).showDirector()
     }
     private fun sceneCommands() {
         val p = plan ?: return notice("นำเข้าแผนเรื่องก่อนครับ")
         val scenes = rows(p)
-        AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setTitle("เลือกฉากเพื่อส่งคำสั่งภาพ").setItems(scenes.map { key(it) }.toTypedArray()) { _, index ->
+        choiceMenu("🎬 เลือกฉากเพื่อส่งคำสั่งภาพ", scenes.map { "🎞️ " + key(it) }) { index ->
             val s = scenes[index]
             shareText("สร้างภาพฉาก ${key(s)} เรื่อง ${p.getString("title")}\n${s.getString("image_prompt")}\nใช้ภาพ MASTER ที่แนบของแต่ละคน คงใบหน้า ทรงผม รูปร่าง และสัดส่วนอก เอว สะโพกตาม MASTER รายคน เปลี่ยนชุดตามฉาก ภาพแนวตั้ง 9:16 ละครไทยสมจริง ไม่มีข้อความในภาพ บันทึกชื่อ ${key(s)}.png\nหากยังไม่มี MASTER ให้ขอภาพต้นฉบับก่อนสร้าง")
-        }.show()
+        }
     }
     @Deprecated("Android legacy back callback")
     override fun onBackPressed() { if (!importing) super.onBackPressed() }
@@ -706,7 +715,7 @@ class StudioActivity : AppCompatActivity() {
         if (unknown.isNotEmpty() && !confirmedOrder) {
             val list = uris.joinToString("\n") { "${displayName(it)} → ${key(assignments.getValue(it))}" }
             val content = TextView(this).apply { text = "บางภาพไม่มีเลขฉาก แอปเสนอเรียงตามลำดับไฟล์ที่เลือก กรุณาตรวจให้ตรงก่อนนำเข้า\n\n$list"; setPadding(dp(16),dp(12),dp(16),dp(12)) }
-            AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setTitle("ตรวจลำดับภาพครั้งเดียว").setView(ScrollView(this).apply { addView(content) }).setPositiveButton("ลำดับถูกต้อง") { _,_ -> importImages(uris,true) }.setNegativeButton("ยกเลิก",null).show()
+            AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setTitle("ตรวจลำดับภาพครั้งเดียว").setView(ScrollView(this).apply { addView(content) }).setPositiveButton("ลำดับถูกต้อง") { _,_ -> importImages(uris,true) }.setNegativeButton("ยกเลิก",null).showDirector()
             return
         }
         val importFolder = project
@@ -734,24 +743,24 @@ class StudioActivity : AppCompatActivity() {
                 }.start()
             }
             fun assign(s: JSONObject) {
-                if (image(s).exists()) AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setMessage("${key(s)} มีภาพแล้ว แทนด้วย $name หรือไม่?").setPositiveButton("แทนภาพ") { _,_ -> save(s) }.setNegativeButton("ข้าม") { _,_ -> next() }.setCancelable(false).show()
+                if (image(s).exists()) AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setMessage("${key(s)} มีภาพแล้ว แทนด้วย $name หรือไม่?").setPositiveButton("แทนภาพ") { _,_ -> save(s) }.setNegativeButton("ข้าม") { _,_ -> next() }.setCancelable(false).showDirector()
                 else save(s)
             }
             if (assignments[uri] != null) assign(assignments.getValue(uri))
-            else AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setTitle("จับคู่ภาพ: $name").setItems(scenes.map { key(it) + if (image(it).exists()) " ✓" else " • ขาดภาพ" }.toTypedArray()) { _, i -> assign(scenes[i]) }.setNegativeButton("ข้าม") { _,_ -> next() }.setCancelable(false).show()
+            else choiceMenu("🧩 จับคู่ภาพ: $name", scenes.map { "🎞️ " + key(it) + if (image(it).exists()) " ✓" else " • ขาดภาพ" }, cancel = "⏭️ ข้าม", cancelable = false, onCancel = { next() }) { i -> assign(scenes[i]) }
         }
         next()
     }
     private fun review() {
         val p = plan ?: return notice("ยังไม่มีแผนเรื่อง")
         val scenes = rows(p)
-        AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setTitle("ตรวจทุก EP").setItems(scenes.map { key(it) + if (image(it).exists()) " ✓" else " • ขาดภาพ" }.toTypedArray()) { _, i ->
+        choiceMenu("🔎 ตรวจทุก EP", scenes.map { "🎞️ " + key(it) + if (image(it).exists()) " ✓" else " • ขาดภาพ" }) { i ->
             val s = scenes[i]
             val view = LinearLayout(this).apply { orientation = 1; setPadding(20,20,20,20) }
             if (image(s).exists()) view.addView(ImageView(this).apply { setImageURI(Uri.fromFile(image(s))); adjustViewBounds = true; layoutParams = LinearLayout.LayoutParams(-1,500) })
             view.addView(TextView(this).apply { text = "${s.getString("action")}\n${s.optString("dialogue")}\n\n${s.getString("flow_prompt")}" })
-            AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setTitle(key(s)).setView(ScrollView(this).apply { addView(view) }).setPositiveButton("ปิด",null).show()
-        }.show()
+            AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setTitle(key(s)).setView(ScrollView(this).apply { addView(view) }).setPositiveButton("ปิด",null).showDirector()
+        }
     }
     private fun export(uri: Uri) {
         val p = plan!!
@@ -781,4 +790,5 @@ class StudioActivity : AppCompatActivity() {
         } }
     }
 }
+
 

@@ -103,41 +103,48 @@ class StudioActivity : AppCompatActivity() {
             isAppearanceLightNavigationBars = false
         }
         val scroll = ScrollView(this).apply { setBackgroundColor(navy); isFillViewport = true; clipToPadding = false }
-        root = LinearLayout(this).apply { orientation = 1; setPadding(dp(16),dp(12),dp(16),dp(24)) }
-        scroll.addView(root); setContentView(scroll)
-        ViewCompat.setOnApplyWindowInsetsListener(scroll) { v, insets ->
+        root = LinearLayout(this).apply { orientation = 1; setPadding(dp(14),dp(4),dp(14),dp(8)) }
+        scroll.addView(root)
+        val host = LinearLayout(this).apply { orientation = 1; setBackgroundColor(navy) }
+        host.addView(scroll,LinearLayout.LayoutParams(-1,0,1f))
+        host.addView(TextView(this).apply {
+            text = "Flow • Veo 3.1 Lite • 8 วินาที • 9:16\nพัฒนาโดย : นายปริญญา จันทร์จักษุ"
+            textSize = 11f; gravity = Gravity.CENTER; setTextColor(muted)
+            setPadding(dp(10),dp(6),dp(10),dp(6))
+            background = backdrop(Color.rgb(26,26,53),navy)
+        })
+        setContentView(host)
+        ViewCompat.setOnApplyWindowInsetsListener(host) { v, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(bars.left,bars.top,bars.right,bars.bottom)
             insets
         }
-        ViewCompat.requestApplyInsets(scroll)
+        ViewCompat.requestApplyInsets(host)
         val header = LinearLayout(this).apply {
-            orientation = 0; gravity = Gravity.CENTER_VERTICAL; setPadding(dp(12),dp(14),dp(12),dp(14))
+            orientation = 0; gravity = Gravity.CENTER_VERTICAL; setPadding(dp(10),dp(8),dp(10),dp(8))
             background = backdrop(Color.rgb(28,30,66),navy,Color.rgb(64,62,108))
         }
         header.addView(ImageView(this).apply {
             setImageResource(R.mipmap.ic_launcher); scaleType = ImageView.ScaleType.FIT_CENTER
-            layoutParams = LinearLayout.LayoutParams(dp(66),dp(66)).apply { marginEnd = dp(12) }
+            layoutParams = LinearLayout.LayoutParams(dp(48),dp(48)).apply { marginEnd = dp(12) }
         })
         val heading = LinearLayout(this).apply { orientation = 1; layoutParams = LinearLayout.LayoutParams(0,-2,1f) }
-        heading.addView(TextView(this).apply { text = "STORY STUDIO"; textSize = 23f; setTextColor(gold); setTypeface(null,Typeface.BOLD) })
-        heading.addView(TextView(this).apply { text = "ระบบจัดหนังครบทั้งเรื่อง"; textSize = 15f; setTextColor(ice); setPadding(0,dp(3),0,dp(3)) })
-        heading.addView(TextView(this).apply { text = "STUDIO 1.1 • BUILD 721"; textSize = 12f; setTextColor(gold) })
+        heading.addView(TextView(this).apply { text = "STORY STUDIO"; textSize = 21f; setTextColor(gold); setTypeface(null,Typeface.BOLD) })
+        heading.addView(TextView(this).apply { text = "ระบบจัดหนังครบทั้งเรื่อง"; textSize = 13f; setTextColor(ice); setPadding(0,dp(3),0,dp(3)) })
+        heading.addView(TextView(this).apply { text = "STUDIO 1.2 • BUILD 722"; textSize = 12f; setTextColor(gold) })
         header.addView(heading); root.addView(header)
         label("สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย", 13)
-        label("พัฒนาโดย : นายปริญญา จันทร์จักษุ", 11)
         val p = plan
         val summary = LinearLayout(this).apply {
-            orientation = 1; setPadding(dp(14),dp(12),dp(14),dp(12))
+            orientation = 1; setPadding(dp(10),dp(6),dp(10),dp(6))
             background = backdrop(Color.rgb(46,35,87),Color.rgb(26,27,58))
-            layoutParams = LinearLayout.LayoutParams(-1,-2).apply { setMargins(0,dp(8),0,dp(12)) }
+            layoutParams = LinearLayout.LayoutParams(-1,-2).apply { setMargins(0,dp(4),0,dp(6)) }
         }
         fun summaryText(value: String, size: Float, color: Int, bold: Boolean = false) {
             summary.addView(TextView(this).apply { text = value; textSize = size; setTextColor(color); setPadding(0,dp(3),0,dp(3)); if (bold) setTypeface(null,Typeface.BOLD) })
         }
         if (p == null) {
-            summaryText("🎬 พร้อมสร้างเรื่องใหม่",19f,ice,true)
-            summaryText("วางเรื่องครบทุก EP แล้วจัดภาพพร้อมใช้ใน Flow",13f,muted)
+            summaryText("🎬 พร้อมสร้างเรื่องใหม่ • ครบทุก EP",14f,ice,true)
         } else {
             val scenes = rows(p); val count = scenes.count { image(it).exists() }
             summaryText(p.getString("title"),20f,ice,true)
@@ -151,7 +158,7 @@ class StudioActivity : AppCompatActivity() {
             })
         }
         root.addView(summary)
-        label("✨ สร้างเรื่อง • จัดภาพ • ส่งออก", 16, true)
+        label("✨ สร้างเรื่อง • จัดภาพ • ส่งออก", 14, true)
         button("① ✨ วางแผนเรื่องทั้งหมด") { planning() }
         button("② 📋 นำเข้าแผนเรื่องครบทุก EP") { planPicker.launch(arrayOf("application/json", "text/*", "application/octet-stream")) }
         button("③ 🎨 สร้างภาพใน ChatGPT") { wholeStoryCommands() }
@@ -196,9 +203,9 @@ class StudioActivity : AppCompatActivity() {
             backgroundTintList = null
             background = backdrop(colors[0],colors[1],if (primary) null else Color.rgb(62,58,106))
             elevation = dp(if (primary) 3 else 0).toFloat()
-            minHeight = dp(if (primary) 54 else 44); minimumHeight = minHeight
-            layoutParams = LinearLayout.LayoutParams(-1,-2).apply { setMargins(0,dp(5),0,dp(5)) }
-            setPadding(dp(10),dp(10),dp(10),dp(10))
+            minHeight = dp(if (primary) 46 else 38); minimumHeight = minHeight
+            layoutParams = LinearLayout.LayoutParams(-1,-2).apply { setMargins(0,dp(4),0,dp(4)) }
+            setPadding(dp(10),dp(6),dp(10),dp(6))
             setOnClickListener { if (!importing) action() else Toast.makeText(this@StudioActivity,"กำลังนำเข้าภาพ กรุณารอสักครู่",Toast.LENGTH_SHORT).show() }
         })
     }
@@ -242,9 +249,9 @@ class StudioActivity : AppCompatActivity() {
             shareText("""วางเรื่องละครไทยสมจริงให้ช่อง สตอรี่หลังบ้าน - ซีรีส์สั้นดราม่าผัวเมีย จนจบทุก EP ในชุดเดียว
 แนวคิด: ${idea.text.toString().ifBlank { "คิดเรื่องใหม่อัตโนมัติ" }}
 เลือกชื่อเรื่องและหนึ่งหมวดจาก: ${categories.joinToString("\n")}
-ประเมินจำนวน EP และฉากตามเนื้อหาเอง ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ตัวละครหลัก กวิน รินลดา มายด์ อ้างอิง MASTER ของแต่ละคนเพื่อคงใบหน้า ผม รูปร่าง ระบุชุดใหม่ สถานที่ การกระทำอย่างกระชับ รักษาความต่อเนื่อง จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน
+ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ตัวละครหลัก กวิน รินลดา มายด์ อ้างอิง MASTER ของแต่ละคนเพื่อคงใบหน้า ผม รูปร่าง ระบุชุดใหม่ สถานที่ การกระทำอย่างกระชับ รักษาความต่อเนื่อง จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน
 ส่งไฟล์ story.json เป็น JSON ไม่มี markdown โครงสร้าง:
-{"title":"ชื่อเรื่อง","category":"ชื่อหมวดเต็มตรงรายการ","bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"scenes":[{"scene":1,"action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","image_prompt":"คำสั่งภาพพร้อมระบุ MASTER ชุด สถานที่ การกระทำ","flow_prompt":"English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}
+{"title":"ชื่อเรื่อง","category":"ชื่อหมวดเต็มตรงรายการ","bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"scenes":[{"scene":1,"action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","image_prompt":"คำสั่งภาพพร้อมระบุ MASTER ชุด สถานที่ การกระทำ","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}
 เพิ่ม EP และฉากเท่าที่เรื่องต้องใช้ เรียงเลขจาก 1 ไม่กำหนดจำนวนตายตัว ขั้นนี้วางแผนและบททั้งเรื่อง ยังไม่สร้างภาพ""")
         }.setNegativeButton("ยกเลิก",null).show()
     }

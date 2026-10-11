@@ -195,10 +195,10 @@ class StudioActivity : AppCompatActivity() {
             setImageResource(R.mipmap.ic_launcher); scaleType = ImageView.ScaleType.FIT_CENTER
             layoutParams = LinearLayout.LayoutParams(dp(60),dp(60)).apply { marginEnd = dp(12) }
         })
-        val heading = LinearLayout(this).apply { orientation = 1; gravity = Gravity.CENTER; layoutParams = LinearLayout.LayoutParams(-2,-2) }
-        heading.addView(TextView(this).apply { text = "STORY STUDIO"; textSize = 22f; setTextColor(gold); setTypeface(null,Typeface.BOLD) })
-        heading.addView(TextView(this).apply { text = "ระบบจัดหนังครบทั้งเรื่อง"; textSize = 13f; setTextColor(ice); setPadding(0,dp(3),0,dp(3)) })
-        heading.addView(TextView(this).apply { text = "เวอร์ชัน 1.9 • รุ่น 009"; textSize = 12f; setTextColor(gold) })
+        val heading = LinearLayout(this).apply { orientation = 1; gravity = Gravity.CENTER; layoutParams = LinearLayout.LayoutParams(0,-2,1f) }
+        heading.addView(TextView(this).apply { text = "STORY STUDIO 1.10"; textSize = 22f; gravity = Gravity.CENTER; setSingleLine(true); layoutParams = LinearLayout.LayoutParams(-1,-2); androidx.core.widget.TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(this, 14, 22, 1, android.util.TypedValue.COMPLEX_UNIT_SP); setTextColor(gold); setTypeface(null,Typeface.BOLD) })
+        heading.addView(TextView(this).apply { text = "จักรวาลเรื่องเล่า"; textSize = 13f; setTextColor(ice); setPadding(0,dp(3),0,dp(3)) })
+        heading.addView(TextView(this).apply { text = "รุ่น 010 • พร้อมใช้ใน Flow"; textSize = 12f; setTextColor(gold) })
         header.addView(heading); root.addView(header)
         label("สร้างละครได้ทุกแนว • เลือกช่องก่อนเริ่ม", 13)
         val p = plan

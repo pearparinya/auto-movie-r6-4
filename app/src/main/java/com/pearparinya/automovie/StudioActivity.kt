@@ -218,9 +218,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.18", 24, 16, gold, true, 1)
+        brandLine("DIRECTOR X 1.19", 24, 16, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 20, 16, ice, true, 3)
-        brandLine("รุ่น 018 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 019 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         label("สร้างละครได้ทุกแนว • เลือกช่องก่อนเริ่ม", 13)
@@ -380,7 +380,17 @@ class StudioActivity : AppCompatActivity() {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
         }
-        startActivity(Intent.createChooser(intent,"ส่งไป ChatGPT"))
+        val packages = listOf("com.openai.chatgpt", "com.openai.chatgpt.beta")
+        for (target in packages) {
+            val direct = Intent(intent).setPackage(target)
+            try {
+                startActivity(direct)
+                return
+            } catch (_: android.content.ActivityNotFoundException) {
+                // Try the other supported ChatGPT package.
+            }
+        }
+        notice("ไม่พบแอป ChatGPT ที่รับคำสั่งและรูปภาพได้ กรุณาติดตั้งหรืออัปเดตแอป ChatGPT แล้วลองอีกครั้ง")
     }
     private fun wholeStoryCommands() {
         val p = plan ?: return notice("นำเข้าแผนเรื่องก่อนครับ")
@@ -484,9 +494,55 @@ class StudioActivity : AppCompatActivity() {
     }
     private fun chooseGenre(channel: String, mode: String) {
         val choices = if (mode == "original") categories else otherGenres
-        AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setTitle("เลือกแนว • $channel")
-            .setItems(choices.toTypedArray()) { _, index -> planningForCategory(choices[index], channel, mode) }
-            .setNegativeButton("ยกเลิก", null).show()
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16),dp(18),dp(16),dp(8))
+            background = backdrop(navy,Color.rgb(27,24,57))
+        }
+        panel.addView(TextView(this).apply {
+            text = "เลือกหมวดหมู่"; textSize = 20f; setTextColor(gold)
+            setTypeface(null,Typeface.BOLD); gravity = Gravity.CENTER
+        })
+        panel.addView(TextView(this).apply {
+            text = channel; textSize = 12f; setTextColor(muted)
+            gravity = Gravity.CENTER; setPadding(0,dp(6),0,dp(12))
+        })
+        val list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val scroll = ScrollView(this).apply { addView(list) }
+        panel.addView(scroll,LinearLayout.LayoutParams(-1,-2))
+        val dialog = AlertDialog.Builder(this).setView(panel).create()
+        val palette = arrayOf(
+            intArrayOf(Color.rgb(255,213,104),Color.rgb(255,177,45)),
+            intArrayOf(Color.rgb(89,226,240),Color.rgb(33,177,225)),
+            intArrayOf(Color.rgb(204,177,255),Color.rgb(168,133,240))
+        )
+        choices.forEachIndexed { index, category ->
+            val shades = palette[index % palette.size]
+            list.addView(TextView(this).apply {
+                text = "${index + 1}   $category"; textSize = 15f
+                setTextColor(navy); setTypeface(null,Typeface.BOLD)
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(14),dp(14),dp(14),dp(14)); minHeight = dp(60)
+                background = backdrop(shades[0],shades[1],Color.argb(120,255,255,255))
+                layoutParams = LinearLayout.LayoutParams(-1,-2).apply { bottomMargin = dp(10) }
+                isClickable = true; isFocusable = true
+                val attribute = android.util.TypedValue()
+                theme.resolveAttribute(android.R.attr.selectableItemBackground,attribute,true)
+                foreground = getDrawable(attribute.resourceId)
+                setOnClickListener { dialog.dismiss(); planningForCategory(category,channel,mode) }
+            })
+        }
+        panel.addView(TextView(this).apply {
+            text = "ยกเลิก"; textSize = 15f; setTextColor(muted)
+            gravity = Gravity.CENTER; minHeight = dp(48)
+            setOnClickListener { dialog.dismiss() }
+        })
+        dialog.show()
+        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(resources.displayMetrics.widthPixels - dp(24),-2)
+        scroll.layoutParams = LinearLayout.LayoutParams(-1,
+            minOf(dp(440), (resources.displayMetrics.heightPixels * 0.55f).toInt()))
+
     }
     private fun planningForCategory(category: String, channel: String, mode: String) {
         val idea = EditText(this).apply { hint = "แนวคิดเรื่อง (เว้นว่างให้คิดอัตโนมัติ)" }

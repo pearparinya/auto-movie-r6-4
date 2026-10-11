@@ -249,7 +249,7 @@ class StudioActivity : AppCompatActivity() {
             summary.addView(TextView(this).apply { text = value; textSize = size; setTextColor(color); setPadding(0,dp(3),0,dp(3)); if (bold) setTypeface(null,Typeface.BOLD) })
         }
         if (p == null) {
-            summaryText("🎬 พร้อมสร้างเรื่องใหม่ • ครบทุก EP",14f,ice,true)
+            summaryText(if (File(project,"command_sent").exists()) "ส่งไป ChatGPT แล้ว • รอรับบทและภาพในขั้นตอน 2" else "🎬 พร้อมสร้างเรื่องใหม่ • ครบทุก EP",14f,ice,true)
         } else {
             val scenes = rows(p); val count = scenes.count { image(it).exists() }
             summaryText(p.getString("title"),20f,ice,true)

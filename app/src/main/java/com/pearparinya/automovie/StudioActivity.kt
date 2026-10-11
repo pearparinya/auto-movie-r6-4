@@ -302,9 +302,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.26", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.27", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 026 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 027 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -498,28 +498,33 @@ class StudioActivity : AppCompatActivity() {
     }
     private fun shareText(text: String, lockCreation: Boolean = false, useNewMasters: Boolean = plan?.optString("character_mode") == "new", includeMasters: Boolean = true, selectedMasterKeys: List<String>? = null) {
         val uris = arrayListOf<Uri>()
+        val transferId = UUID.randomUUID().toString()
         val sources = if (!includeMasters) emptyList<File>() else if (useNewMasters) File(project, "masters").listFiles()?.toList() ?: emptyList()
             else (selectedMasterKeys ?: listOf("gawin", "rinlada", "mind")).map { File(filesDir, "character_masters/$it.master") }
         for (source in sources) {
             val name = if (useNewMasters) source.nameWithoutExtension else source.nameWithoutExtension + "_MASTER"
             if (source.exists()) {
-                val out = File(cacheDir,"character_master_exports/${name.uppercase()}.png")
+                val out = File(cacheDir,"character_master_exports/$transferId/${name.uppercase()}.png")
                 out.parentFile!!.mkdirs(); source.copyTo(out, overwrite = true)
                 uris.add(FileProvider.getUriForFile(this,"$packageName.fileprovider",out))
             }
         }
-        val intent = Intent(if (uris.isEmpty()) Intent.ACTION_SEND else Intent.ACTION_SEND_MULTIPLE).apply {
+        val intent = Intent(if (uris.size <= 1) Intent.ACTION_SEND else Intent.ACTION_SEND_MULTIPLE).apply {
             type = if (uris.isEmpty()) "text/plain" else "image/*"
             putExtra(Intent.EXTRA_TEXT,text)
             if (uris.isNotEmpty()) {
-                putParcelableArrayListExtra(Intent.EXTRA_STREAM,uris)
+                if (uris.size == 1) putExtra(Intent.EXTRA_STREAM,uris[0])
+                else putParcelableArrayListExtra(Intent.EXTRA_STREAM,uris)
                 clipData = ClipData.newUri(contentResolver,"MASTER",uris[0]).apply { uris.drop(1).forEach { addItem(ClipData.Item(it)) } }
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
         }
         val packages = listOf("com.openai.chatgpt", "com.openai.chatgpt.beta")
         for (target in packages) {
-            val direct = Intent(intent).setPackage(target)
+            val direct = Intent(intent).setPackage(target).apply {
+                // Repeated requests should get a fresh share receiver.
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+            }
             try {
                 val launch = packageManager.getLaunchIntentForPackage(target)
                     ?: throw android.content.ActivityNotFoundException()

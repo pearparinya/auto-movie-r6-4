@@ -296,8 +296,8 @@ jobs:
 
           gh release create "$TAG" "$PUBLISH_APK" \
             --target "${{ github.sha }}" \
-            --title "DIRECTOR X 1.37 • รุ่น 037" \
-            --notes "DIRECTOR X 1.37 • รุ่น 037 — Update ภายใน Studio โดยตรง | BUILD: ${BUILD}" \
+            --title "DIRECTOR X 1.38 • รุ่น 038" \
+            --notes "DIRECTOR X 1.38 • รุ่น 038 — Update ภายใน Studio โดยตรง | BUILD: ${BUILD}" \
             --latest
 
           echo "Verifying published build release..."

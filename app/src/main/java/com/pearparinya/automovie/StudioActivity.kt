@@ -325,9 +325,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.37", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.38", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 037 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 038 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -382,14 +382,13 @@ class StudioActivity : AppCompatActivity() {
             } else zipPicker.launch(StoryFiles.zipName(title))
         }
         if (p != null) button("🎨 สร้าง / ปรับปกจากภาพฉาก",false) { sendCoverCommands() }
-        if (sent) button("✨ เริ่มเรื่องใหม่",false) {
+        splitActions("🔄 อัปเดต DIRECTOR X", "✨ เริ่มเรื่องใหม่", { updater.check() }, {
             AlertDialog.Builder(this).setTitle("เริ่มเรื่องใหม่?").setMessage("เรื่องปัจจุบันเก็บไว้ในรายการเรื่องที่บันทึก สามารถกลับมาทำต่อได้")
                 .setPositiveButton("เริ่มเรื่องใหม่") { _,_ -> prefs.edit().putString("project", UUID.randomUUID().toString()).apply(); render() }.setNegativeButton("ทำเรื่องเดิมต่อ",null).showDirector()
-        }
-        button("🔄 Update DIRECTOR X",false) { updater.check() }
+        }, colors = listOf(menuColors[3], menuColors[4]))
         splitActions("🎭 ตัวละคร • ตัวเลือก", "🖼️ ทดลองสร้างรูป", { toolsMenu() }, { testImageMenu() })
     }
-    private fun splitActions(left: String, right: String, leftAction: () -> Unit, rightAction: () -> Unit) {
+    private fun splitActions(left: String, right: String, leftAction: () -> Unit, rightAction: () -> Unit, colors: List<IntArray> = listOf(menuColors[1], menuColors[2])) {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(-1,-2).apply { topMargin = dp(3); bottomMargin = dp(3) }
@@ -401,7 +400,7 @@ class StudioActivity : AppCompatActivity() {
                 minWidth = 0; minimumWidth = 0; minHeight = dp(48); minimumHeight = dp(48)
                 setPadding(dp(4),dp(5),dp(4),dp(5))
                 backgroundTintList = null
-                background = backdrop(menuColors[index + 1][0],menuColors[index + 1][1],Color.argb(150,255,255,255))
+                background = backdrop(colors[index][0],colors[index][1],Color.argb(150,255,255,255))
                 layoutParams = LinearLayout.LayoutParams(0,-2,1f).apply { if (index == 0) marginEnd = dp(3) else marginStart = dp(3) }
                 setOnClickListener { if (!importing) item.second() }
             })

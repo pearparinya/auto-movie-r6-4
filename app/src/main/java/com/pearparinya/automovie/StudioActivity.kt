@@ -357,7 +357,7 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.49", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X ${packageManager.getPackageInfo(packageName, 0).versionName}", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
         brandLine("พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)

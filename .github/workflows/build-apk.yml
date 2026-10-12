@@ -298,15 +298,15 @@ jobs:
 
           gh release create "$TAG" "$PUBLISH_APK" \
             --target "${{ github.sha }}" \
-            --title "DIRECTOR X 1.49" \
-            --notes "DIRECTOR X 1.49 — อัปเดตภายในแอปได้โดยตรง" \
+            --title "DIRECTOR X ${VERSION}" \
+            --notes "DIRECTOR X ${VERSION} — อัปเดตภายในแอปได้โดยตรง" \
             --latest
 
           echo "Verifying published build release..."
           ACTUAL_BODY="$(gh api "/repos/${{ github.repository }}/releases/tags/$TAG" --jq '.body')"
           ACTUAL_ASSET="$(gh api "/repos/${{ github.repository }}/releases/tags/$TAG" --jq '.assets[] | select(.name == "'"$ASSET_NAME"'") | .name' | head -n 1)"
 
-          echo "$ACTUAL_BODY" | grep -q "DIRECTOR X 1.49" || {
+          echo "$ACTUAL_BODY" | grep -q "DIRECTOR X ${VERSION}" || {
             echo "Release verification failed: BUILD metadata is not current."
             exit 1
           }

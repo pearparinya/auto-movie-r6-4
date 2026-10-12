@@ -325,9 +325,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.41", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.42", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 041 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 042 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -539,7 +539,11 @@ class StudioActivity : AppCompatActivity() {
         for (source in sources) {
             val name = if (useNewMasters) source.nameWithoutExtension else source.nameWithoutExtension + "_MASTER"
             if (source.exists()) {
-                val out = File(cacheDir,"character_master_exports/$transferId/${name.uppercase()}.png")
+                val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                android.graphics.BitmapFactory.decodeFile(source.path, bounds)
+                if (bounds.outWidth <= 0) { notice("อ่านภาพ MASTER $name ไม่ได้ กรุณาเลือกภาพตัวละครใหม่"); return }
+                val extension = when (bounds.outMimeType) { "image/jpeg" -> "jpg"; "image/webp" -> "webp"; else -> "png" }
+                val out = File(cacheDir,"character_master_exports/$transferId/${name.uppercase()}.$extension")
                 out.parentFile!!.mkdirs(); source.copyTo(out, overwrite = true)
                 uris.add(FileProvider.getUriForFile(this,"$packageName.fileprovider",out))
             }
@@ -567,18 +571,15 @@ class StudioActivity : AppCompatActivity() {
         val packages = listOf("com.openai.chatgpt", "com.openai.chatgpt.beta")
         for (target in packages) {
             val direct = Intent(intent).setPackage(target).apply {
-                // Repeated requests should get a fresh share receiver.
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             try {
-                val launch = packageManager.getLaunchIntentForPackage(target)
-                    ?: throw android.content.ActivityNotFoundException()
-                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-                // Open ChatGPT's own task before its share receiver.
-                startActivities(arrayOf(launch, direct))
+                // Deliver the share payload directly. A separate launcher intent can replace the share draft.
+                uris.forEach { grantUriPermission(target, it, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+                (getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager)
+                    .setPrimaryClip(ClipData.newPlainText("คำสั่ง DIRECTOR X", text))
+                startActivity(direct)
                 if (lockCreation) { File(project,"command_sent").writeText("sent"); render() }
-                // Keep DIRECTOR X behind ChatGPT's own task, including its share UI.
-                moveTaskToBack(true)
                 return
             } catch (_: android.content.ActivityNotFoundException) {
                 // Try the other supported ChatGPT package.

@@ -39,7 +39,7 @@ class StudioUpdater(private val activity: AppCompatActivity) {
         val dialog = if (automatic) null else AlertDialog.Builder(activity).setIcon(R.drawable.studio_update).setTitle("DIRECTOR X").setMessage("กำลังตรวจสอบรุ่นใหม่…").setCancelable(false).showDirector()
         Thread {
             try {
-                val connection = connect("https://api.github.com/repos/pearparinya/auto-movie-r6-4/releases/latest?cb=${System.currentTimeMillis()}")
+                val connection = connect("https://api.github.com/repos/pearparinya/director-x/releases/latest?cb=${System.currentTimeMillis()}")
                 val release = try { JSONObject(connection.inputStream.bufferedReader().use { it.readText() }) } finally { connection.disconnect() }
                 val build = Regex("BUILD\\s*[:#]?\\s*(\\d+)",RegexOption.IGNORE_CASE).find(release.optString("body"))?.groupValues?.get(1)?.toLongOrNull()
                     ?: Regex("-B(\\d+)").find(release.getString("tag_name"))?.groupValues?.get(1)?.toLongOrNull()
@@ -48,7 +48,8 @@ class StudioUpdater(private val activity: AppCompatActivity) {
                 val assets = release.getJSONArray("assets")
                 val asset = (0 until assets.length()).map { assets.getJSONObject(it) }.firstOrNull { it.getString("name").endsWith(".apk",true) } ?: error("ไม่พบ APK รุ่นใหม่")
                 val url = asset.getString("browser_download_url")
-                require(url.startsWith("https://github.com/pearparinya/auto-movie-r6-4/releases/download/")) { "แหล่งดาวน์โหลดไม่ถูกต้อง" }
+                require(url.startsWith("https://github.com/pearparinya/director-x/releases/download/") ||
+                    url.startsWith("https://github.com/pearparinya/auto-movie-r6-4/releases/download/")) { "แหล่งดาวน์โหลดไม่ถูกต้อง" }
                 activity.runOnUiThread {
                     busy = false; dialog?.dismiss()
                     if (activity.isFinishing || activity.isDestroyed) return@runOnUiThread

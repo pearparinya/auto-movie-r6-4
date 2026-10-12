@@ -123,7 +123,7 @@ class StudioActivity : AppCompatActivity() {
         masterSlot = null
     }
     private fun characterMasters() {
-        val names = listOf("gawin" to "กวิน", "rinlada" to "รินลดา", "mind" to "มายด์")
+        val names = listOf("gawin" to "กวิน", "rinlada" to "รินรดา", "mind" to "เมย์")
         choiceMenu("🎭 ภาพต้นฉบับตัวละคร", names.map { (key, name) ->
                 "${if (key == "gawin") "👨" else "👩"} $name • " + if (File(filesDir, "character_masters/$key.master").exists()) "มีภาพแล้ว · แตะเพื่อเปลี่ยน" else "เพิ่มภาพ"
             }) { index ->
@@ -225,20 +225,22 @@ class StudioActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val masterError = runCatching { installRinladaMaster() }.exceptionOrNull()
         render()
-        if (masterError != null) notice("ติดตั้ง MASTER รินลดาไม่สำเร็จ กรุณาเปิดแอปอีกครั้ง")
+        if (masterError != null) notice("ติดตั้ง MASTER ตัวละครไม่สำเร็จ กรุณาเปิดแอปอีกครั้ง")
     }
     private fun installRinladaMaster() {
-        val revision = "rinlada_master_20261012_1732"
-        val target = File(filesDir, "character_masters/rinlada.master")
-        if (prefs.getBoolean(revision, false) && target.exists()) return
-        target.parentFile!!.mkdirs()
-        val temp = File(target.parentFile, "rinlada.master.pending")
-        assets.open("character_masters/RINLADA_MASTER.png").use { input -> temp.outputStream().use { input.copyTo(it) } }
-        require(masterExportName(temp, false) != null) { "อ่าน MASTER ไม่ได้" }
-        if (target.exists()) target.copyTo(File(target.parentFile, "rinlada.previous"), overwrite = true)
-        temp.copyTo(target, overwrite = true)
-        temp.delete()
-        prefs.edit().putBoolean(revision, true).apply()
+        for ((key, asset) in listOf("rinlada" to "RINLADA_MASTER.png", "mind" to "MIND_MASTER.png")) {
+            val revision = "${key}_master_20261012_1826"
+            val target = File(filesDir, "character_masters/$key.master")
+            if (prefs.getBoolean(revision, false) && target.exists()) continue
+            target.parentFile!!.mkdirs()
+            val temp = File(target.parentFile, "$key.master.pending")
+            assets.open("character_masters/$asset").use { input -> temp.outputStream().use { input.copyTo(it) } }
+            require(masterExportName(temp, false) != null) { "อ่าน MASTER ไม่ได้" }
+            if (target.exists()) target.copyTo(File(target.parentFile, "$key.previous"), overwrite = true)
+            temp.copyTo(target, overwrite = true)
+            temp.delete()
+            prefs.edit().putBoolean(revision, true).apply()
+        }
     }
     override fun onResume() {
         super.onResume()
@@ -441,7 +443,7 @@ class StudioActivity : AppCompatActivity() {
     }
     private fun testImageMenu() {
         choiceMenu("🖼️ ทดลองสร้างรูป 1 ภาพ", listOf("🎭 ตัวละครเดิม • เลือกคนที่ต้องการ", "✨ ตัวละครสมมุติ • สร้างคนใหม่")) { choice ->
-            if (choice == 0) choiceMenu("🎭 เลือกตัวละครในภาพ", listOf("👨 กวิน • คนเดียว", "👩 รินลดา • คนเดียว", "👩 มายด์ • คนเดียว", "👥 ทั้ง 3 คนในภาพเดียว")) { index ->
+            if (choice == 0) choiceMenu("🎭 เลือกตัวละครในภาพ", listOf("👨 กวิน • คนเดียว", "👩 รินรดา • คนเดียว", "👩 เมย์ • คนเดียว", "👥 ทั้ง 3 คนในภาพเดียว")) { index ->
                 val keys = listOf("gawin", "rinlada", "mind")
                 sendTestImage(if (index == 3) keys else listOf(keys[index]))
             }
@@ -449,7 +451,7 @@ class StudioActivity : AppCompatActivity() {
         }
     }
     private fun sendTestImage(selectedKeys: List<String>) {
-        val cast = listOf("gawin" to "กวิน", "rinlada" to "รินลดา", "mind" to "มายด์")
+        val cast = listOf("gawin" to "กวิน", "rinlada" to "รินรดา", "mind" to "เมย์")
         val selected = cast.filter { it.first in selectedKeys }
         require(selected.isNotEmpty())
         if (selected.any { !File(filesDir,"character_masters/${it.first}.master").exists() }) {
@@ -469,13 +471,13 @@ class StudioActivity : AppCompatActivity() {
                 notice("อ่านภาพ MASTER ของ $name ไม่ได้ กรุณาเพิ่มภาพต้นฉบับใหม่"); return
             }
             val outfit = when (name) {
-                "รินลดา" -> "เสื้อผ้าถักเนื้อละเอียดสีครีมแขนสามส่วน กระดุมหน้า คอเสื้อโค้งระดับพอดี ผ้าทึบ ทรงพอดีลำตัวและเอว กระโปรงสีเบจยาวถึงเข่า และผ้ากันเปื้อนสั้นสีเบจ"
-                "มายด์" -> "เสื้อผ้าถักเนื้อละเอียดสีชมพูอ่อนแขนสามส่วน กระดุมหน้า คอเสื้อโค้งระดับพอดี ผ้าทึบ ทรงพอดีลำตัวและเอว กระโปรงสีครีมยาวถึงเข่า และผ้ากันเปื้อนสีครีม"
+                "รินรดา" -> "เสื้อผ้าถักเนื้อละเอียดสีครีมแขนสามส่วน กระดุมหน้า คอเสื้อโค้งระดับพอดี ผ้าทึบ ทรงพอดีลำตัวและเอว กระโปรงสีเบจยาวถึงเข่า และผ้ากันเปื้อนสั้นสีเบจ"
+                "เมย์" -> "เสื้อผ้าถักเนื้อละเอียดสีชมพูอ่อนแขนสามส่วน กระดุมหน้า คอเสื้อโค้งระดับพอดี ผ้าทึบ ทรงพอดีลำตัวและเอว กระโปรงสีครีมยาวถึงเข่า และผ้ากันเปื้อนสีครีม"
                 else -> "เสื้อโปโลสีกรมท่าพอดีตัว และกางเกงขายาวสีเบจ"
             }
             val action = when (name) {
-                "รินลดา" -> "รินลดากำลังหั่นมะเขือเทศบนเขียงไม้"
-                "มายด์" -> "มายด์กำลังผัดผักในกระทะ"
+                "รินรดา" -> "รินรดากำลังหั่นมะเขือเทศบนเขียงไม้"
+                "เมย์" -> "เมย์กำลังผัดผักในกระทะ"
                 else -> "กวินกำลังจัดผักลงในชาม"
             }
             characters.put(JSONObject().put("name", name).put("master", masterName).put("outfit", outfit))
@@ -785,7 +787,7 @@ class StudioActivity : AppCompatActivity() {
                 adjustViewBounds = true
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 layoutParams = LinearLayout.LayoutParams(-1, -2)
-                contentDescription = if (mainChannel) "กวิน รินลดา และมายด์ ภาพครึ่งตัวในฉากเดียวกัน"
+                contentDescription = if (mainChannel) "กวิน รินรดา และเมย์ ภาพครึ่งตัวในฉากเดียวกัน"
                     else "ภาพแนวสยองขวัญ ตลก และโรแมนติก"
             })
             card.addView(TextView(this).apply {
@@ -833,8 +835,8 @@ class StudioActivity : AppCompatActivity() {
 วางบทครบทุก EP ก่อนสร้างภาพ เก็บข้อมูลสรุปเดียวกันใน story.json และตรวจตัวเลขให้ตรงกับจำนวนสมาชิก episodes และ scenes จริง ห้ามส่ง JSON ตัวอย่างที่มีแค่ฉากเดียวแทนบทเต็ม
 ตั้งชื่อเรื่องเป็นภาษาไทยเท่านั้น ใส่ชื่อภาษาไทยในค่า title ของ story.json และตั้งชื่อไฟล์ ZIP เป็นชื่อเรื่องภาษาไทย.zip ห้ามใช้ชื่อหมวดภาษาอังกฤษเป็นชื่อเรื่องหรือชื่อ ZIP
 สร้างชื่อเรื่องและพล็อตให้ตรงหมวดนี้ ใช้ค่า category ใน story.json เป็น "$category" ตรงทุกตัวอักษร
-ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ${if (mode == "original") "ตัวละครหลัก กวิน รินลดา มายด์ อ้างอิง MASTER ของแต่ละคนเพื่อคงใบหน้า ผม รูปร่าง และสัดส่วนร่างกายตาม MASTER รายคน" else "สร้างชื่อและใบหน้าตัวละครใหม่สำหรับเรื่องนี้ ใช้ภาพที่แนบอ้างอิงเฉพาะรูปร่างและสัดส่วนของตัวละครผู้ใหญ่ ไม่ใช้ชื่อหรือใบหน้าเดิม สร้างภาพ MASTER ใหม่ก่อนสร้างฉาก ตั้งชื่อ CHARACTER_01.png, CHARACTER_02.png ตามจำนวนที่ต้องใช้ แล้วใช้ใบหน้าใหม่เดิมอย่างต่อเนื่องทุกฉาก เก็บรายละเอียดตัวละครและชื่อไฟล์ MASTER ใน bible"}\n${storyVisualGuide(mode)}\nใช้วิธีเดียวกับการทดสอบสร้างภาพ: MASTER รายคนเป็นต้นฉบับของตัวละคร ชุด สถานที่และการกระทำเป็นข้อมูลใหม่ตามบท เขียน image_prompt พร้อมใช้ของแต่ละฉากอย่างกระชับ: ตัวละครและ MASTER รายคน → ชุดรายคน → สถานที่และสิ่งของ → การกระทำ → สีหน้าและสายตา ระบุชนิด สี และทรงชุดพอดีตัวให้เหมาะกับบทบาท รวมทั้งสถานที่จริงในแต่ละฉากเพื่อสร้างซ้ำได้ ชุดเปลี่ยนตามวันหรือเหตุการณ์ และคงเดิมในเหตุการณ์ต่อเนื่อง ใช้คำอธิบายเชิงบวกสั้น ๆ โดยไม่เพิ่มรายการข้อห้ามยาวซ้ำทุกฉาก เหตุการณ์ทุกฉากมาจากบทของเรื่องนี้ จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน
-แผนความต่อเนื่องของตัวละคร: เก็บชื่อ → ไฟล์ MASTER ตายตัวใน bible: กวิน → GAWIN_MASTER, รินลดา → RINLADA_MASTER, มายด์ → MIND_MASTER ใช้นามสกุล .png/.jpg/.webp ตามไฟล์ภาพที่แนบ โดยชื่อฐานจับคู่ตรงคน สำหรับช่องตัวละครใหม่ใช้ชื่อใหม่ → CHARACTER_01.png ตามที่สร้าง แต่ละฉากมี characters เฉพาะคนที่ปรากฏ พร้อม name, master, outfit ระบุ location และ continuity_group เหตุการณ์เดียวกันใช้รหัสกลุ่มเดียวกัน ชุดและรายละเอียดสถานที่เหมือนเดิม เมื่อเปลี่ยนวันหรือเหตุการณ์จึงเปลี่ยนกลุ่ม
+ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ${if (mode == "original") "ตัวละครหลัก กวิน รินรดา เมย์ อ้างอิง MASTER ของแต่ละคนเพื่อคงใบหน้า ผม รูปร่าง และสัดส่วนร่างกายตาม MASTER รายคน" else "สร้างชื่อและใบหน้าตัวละครใหม่สำหรับเรื่องนี้ ใช้ภาพที่แนบอ้างอิงเฉพาะรูปร่างและสัดส่วนของตัวละครผู้ใหญ่ ไม่ใช้ชื่อหรือใบหน้าเดิม สร้างภาพ MASTER ใหม่ก่อนสร้างฉาก ตั้งชื่อ CHARACTER_01.png, CHARACTER_02.png ตามจำนวนที่ต้องใช้ แล้วใช้ใบหน้าใหม่เดิมอย่างต่อเนื่องทุกฉาก เก็บรายละเอียดตัวละครและชื่อไฟล์ MASTER ใน bible"}\n${storyVisualGuide(mode)}\nใช้วิธีเดียวกับการทดสอบสร้างภาพ: MASTER รายคนเป็นต้นฉบับของตัวละคร ชุด สถานที่และการกระทำเป็นข้อมูลใหม่ตามบท เขียน image_prompt พร้อมใช้ของแต่ละฉากอย่างกระชับ: ตัวละครและ MASTER รายคน → ชุดรายคน → สถานที่และสิ่งของ → การกระทำ → สีหน้าและสายตา ระบุชนิด สี และทรงชุดพอดีตัวให้เหมาะกับบทบาท รวมทั้งสถานที่จริงในแต่ละฉากเพื่อสร้างซ้ำได้ ชุดเปลี่ยนตามวันหรือเหตุการณ์ และคงเดิมในเหตุการณ์ต่อเนื่อง ใช้คำอธิบายเชิงบวกสั้น ๆ โดยไม่เพิ่มรายการข้อห้ามยาวซ้ำทุกฉาก เหตุการณ์ทุกฉากมาจากบทของเรื่องนี้ จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน
+แผนความต่อเนื่องของตัวละคร: เก็บชื่อ → ไฟล์ MASTER ตายตัวใน bible: กวิน → GAWIN_MASTER, รินรดา → RINLADA_MASTER, เมย์ → MIND_MASTER ใช้นามสกุล .png/.jpg/.webp ตามไฟล์ภาพที่แนบ โดยชื่อฐานจับคู่ตรงคน สำหรับช่องตัวละครใหม่ใช้ชื่อใหม่ → CHARACTER_01.png ตามที่สร้าง แต่ละฉากมี characters เฉพาะคนที่ปรากฏ พร้อม name, master, outfit ระบุ location และ continuity_group เหตุการณ์เดียวกันใช้รหัสกลุ่มเดียวกัน ชุดและรายละเอียดสถานที่เหมือนเดิม เมื่อเปลี่ยนวันหรือเหตุการณ์จึงเปลี่ยนกลุ่ม
 ก่อนใช้เครื่องมือสร้างภาพแต่ละฉาก อ้างอิง MASTER ต้นฉบับตรงรายคนอีกครั้ง ใช้ภาพฉากก่อนหน้าในกลุ่มเดียวกันเป็นตัวช่วยเรื่องชุด สถานที่ และสิ่งของ โดยตัวตนยึด MASTER เป็นหลัก ตรวจชื่อและชุดของแต่ละคนก่อนส่งสร้าง ไม่ใช้ภาพที่คลาดเคลื่อนแทน MASTER หากขาดต้นฉบับให้แจ้งก่อนสร้าง
 ส่งไฟล์ story.json เป็น JSON ไม่มี markdown โครงสร้าง:
 {"schema_version":3,"channel":${JSONObject.quote(channel)},"character_mode":"$mode","title":"ชื่อเรื่อง","category":${JSONObject.quote(category)},"tagline":"คำโปรยเรื่อง","episode_count":1,"scene_count":1,"bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"title":"ชื่อตอนภาษาไทย","tagline":"คำโปรยตอน","scene_count":1,"scenes":[{"scene":1,"characters":[{"name":"ชื่อตัวละครที่อยู่ในฉาก","master":"ชื่อไฟล์ MASTER ตรงรายคน","outfit":"ชนิด สี และรายละเอียดชุด"}],"location":"สถานที่และสิ่งของหลัก","continuity_group":"DAY01_LOCATION01_EVENT01","action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","image_prompt":"ตัวละครและ MASTER ตรงรายคน คงใบหน้า ผม รูปร่างตามต้นฉบับ; ชุดใหม่รายคนระบุชนิดสีและทรง; สถานที่และสิ่งของ; การกระทำ สีหน้าและสายตาตามบท; ภาพละครไทยสมจริง 9:16 เห็นการกระทำครบ ไม่มีข้อความ","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}

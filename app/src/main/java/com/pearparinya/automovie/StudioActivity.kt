@@ -264,6 +264,19 @@ class StudioActivity : AppCompatActivity() {
             for (j in 0 until scenes.length()) {
                 val s = scenes.getJSONObject(j)
                 require(s.getInt("scene") == j + 1) { "ฉากต้องเรียงจาก 1 ภายในแต่ละ EP" }
+                if (p.optInt("schema_version", 1) >= 3) {
+                    require(s.optString("location").isNotBlank() && s.optString("continuity_group").isNotBlank()) { "ฉากขาดสถานที่หรือรหัสเหตุการณ์ต่อเนื่อง" }
+                    val cast = s.getJSONArray("characters")
+                    require(cast.length() > 0) { "ฉากขาดรายการตัวละคร" }
+                    val names = mutableSetOf<String>()
+                    for (c in 0 until cast.length()) {
+                        val person = cast.getJSONObject(c)
+                        require(person.optString("name").isNotBlank() && names.add(person.getString("name"))) { "ชื่อหรือรายการตัวละครไม่ถูกต้อง" }
+                        require(person.optString("outfit").isNotBlank()) { "ฉากขาดชุดของ ${person.optString("name")}" }
+                        val master = person.optString("master")
+                        require(if (mode == "original") StoryIdentity.masterFor(person.getString("name")) == master else Regex("^CHARACTER_[0-9]+[.]png$").matches(master)) { "MASTER ไม่ตรงกับตัวละคร ${person.optString("name")}" }
+                    }
+                }
                 for (field in listOf("action", "image_prompt", "flow_prompt")) require(s.getString(field).isNotBlank()) { "ฉากขาด $field" }
             }
         }
@@ -325,9 +338,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.44", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.45", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 044 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 045 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -536,6 +549,10 @@ class StudioActivity : AppCompatActivity() {
         val transferId = UUID.randomUUID().toString()
         val sources = if (!includeMasters) emptyList<File>() else if (useNewMasters) File(project, "masters").listFiles()?.toList() ?: emptyList()
             else (selectedMasterKeys ?: listOf("gawin", "rinlada", "mind")).map { File(filesDir, "character_masters/$it.master") }
+        if (includeMasters && (sources.isEmpty() || sources.any { !it.exists() })) {
+            notice("ภาพ MASTER ยังไม่ครบสำหรับคำสั่งนี้ กรุณาเพิ่มต้นฉบับตัวละครก่อนส่ง เพื่อไม่สร้างตัวละครผิดคน")
+            return
+        }
         for (source in sources) {
             val name = if (useNewMasters) source.nameWithoutExtension else source.nameWithoutExtension + "_MASTER"
             if (source.exists()) {
@@ -619,12 +636,33 @@ class StudioActivity : AppCompatActivity() {
         else "ใช้ภาพ MASTER ที่แนบตรงรายคน คงใบหน้า ผม รูปร่าง และสัดส่วนร่างกายตามต้นฉบับ"
         return "$master เปลี่ยนเป็นชุดใหม่ตามบทให้เหมาะกับบทบาท เลือกทรงเสื้อผ้าพอดีตัวตามรูปร่างเดิม ระบุชุด สถานที่ สิ่งของ และการกระทำของแต่ละคนให้ชัดเจน ภาพละครไทยสมจริง แนวตั้ง 9:16 เห็นใบหน้าและรูปร่างตั้งแต่ศีรษะถึงต้นขา ปรับระยะให้เห็นการกระทำครบ สีหน้าและสายตาตามเหตุการณ์ รักษาชุดและสถานที่เดิมเมื่อเป็นเหตุการณ์ต่อเนื่อง ภาพไม่มีข้อความหรือตราสัญลักษณ์ สร้างด้วยเครื่องมือสร้างภาพและแสดงภาพจริงในแชต หากสร้างไม่ได้ให้แจ้งตามจริง"
     }
+    private fun sceneCastDescription(scene: JSONObject): String {
+        val cast = scene.optJSONArray("characters") ?: return ""
+        return (0 until cast.length()).joinToString("\n") { i ->
+            val person = cast.getJSONObject(i)
+            "${person.optString("name")} → ${person.optString("master")} | ชุด: ${person.optString("outfit")}" }
+    }
     private fun storySceneCommand(p: JSONObject, scene: JSONObject): String {
         val scenes = rows(p)
         val index = scenes.indexOfFirst { key(it) == key(scene) }
         val previous = scenes.getOrNull(index - 1)?.optString("action").orEmpty()
-        val next = scenes.getOrNull(index + 1)?.optString("action").orEmpty()
-        return "สร้างภาพหนึ่งภาพฉาก ${key(scene)} เรื่อง ${p.getString("title")}\n${storyVisualGuide(p.optString("character_mode","original"))}\nคำสั่งภาพตามบท: ${scene.getString("image_prompt")}\nเหตุการณ์ฉากนี้: ${scene.getString("action")}\nบทพูดและอารมณ์: ${scene.optString("dialogue")}\nเหตุการณ์ก่อนหน้า: $previous\nจุดส่งต่อฉากถัดไป: $next\nสร้างเฉพาะเหตุการณ์ฉากนี้ หนึ่งฉากหนึ่งภาพ ตั้งชื่อ ${key(scene)}.png"
+        val details = sceneCastDescription(scene)
+        return "สร้างภาพหนึ่งภาพฉาก ${key(scene)} เรื่อง ${p.getString("title")}\n${storyVisualGuide(p.optString("character_mode","original"))}\n$details\nสถานที่: ${scene.optString("location")}\nเหตุการณ์ต่อเนื่อง: ${scene.optString("continuity_group")}\nรายละเอียดฉาก: ${scene.getString("image_prompt")}\nการกระทำ: ${scene.getString("action")}\nบทพูดและอารมณ์: ${scene.optString("dialogue")}\nเหตุการณ์ก่อนหน้า: $previous\nภาพฉากก่อนหน้าที่แนบใช้เฉพาะความต่อเนื่องของชุด สถานที่ และสิ่งของ ตัวตนแต่ละคนยึด MASTER ต้นฉบับเป็นหลัก สร้างเฉพาะตัวละครในรายการฉากนี้ ตั้งชื่อ ${key(scene)}.png"
+    }
+    private fun sendSceneImage(p: JSONObject, scene: JSONObject) {
+        val cast = scene.optJSONArray("characters")
+        val keys = if (cast != null) (0 until cast.length()).mapNotNull { StoryIdentity.keyFor(cast.getJSONObject(it).optString("name")) }
+            else StoryIdentity.keysFromPrompt(scene.optString("image_prompt"))
+        val original = p.optString("character_mode", "original") == "original"
+        if (original && keys.isEmpty()) { notice("ฉากนี้ยังจับคู่ MASTER ไม่ได้ กรุณาอัปเดตบทให้มีชื่อตัวละครใน image_prompt หรือ characters"); return }
+        val scenes = rows(p)
+        val index = scenes.indexOfFirst { key(it) == key(scene) }
+        val group = scene.optString("continuity_group")
+        val previous = if (group.isBlank()) null else scenes.take(index).lastOrNull {
+            it.optString("continuity_group") == group && image(it).exists()
+        }
+        val references = previous?.let { listOf(key(it) to image(it)) } ?: emptyList()
+        shareText(storySceneCommand(p,scene), selectedMasterKeys = if (original) keys else null, referenceImages = references)
     }
     private fun wholeStoryCommands() {
         val p = plan ?: return notice("นำเข้าแผนเรื่องก่อนครับ")
@@ -757,8 +795,10 @@ class StudioActivity : AppCompatActivity() {
 ตั้งชื่อเรื่องเป็นภาษาไทยเท่านั้น ใส่ชื่อภาษาไทยในค่า title ของ story.json และตั้งชื่อไฟล์ ZIP เป็นชื่อเรื่องภาษาไทย.zip ห้ามใช้ชื่อหมวดภาษาอังกฤษเป็นชื่อเรื่องหรือชื่อ ZIP
 สร้างชื่อเรื่องและพล็อตให้ตรงหมวดนี้ ใช้ค่า category ใน story.json เป็น "$category" ตรงทุกตัวอักษร
 ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ${if (mode == "original") "ตัวละครหลัก กวิน รินลดา มายด์ อ้างอิง MASTER ของแต่ละคนเพื่อคงใบหน้า ผม รูปร่าง และสัดส่วนร่างกายตาม MASTER รายคน" else "สร้างชื่อและใบหน้าตัวละครใหม่สำหรับเรื่องนี้ ใช้ภาพที่แนบอ้างอิงเฉพาะรูปร่างและสัดส่วนของตัวละครผู้ใหญ่ ไม่ใช้ชื่อหรือใบหน้าเดิม สร้างภาพ MASTER ใหม่ก่อนสร้างฉาก ตั้งชื่อ CHARACTER_01.png, CHARACTER_02.png ตามจำนวนที่ต้องใช้ แล้วใช้ใบหน้าใหม่เดิมอย่างต่อเนื่องทุกฉาก เก็บรายละเอียดตัวละครและชื่อไฟล์ MASTER ใน bible"}\n${storyVisualGuide(mode)}\nใช้วิธีเดียวกับการทดสอบสร้างภาพ: MASTER รายคนเป็นต้นฉบับของตัวละคร ชุด สถานที่และการกระทำเป็นข้อมูลใหม่ตามบท เขียน image_prompt พร้อมใช้ของแต่ละฉากอย่างกระชับ: ตัวละครและ MASTER รายคน → ชุดรายคน → สถานที่และสิ่งของ → การกระทำ → สีหน้าและสายตา ระบุชนิด สี และทรงชุดพอดีตัวให้เหมาะกับบทบาท รวมทั้งสถานที่จริงในแต่ละฉากเพื่อสร้างซ้ำได้ ชุดเปลี่ยนตามวันหรือเหตุการณ์ และคงเดิมในเหตุการณ์ต่อเนื่อง ใช้คำอธิบายเชิงบวกสั้น ๆ โดยไม่เพิ่มรายการข้อห้ามยาวซ้ำทุกฉาก เหตุการณ์ทุกฉากมาจากบทของเรื่องนี้ จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน
+แผนความต่อเนื่องของตัวละคร: เก็บชื่อ → ไฟล์ MASTER ตายตัวใน bible: กวิน → GAWIN_MASTER.png, รินลดา → RINLADA_MASTER.png, มายด์ → MIND_MASTER.png สำหรับช่องตัวละครใหม่ใช้ชื่อใหม่ → CHARACTER_01.png ตามที่สร้าง แต่ละฉากมี characters เฉพาะคนที่ปรากฏ พร้อม name, master, outfit ระบุ location และ continuity_group เหตุการณ์เดียวกันใช้รหัสกลุ่มเดียวกัน ชุดและรายละเอียดสถานที่เหมือนเดิม เมื่อเปลี่ยนวันหรือเหตุการณ์จึงเปลี่ยนกลุ่ม
+ก่อนใช้เครื่องมือสร้างภาพแต่ละฉาก อ้างอิง MASTER ต้นฉบับตรงรายคนอีกครั้ง ใช้ภาพฉากก่อนหน้าในกลุ่มเดียวกันเป็นตัวช่วยเรื่องชุด สถานที่ และสิ่งของ โดยตัวตนยึด MASTER เป็นหลัก ตรวจชื่อและชุดของแต่ละคนก่อนส่งสร้าง ไม่ใช้ภาพที่คลาดเคลื่อนแทน MASTER หากขาดต้นฉบับให้แจ้งก่อนสร้าง
 ส่งไฟล์ story.json เป็น JSON ไม่มี markdown โครงสร้าง:
-{"schema_version":2,"channel":${JSONObject.quote(channel)},"character_mode":"$mode","title":"ชื่อเรื่อง","category":${JSONObject.quote(category)},"tagline":"คำโปรยเรื่อง","episode_count":1,"scene_count":1,"bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"title":"ชื่อตอนภาษาไทย","tagline":"คำโปรยตอน","scene_count":1,"scenes":[{"scene":1,"action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","image_prompt":"ตัวละครและ MASTER ตรงรายคน คงใบหน้า ผม รูปร่างตามต้นฉบับ; ชุดใหม่รายคนระบุชนิดสีและทรง; สถานที่และสิ่งของ; การกระทำ สีหน้าและสายตาตามบท; ภาพละครไทยสมจริง 9:16 เห็นการกระทำครบ ไม่มีข้อความ","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}
+{"schema_version":3,"channel":${JSONObject.quote(channel)},"character_mode":"$mode","title":"ชื่อเรื่อง","category":${JSONObject.quote(category)},"tagline":"คำโปรยเรื่อง","episode_count":1,"scene_count":1,"bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"title":"ชื่อตอนภาษาไทย","tagline":"คำโปรยตอน","scene_count":1,"scenes":[{"scene":1,"characters":[{"name":"ชื่อตัวละครที่อยู่ในฉาก","master":"ชื่อไฟล์ MASTER ตรงรายคน","outfit":"ชนิด สี และรายละเอียดชุด"}],"location":"สถานที่และสิ่งของหลัก","continuity_group":"DAY01_LOCATION01_EVENT01","action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","image_prompt":"ตัวละครและ MASTER ตรงรายคน คงใบหน้า ผม รูปร่างตามต้นฉบับ; ชุดใหม่รายคนระบุชนิดสีและทรง; สถานที่และสิ่งของ; การกระทำ สีหน้าและสายตาตามบท; ภาพละครไทยสมจริง 9:16 เห็นการกระทำครบ ไม่มีข้อความ","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}
 การส่งชุดงานสุดท้าย: รวม story.json ภาพฉาก และปกใน ZIP ชื่อเรื่องภาษาไทย ใช้ MASTER เป็นภาพอ้างอิงระหว่างสร้าง แต่ไม่ใส่ไฟล์ภาพ MASTER หรือโฟลเดอร์ MASTER/characters ลงใน ZIP ที่ส่งกลับ คำสั่ง Flow รวมหนึ่งไฟล์ต่อ EP: Flow/EP01_FLOW.txt, Flow/EP02_FLOW.txt ตามจำนวนตอนจริง แต่ละไฟล์มีชื่อตอนและทุกซีนเรียงเลข แต่ละซีนแสดงเลขฉาก เหตุการณ์ บทพูด และคำสั่ง Flow แยกเป็นบล็อกสำหรับคัดลอกทีละซีน ไม่แยกเป็นไฟล์ Flow รายซีน คำสั่ง flow_prompt ใน story.json ยังต้องครบทุกซีนตามเดิม
 ตัวเลข 1 ในตัวอย่างเป็นเพียงรูปแบบ ต้องแทนด้วยจำนวนจริงของบทเต็ม เพิ่ม EP และฉากเท่าที่เรื่องต้องใช้ เรียงเลขจาก 1 ไม่กำหนดจำนวนตายตัว หลังวางบททั้งเรื่อง ส่งไฟล์ story.json แล้วใช้เครื่องมือสร้างภาพและแสดงภาพจริงในแชตแยกหนึ่งฉากหนึ่งไฟล์ตามลำดับครบทุก EP จนจบ ตั้งชื่อ EP01_SC001.png ตามเลข EP และฉาก ไม่ทำภาพรวมหลายฉาก ${if (mode == "original") "ใช้ MASTER ที่แนบให้ตรงรายคน" else "ใช้ CHARACTER MASTER ใหม่ที่สร้างสำหรับเรื่องนี้ตรงรายคน"} พร้อมคำสั่งสำหรับ Flow / Veo 3.1 Lite ทุกฉาก ผู้ใช้ต้องการบทและภาพพร้อมนำไปทำวิดีโอ
 หลังสร้างฉากสุดท้ายของแต่ละ EP ให้สร้างปกแยก 2 ไฟล์ทันที: EP01_COVER_9x16.png ขนาด 9:16 และ EP01_COVER_16x9.png ขนาด 16:9 เปลี่ยนเลขตาม EP จัดองค์ประกอบแต่ละสัดส่วนใหม่ ใช้ตัวละครจาก MASTER รายคน สื่อเหตุการณ์เด่นของตอนนั้น ข้อความภาษาไทย 3 บรรทัดจัดกึ่งกลางในพื้นที่กลางภาพ เว้นขอบซ้ายขวาอย่างน้อย 10% และขอบบนล่าง 20%: บรรทัด 1 ชื่อช่อง (เล็กกว่า), บรรทัด 2 ชื่อเรื่อง (ใหญ่ที่สุด), บรรทัด 3 EP 01 • ชื่อตอน (ขนาดรอง) ปรับขนาดอักษรให้ครบทั้งบรรทัด อ่านชัดบนมือถือ ไม่ทับใบหน้า ชื่อเรื่องและชื่อตอนต้องตรง story.json รวมปกทุก EP ใน ZIP ชื่อเรื่องภาษาไทยด้วย""", lockCreation = true, useNewMasters = false)
@@ -769,7 +809,7 @@ class StudioActivity : AppCompatActivity() {
         val scenes = rows(p)
         choiceMenu("🎬 เลือกฉากเพื่อส่งคำสั่งภาพ", scenes.map { "🎞️ " + key(it) }) { index ->
             val s = scenes[index]
-            shareText(storySceneCommand(p,s))
+            sendSceneImage(p,s)
         }
     }
     @Deprecated("Android legacy back callback")

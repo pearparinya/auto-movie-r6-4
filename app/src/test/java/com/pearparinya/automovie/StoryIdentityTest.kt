@@ -9,6 +9,9 @@ class StoryIdentityTest {
         assertEquals("MIND_MASTER.png", StoryIdentity.masterFor("มายด์"))
         assertEquals("gawin", StoryIdentity.keyFor("กวิน"))
         assertNull(StoryIdentity.keyFor("ตัวละครใหม่"))
+        assertTrue(StoryIdentity.matchesMaster("รินลดา", "RINLADA_MASTER.jpg"))
+        assertFalse(StoryIdentity.matchesMaster("รินลดา", "MIND_MASTER.png"))
+        assertFalse(StoryIdentity.matchesMaster("รินลดา", "folder/RINLADA_MASTER.png"))
     }
     @Test fun legacySceneSelectsOnlyMentionedActorsWithoutDuplicates() {
         assertEquals(listOf("rinlada"), StoryIdentity.keysFromPrompt("รินลดา ใช้ RINLADA_MASTER.png ทำอาหาร"))

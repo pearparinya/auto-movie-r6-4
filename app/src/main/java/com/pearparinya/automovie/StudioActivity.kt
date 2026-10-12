@@ -223,13 +223,13 @@ class StudioActivity : AppCompatActivity() {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val masterError = runCatching { installRinladaMaster() }.exceptionOrNull()
+        val masterError = runCatching { installCharacterMasters() }.exceptionOrNull()
         render()
         if (masterError != null) notice("ติดตั้ง MASTER ตัวละครไม่สำเร็จ กรุณาเปิดแอปอีกครั้ง")
     }
-    private fun installRinladaMaster() {
-        for ((key, asset) in listOf("rinlada" to "RINLADA_MASTER.png", "mind" to "MIND_MASTER.png")) {
-            val revision = "${key}_master_20261012_1826"
+    private fun installCharacterMasters() {
+        for ((key, asset) in listOf("gawin" to "GAWIN_MASTER.png", "rinlada" to "RINLADA_MASTER.png", "mind" to "MIND_MASTER.png")) {
+            val revision = if (key == "gawin") "gawin_master_20261012_1841" else "${key}_master_20261012_1826"
             val target = File(filesDir, "character_masters/$key.master")
             if (prefs.getBoolean(revision, false) && target.exists()) continue
             target.parentFile!!.mkdirs()

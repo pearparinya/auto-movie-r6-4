@@ -32,6 +32,8 @@ class StudioActivity : AppCompatActivity() {
     private val project get() = File(base, prefs.getString("project", "draft")!!).apply { mkdirs() }
     private var plan: JSONObject? = null
     private var importing = false
+    private var pendingStoryShare: (() -> Unit)? = null
+    private var pendingStorySummary = ""
     private val updater = StudioUpdater(this)
     private lateinit var root: LinearLayout
     private val navy = Color.rgb(12,15,38)
@@ -244,7 +246,15 @@ class StudioActivity : AppCompatActivity() {
     }
     override fun onResume() {
         super.onResume()
-        if (!importing) updater.checkAutomatically()
+        val retry = pendingStoryShare
+        if (retry != null) {
+            pendingStoryShare = null
+            AlertDialog.Builder(this).setTitle("ตรวจข้อมูลใน ChatGPT")
+                .setMessage("$pendingStorySummary\nเปิดหน้าส่งแชร์แล้ว แต่แอปตรวจข้อความใน ChatGPT โดยตรงไม่ได้\nข้อมูลเข้าครบทั้งคำสั่งและภาพหรือไม่? หากภาพเข้าแต่ข้อความว่าง ให้วางคำสั่งที่คัดลอกไว้")
+                .setPositiveButton("ข้อมูลเข้าครบแล้ว") { _, _ -> File(project,"command_sent").writeText("confirmed"); render() }
+                .setNeutralButton("ส่งข้อมูลอีกครั้ง") { _, _ -> retry() }
+                .setNegativeButton("ยังไม่เข้า") { _, _ -> render() }.showDirector()
+        } else if (!importing) updater.checkAutomatically()
     }
     private fun rows(p: JSONObject): List<JSONObject> {
         val result = mutableListOf<JSONObject>()
@@ -660,6 +670,31 @@ class StudioActivity : AppCompatActivity() {
         }
         (getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager)
             .setPrimaryClip(ClipData.newPlainText("คำสั่ง DIRECTOR X", text))
+        if (lockCreation) {
+            val destination = project
+            File(destination, "last_story_command.txt").writeText(text)
+            pendingStorySummary = "เตรียมคำสั่ง ${text.length} ตัวอักษร และภาพ ${uris.size} ภาพ"
+            fun sendStoryPayload() {
+                try {
+                    val chooser = Intent.createChooser(Intent(intent), "เลือก ChatGPT เพื่อรับคำสั่งและภาพ").apply {
+                        clipData = intent.clipData
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    startActivity(chooser)
+                    pendingStoryShare = { sendStoryPayload() }
+                } catch (_: android.content.ActivityNotFoundException) {
+                    notice("ไม่พบแอปรับข้อมูล คำสั่งคัดลอกและเก็บไว้แล้ว")
+                } catch (_: SecurityException) {
+                    notice("ส่งภาพไม่ได้ คำสั่งคัดลอกและเก็บไว้แล้ว กรุณาแนบ MASTER ใน ChatGPT")
+                }
+            }
+            val preview = TextView(this).apply { this.text = text; textSize = 14f; setPadding(dp(12),dp(12),dp(12),dp(12)); setTextIsSelectable(true) }
+            AlertDialog.Builder(this).setTitle("คำสั่งสร้างหนังพร้อมส่ง • ภาพ ${uris.size} ภาพ")
+                .setView(ScrollView(this).apply { addView(preview) })
+                .setPositiveButton("ส่งไป ChatGPT") { _, _ -> sendStoryPayload() }
+                .setNegativeButton("ปิด", null).showDirector()
+            return
+        }
         val chatGptPackages = listOf("com.openai.chatgpt", "com.openai.chatgpt.beta")
         for (targetPackage in chatGptPackages) {
             val scoped = Intent(intent).setPackage(targetPackage)

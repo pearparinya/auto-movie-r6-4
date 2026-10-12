@@ -325,9 +325,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.43", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.44", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 043 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 044 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -573,8 +573,31 @@ class StudioActivity : AppCompatActivity() {
         }
         (getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager)
             .setPrimaryClip(ClipData.newPlainText("คำสั่ง DIRECTOR X", text))
+        val chatGptPackages = listOf("com.openai.chatgpt", "com.openai.chatgpt.beta")
+        for (targetPackage in chatGptPackages) {
+            val scoped = Intent(intent).setPackage(targetPackage)
+            val receivers = packageManager.queryIntentActivities(scoped, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY)
+                .filter { it.activityInfo.packageName == targetPackage && it.activityInfo.exported && it.activityInfo.enabled }
+                .sortedByDescending { it.priority }
+            for (receiver in receivers) {
+                try {
+                    val direct = Intent(intent).apply {
+                        component = android.content.ComponentName(receiver.activityInfo.packageName, receiver.activityInfo.name)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    uris.forEach { grantUriPermission(targetPackage, it, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+                    startActivity(direct)
+                    if (lockCreation) { File(project,"command_sent").writeText("sent"); render() }
+                    return
+                } catch (_: android.content.ActivityNotFoundException) {
+                    // Try another receiver that advertised support for this payload.
+                } catch (_: SecurityException) {
+                    // Fall back to the system resolver if this receiver is unavailable.
+                }
+            }
+        }
         AlertDialog.Builder(this).setTitle("ส่งคำสั่งและภาพไป ChatGPT")
-            .setMessage("เตรียมภาพ ${uris.size} ภาพพร้อมคำสั่งแล้ว\nกดเปิดเมนูแชร์ แล้วเลือก ChatGPT\nหากภาพเข้าแต่ข้อความว่าง ให้กดค้างที่ช่องข้อความแล้วเลือกวาง คำสั่งคัดลอกไว้แล้ว")
+            .setMessage("ส่งตรงไม่ได้ เพราะไม่พบหน้ารับแชร์ที่ใช้งานได้ของ ChatGPT\nเตรียมภาพ ${uris.size} ภาพพร้อมคำสั่งแล้ว\nกดเปิดเมนูแชร์ แล้วเลือก ChatGPT\nหากภาพเข้าแต่ข้อความว่าง ให้กดค้างที่ช่องข้อความแล้วเลือกวาง คำสั่งคัดลอกไว้แล้ว")
             .setPositiveButton("เปิดเมนูแชร์") { _, _ ->
                 try {
                     // Let Android resolve the actual share receiver instead of forcing a package launcher.

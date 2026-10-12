@@ -325,9 +325,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.42", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.43", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 042 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 043 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -559,7 +559,10 @@ class StudioActivity : AppCompatActivity() {
             uris.add(FileProvider.getUriForFile(this,"$packageName.fileprovider",out))
         }
         val intent = Intent(if (uris.size <= 1) Intent.ACTION_SEND else Intent.ACTION_SEND_MULTIPLE).apply {
-            type = if (uris.isEmpty()) "text/plain" else "image/*"
+            type = if (uris.isEmpty()) "text/plain" else {
+                val extensions = uris.map { it.lastPathSegment?.substringAfterLast('.')?.lowercase() }.distinct()
+                when (extensions.singleOrNull()) { "jpg", "jpeg" -> "image/jpeg"; "png" -> "image/png"; "webp" -> "image/webp"; else -> "image/*" }
+            }
             putExtra(Intent.EXTRA_TEXT,text)
             if (uris.isNotEmpty()) {
                 if (uris.size == 1) putExtra(Intent.EXTRA_STREAM,uris[0])
@@ -568,25 +571,25 @@ class StudioActivity : AppCompatActivity() {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
         }
-        val packages = listOf("com.openai.chatgpt", "com.openai.chatgpt.beta")
-        for (target in packages) {
-            val direct = Intent(intent).setPackage(target).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            try {
-                // Deliver the share payload directly. A separate launcher intent can replace the share draft.
-                uris.forEach { grantUriPermission(target, it, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
-                (getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager)
-                    .setPrimaryClip(ClipData.newPlainText("คำสั่ง DIRECTOR X", text))
-                startActivity(direct)
-                if (lockCreation) { File(project,"command_sent").writeText("sent"); render() }
-                return
-            } catch (_: android.content.ActivityNotFoundException) {
-                // Try the other supported ChatGPT package.
-            }
-        }
-        notice("ไม่พบแอป ChatGPT ที่รับคำสั่งและรูปภาพได้ กรุณาติดตั้งหรืออัปเดตแอป ChatGPT แล้วลองอีกครั้ง")
+        (getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager)
+            .setPrimaryClip(ClipData.newPlainText("คำสั่ง DIRECTOR X", text))
+        AlertDialog.Builder(this).setTitle("ส่งคำสั่งและภาพไป ChatGPT")
+            .setMessage("เตรียมภาพ ${uris.size} ภาพพร้อมคำสั่งแล้ว\nกดเปิดเมนูแชร์ แล้วเลือก ChatGPT\nหากภาพเข้าแต่ข้อความว่าง ให้กดค้างที่ช่องข้อความแล้วเลือกวาง คำสั่งคัดลอกไว้แล้ว")
+            .setPositiveButton("เปิดเมนูแชร์") { _, _ ->
+                try {
+                    // Let Android resolve the actual share receiver instead of forcing a package launcher.
+                    val chooser = Intent.createChooser(intent, "เลือก ChatGPT เพื่อรับคำสั่งและภาพ").apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        clipData = intent.clipData
+                    }
+                    startActivity(chooser)
+                    if (lockCreation) { File(project,"command_sent").writeText("sent"); render() }
+                } catch (_: android.content.ActivityNotFoundException) {
+                    notice("ไม่พบแอปที่รับการแชร์ได้ คำสั่งคัดลอกแล้ว สามารถเปิด ChatGPT แล้ววางและแนบภาพเองได้")
+                }
+            }.setNegativeButton("ยกเลิก", null).showDirector()
     }
+
     private fun storyVisualGuide(mode: String): String {
         val master = if (mode == "new")
             "ใช้ CHARACTER MASTER ของเรื่องนี้ตรงรายคน คงใบหน้า ผม รูปร่าง และสัดส่วนร่างกายตามต้นฉบับ"

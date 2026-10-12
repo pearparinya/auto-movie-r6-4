@@ -36,10 +36,10 @@ class StudioActivity : AppCompatActivity() {
     private var pendingStorySummary = ""
     private val updater = StudioUpdater(this)
     private lateinit var root: LinearLayout
-    private val navy = Color.rgb(12,15,38)
-    private val gold = Color.rgb(255,190,74)
-    private val ice = Color.rgb(248,247,255)
-    private val muted = Color.rgb(190,188,214)
+    private val navy = Color.rgb(9,10,12)
+    private val gold = Color.rgb(232,180,82)
+    private val ice = Color.rgb(244,242,236)
+    private val muted = Color.rgb(164,164,169)
     private fun dp(n: Int) = (n * resources.displayMetrics.density).toInt()
     private fun backdrop(top: Int, bottom: Int, border: Int? = null) = GradientDrawable(GradientDrawable.Orientation.TL_BR,intArrayOf(top,bottom)).apply {
         cornerRadius = dp(16).toFloat()
@@ -56,7 +56,7 @@ class StudioActivity : AppCompatActivity() {
         cancelable: Boolean = true, onCancel: (() -> Unit)? = null, action: (Int) -> Unit) {
         val panel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL; setPadding(dp(16),dp(18),dp(16),dp(12))
-            background = backdrop(navy,Color.rgb(32,28,65),Color.rgb(110,99,155))
+            background = backdrop(Color.rgb(24,24,27),navy,Color.rgb(74,61,39))
         }
         panel.addView(TextView(this).apply {
             text = title; textSize = 20f; setTextColor(gold); setTypeface(null,Typeface.BOLD)
@@ -69,10 +69,10 @@ class StudioActivity : AppCompatActivity() {
         choices.forEachIndexed { index, value ->
             val shades = menuColors[index % menuColors.size]
             list.addView(TextView(this).apply {
-                text = value; textSize = 16f; setTextColor(navy); setTypeface(null,Typeface.BOLD)
+                text = value; textSize = 16f; setTextColor(ice); setTypeface(null,Typeface.BOLD)
                 gravity = Gravity.CENTER_VERTICAL; minHeight = dp(60)
                 setPadding(dp(14),dp(14),dp(14),dp(14))
-                background = backdrop(shades[0],shades[1],Color.argb(160,255,255,255))
+                background = backdrop(Color.rgb(34,31,25),Color.rgb(24,24,27),Color.rgb(86,68,39))
                 layoutParams = LinearLayout.LayoutParams(-1,-2).apply { bottomMargin = dp(10) }
                 isClickable = true; isFocusable = true
                 val attr = android.util.TypedValue()
@@ -86,7 +86,7 @@ class StudioActivity : AppCompatActivity() {
         })
         panel.addView(TextView(this).apply {
             text = cancel; textSize = 16f; setTextColor(ice); gravity = Gravity.CENTER
-            minHeight = dp(48); background = backdrop(Color.rgb(64,65,97),Color.rgb(45,45,76))
+            minHeight = dp(48); background = backdrop(Color.rgb(36,36,40),Color.rgb(28,28,32))
             isFocusable = true; setOnClickListener { dialog.dismiss(); onCancel?.invoke() }
         })
         dialog.setOnCancelListener { onCancel?.invoke() }
@@ -320,8 +320,8 @@ class StudioActivity : AppCompatActivity() {
             isAppearanceLightStatusBars = false
             isAppearanceLightNavigationBars = false
         }
-        val scroll = ScrollView(this).apply { background = backdrop(Color.rgb(19,23,54), Color.rgb(9,12,29)); isFillViewport = true; clipToPadding = false }
-        root = LinearLayout(this).apply { orientation = 1; setPadding(dp(10),dp(2),dp(10),dp(4)) }
+        val scroll = ScrollView(this).apply { background = backdrop(navy, navy); isFillViewport = true; clipToPadding = false }
+        root = LinearLayout(this).apply { orientation = 1; setPadding(dp(16),dp(12),dp(16),dp(12)) }
         scroll.addView(root)
         val host = LinearLayout(this).apply { orientation = 1; setBackgroundColor(navy) }
         host.addView(scroll,LinearLayout.LayoutParams(-1,0,1f))
@@ -329,7 +329,7 @@ class StudioActivity : AppCompatActivity() {
             text = "Flow • Veo 3.1 Lite • 8 วินาที • 9:16\nพัฒนาโดย : นายปริญญา จันทร์จักษุ"
             textSize = 11f; gravity = Gravity.CENTER; setTextColor(muted)
             setPadding(dp(10),dp(6),dp(10),dp(6))
-            background = backdrop(Color.rgb(35,32,65),navy,Color.rgb(99,80,45))
+            background = backdrop(navy,navy)
         })
         setContentView(host)
         ViewCompat.setOnApplyWindowInsetsListener(host) { v, insets ->
@@ -342,23 +342,23 @@ class StudioActivity : AppCompatActivity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(8), dp(6), dp(8), dp(6))
-            background = backdrop(Color.rgb(43,38,81), navy, Color.rgb(141,112,62)); elevation = dp(6).toFloat()
+            background = backdrop(Color.rgb(24,24,27), Color.rgb(17,17,20), Color.rgb(68,56,36)); elevation = dp(6).toFloat()
         }
         header.addView(ImageView(this).apply {
             setImageResource(R.drawable.director_mark)
             scaleType = ImageView.ScaleType.FIT_CENTER
-            layoutParams = LinearLayout.LayoutParams(dp(104), dp(104)).apply { marginEnd = dp(8) }
+            layoutParams = LinearLayout.LayoutParams(dp(72), dp(72)).apply { marginEnd = dp(8) }
             contentDescription = "DIRECTOR X"
         })
         val heading = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
+            gravity = Gravity.START
             layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
         }
         fun brandLine(value: String, maximum: Int, minimum: Int, color: Int, bold: Boolean, spacing: Int) {
             heading.addView(TextView(this).apply {
                 text = value
-                gravity = Gravity.CENTER
+                gravity = Gravity.START
                 layoutParams = LinearLayout.LayoutParams(-1, -2)
                 setSingleLine(true)
                 textSize = maximum.toFloat()
@@ -378,8 +378,8 @@ class StudioActivity : AppCompatActivity() {
         val p = plan
         val summary = LinearLayout(this).apply {
             orientation = 1; setPadding(dp(10),dp(6),dp(10),dp(6))
-            background = backdrop(Color.rgb(46,35,87),Color.rgb(26,27,58))
-            layoutParams = LinearLayout.LayoutParams(-1,-2).apply { setMargins(0,dp(4),0,dp(6)) }
+            background = backdrop(Color.rgb(24,24,27),Color.rgb(19,19,22),Color.rgb(43,43,47))
+            layoutParams = LinearLayout.LayoutParams(-1,-2).apply { setMargins(0,dp(12),0,dp(16)) }
         }
         fun summaryText(value: String, size: Float, color: Int, bold: Boolean = false) {
             summary.addView(TextView(this).apply { text = value; textSize = size; setTextColor(color); setPadding(0,dp(3),0,dp(3)); if (bold) setTypeface(null,Typeface.BOLD) })
@@ -402,8 +402,8 @@ class StudioActivity : AppCompatActivity() {
             summaryText("ปก ${names.count { coverFile(it).exists() }}/${names.size} • ทุก EP มี 9:16 และ 16:9",12f,gold,true)
             summary.addView(ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal).apply {
                 max = scenes.size; progress = count
-                progressTintList = ColorStateList.valueOf(Color.rgb(35,219,195))
-                progressBackgroundTintList = ColorStateList.valueOf(Color.rgb(58,53,92))
+                progressTintList = ColorStateList.valueOf(gold)
+                progressBackgroundTintList = ColorStateList.valueOf(Color.rgb(48,46,40))
                 layoutParams = LinearLayout.LayoutParams(-1,dp(8)).apply { topMargin = dp(8) }
             })
         }
@@ -411,7 +411,7 @@ class StudioActivity : AppCompatActivity() {
         val sent = p != null || File(project,"command_sent").exists()
         val complete = p != null && rows(p).all { image(it).exists() } && coverNames(p).all { coverFile(it).exists() }
         label(if (complete) "ภาพและปกครบแล้ว • บันทึกชุดงานล่าสุดได้" else if (sent) "ขั้นตอน 2 • รับไฟล์จาก ChatGPT กลับเข้าแอป" else "ขั้นตอน 1 • เลือกเรื่องแล้วส่งไป ChatGPT", 14, true)
-        stepCard(1, "🎬", if (sent) "ส่งคำสั่งแล้ว ✓" else "สร้างเรื่องและส่งไป ChatGPT", if (sent) "ล็อกการสร้างซ้ำ • เริ่มเรื่องใหม่ใช้ปุ่มด้านล่าง" else "เลือกช่องและแนว • ชื่อเรื่องภาษาไทย", enabled = !sent) { planning() }
+        stepCard(1, "🎬", if (sent) "ส่งคำสั่งแล้ว ✓" else "สร้างเรื่องและส่งไป ChatGPT", if (sent) "ล็อกการสร้างซ้ำ • เริ่มเรื่องใหม่ใช้ปุ่มด้านล่าง" else "เลือกช่องและแนว • ชื่อเรื่องภาษาไทย", enabled = !sent, completed = sent) { planning() }
         stepCard(2, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "เพิ่มภาพฉาก / รับ ZIP", "เลือก ZIP หรือ story.json และภาพ • มีบทแล้วเพิ่มเฉพาะภาพได้") { packagePicker.launch(arrayOf("*/*")) }
         stepCard(3, "📦", "บันทึกชุดงานล่าสุด", if (complete) "รวมบท ภาพฉาก และปกเป็น ZIP" else "ปลดล็อกเมื่อภาพฉากและปกทั้งสองแบบครบ", enabled = complete) {
             val current = plan ?: return@stepCard
@@ -440,11 +440,11 @@ class StudioActivity : AppCompatActivity() {
         listOf(left to leftAction, right to rightAction).forEachIndexed { index, item ->
             row.addView(Button(this).apply {
                 text = item.first; isAllCaps = false; textSize = 12f
-                setTextColor(navy); setTypeface(null,Typeface.BOLD); gravity = Gravity.CENTER
+                setTextColor(gold); setTypeface(null,Typeface.BOLD); gravity = Gravity.CENTER
                 minWidth = 0; minimumWidth = 0; minHeight = dp(48); minimumHeight = dp(48)
                 setPadding(dp(4),dp(5),dp(4),dp(5))
                 backgroundTintList = null
-                background = backdrop(colors[index][0],colors[index][1],Color.argb(150,255,255,255))
+                background = backdrop(Color.rgb(25,25,28),Color.rgb(19,19,22),Color.rgb(63,55,39))
                 layoutParams = LinearLayout.LayoutParams(0,-2,1f).apply { if (index == 0) marginEnd = dp(3) else marginStart = dp(3) }
                 setOnClickListener { if (!importing) item.second() }
             })
@@ -573,47 +573,57 @@ class StudioActivity : AppCompatActivity() {
         val command = if (preserveMaster) "แก้ไขภาพ MASTER ที่แนบด้วยเครื่องมือแก้ไขภาพ และแสดงผลหนึ่งภาพจริงในแชต\nตัวละครผู้ใหญ่และไฟล์อ้างอิง:\n${sceneCastDescription(scene)}\nใช้ตัวละครจากภาพรายคนเป็นต้นแบบโดยตรง คงใบหน้า ผม รูปร่าง สัดส่วน เครื่องแต่งกาย ท่าทาง สีหน้า และสายตาตามภาพนั้น\nเปลี่ยนเฉพาะสถานที่เป็น $location คงอุปกรณ์ที่ตัวละครถือและพื้นที่ทำอาหารรอบมือจากภาพอ้างอิง\n${if (selected.size == 1) "คงระยะกล้องและมุมมองตามภาพต้นฉบับ" else "จัดแต่ละคนที่เคาน์เตอร์แยกกันในภาพเดียว เห็นใบหน้าและกิจกรรมครบ จับคู่ลักษณะของแต่ละคนกับ MASTER ของตนเอง"}\nภาพสมจริงแนวตั้ง 9:16 ไม่มีข้อความหรือตราสัญลักษณ์ หลังแสดงภาพแจ้งชื่อตัวละครและฉากหลังสั้น ๆ หากแก้ไขภาพไม่ได้ให้แจ้งตามจริง" else "สร้างภาพหนึ่งภาพตอนนี้ด้วยเครื่องมือสร้างภาพ และแสดงภาพจริงในแชต\n${storyVisualGuide("original")}\nตัวละครและชุดรายคน:\n${sceneCastDescription(scene)}\nสถานที่: $location จัดผักสด ชามและอุปกรณ์ทำอาหารให้เหมาะกับกิจกรรม\nการกระทำ: ${actions.joinToString("; ")}\nจัดท่ายืนเป็นธรรมชาติ สีหน้าเป็นมิตร แสงธรรมชาติ เหตุการณ์สมมุติหนึ่งเหตุการณ์ สร้างเฉพาะตัวละครในรายการนี้ ยึด MASTER ต้นฉบับรายคนเป็นหลัก ภาพทดสอบนี้เป็นฉากใหม่ ใช้ชุดและสถานที่ตามคำสั่งนี้\nหลังแสดงภาพจริงแล้วแจ้งชื่อ ชุด สถานที่ และเหตุการณ์สั้น ๆ หากสร้างภาพไม่ได้ให้แจ้งตามจริง"
         shareText(command, useNewMasters = false, selectedMasterKeys = selected.map { it.first })
     }
-    private fun stepCard(number: Int, icon: String, title: String, detail: String, enabled: Boolean = true, action: () -> Unit) {
-        val colors = when (number) {
-            1 -> intArrayOf(Color.rgb(255,218,112),Color.rgb(255,173,34))
-            2 -> intArrayOf(Color.rgb(46,189,252),Color.rgb(30,101,221))
-            else -> intArrayOf(Color.rgb(182,107,255),Color.rgb(107,56,204))
-        }
-        val ink = if (number == 1) navy else ice
-        val card = LinearLayout(this).apply {
+    private fun stepCard(number: Int, icon: String, title: String, detail: String, enabled: Boolean = true, completed: Boolean = false, action: () -> Unit) {
+        val active = enabled && !completed
+        val status = if (completed) "เสร็จแล้ว" else if (enabled) "พร้อมใช้งาน" else "ล็อก • รอขั้นตอนก่อนหน้า"
+        val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(10),dp(8),dp(10),dp(8))
-            background = backdrop(colors[0],colors[1],Color.argb(110,255,255,255))
-            elevation = dp(5).toFloat()
-            layoutParams = LinearLayout.LayoutParams(-1,-2).apply { topMargin = dp(3); bottomMargin = dp(3) }
-            isEnabled = enabled; isClickable = enabled; isFocusable = enabled; alpha = if (enabled) 1f else 0.45f
+            layoutParams = LinearLayout.LayoutParams(-1,-2)
+        }
+        row.addView(object : View(this) {
+            private val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+            override fun onDraw(canvas: android.graphics.Canvas) {
+                super.onDraw(canvas)
+                val x = width / 2f; val y = height / 2f; val radius = dp(14).toFloat()
+                paint.color = Color.rgb(61,54,39); paint.strokeWidth = dp(1).toFloat()
+                if (number > 1) canvas.drawLine(x,0f,x,y-radius,paint)
+                if (number < 3) canvas.drawLine(x,y+radius,x,height.toFloat(),paint)
+                paint.color = if (active || completed) gold else Color.rgb(50,50,55)
+                canvas.drawCircle(x,y,radius,paint)
+                paint.color = if (active || completed) navy else muted
+                paint.textSize = dp(12).toFloat(); paint.textAlign = android.graphics.Paint.Align.CENTER
+                paint.typeface = Typeface.create(Typeface.DEFAULT,Typeface.BOLD)
+                canvas.drawText(if (completed) "✓" else number.toString(),x,y-(paint.ascent()+paint.descent())/2,paint)
+            }
+        }, LinearLayout.LayoutParams(dp(34),-1).apply { marginEnd = dp(10) })
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16),dp(15),dp(16),dp(15))
+            background = backdrop(if (active) Color.rgb(39,32,21) else Color.rgb(23,23,26), Color.rgb(18,18,21), if (active) Color.rgb(138,103,46) else Color.rgb(47,47,51))
+            layoutParams = LinearLayout.LayoutParams(0,-2,1f).apply { topMargin = dp(6); bottomMargin = dp(6) }
+            minimumHeight = dp(108)
+            isEnabled = enabled; isClickable = enabled; isFocusable = enabled
             val attribute = android.util.TypedValue()
             theme.resolveAttribute(android.R.attr.selectableItemBackground,attribute,true)
             foreground = getDrawable(attribute.resourceId)
-            contentDescription = "ขั้นตอน $number $title $detail"
-            setOnClickListener { if (enabled && !importing) action() else Toast.makeText(this@StudioActivity,"กำลังนำเข้าภาพ กรุณารอสักครู่",Toast.LENGTH_SHORT).show() }
+            contentDescription = "ขั้นตอน $number $title $status $detail"
+            setOnClickListener { if (enabled && !importing) action() else if (importing) Toast.makeText(this@StudioActivity,"กำลังนำเข้าภาพ กรุณารอสักครู่",Toast.LENGTH_SHORT).show() }
         }
-        card.addView(ImageView(this).apply {
-            setImageResource(when (number) { 1 -> R.drawable.studio_movie; 2 -> R.drawable.studio_images; else -> R.drawable.studio_package }); scaleType = ImageView.ScaleType.FIT_CENTER
-            layoutParams = LinearLayout.LayoutParams(dp(36),dp(36))
-            contentDescription = title
-        })
-        val words = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(0,-2,1f).apply { marginStart = dp(6) }
-        }
-        words.addView(TextView(this).apply {
-            text = "$number  $title"; textSize = 16f; setTypeface(null,Typeface.BOLD); setTextColor(ink)
-        })
-        words.addView(TextView(this).apply {
-            text = detail; textSize = 11f; setTextColor(ink); setPadding(0,dp(5),0,0)
-        })
-        card.addView(words)
         card.addView(TextView(this).apply {
-            text = if (enabled) "›" else "🔒"; textSize = 27f; setTextColor(ink); gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(dp(18),-2)
+            text = "ขั้นตอน $number  •  $status"; textSize = 10f
+            setTextColor(if (active || completed) gold else muted)
+            setTypeface(null,Typeface.BOLD)
         })
-        root.addView(card)
+        card.addView(TextView(this).apply {
+            text = "$title  ${if (enabled) "›" else if (completed) "✓" else "🔒"}"; textSize = 16f
+            setTypeface(null,Typeface.BOLD); setTextColor(if (active) gold else ice)
+            setPadding(0,dp(7),0,0)
+        })
+        card.addView(TextView(this).apply {
+            text = detail; textSize = 12f; setTextColor(muted); setPadding(0,dp(6),0,0)
+        })
+        row.addView(card)
+        root.addView(row)
     }
     private fun toolsMenu() {
         choiceMenu("⚙️ ตัวเลือก", listOf("🎭 ภาพต้นฉบับตัวละคร", "🔎 ดูภาพและบทในเรื่องนี้", "📚 เลือกเรื่องที่บันทึก", "🎬 ส่งคำสั่งภาพทั้งเรื่อง", "💡 วิธีใช้งาน")) { index ->
@@ -650,9 +660,9 @@ class StudioActivity : AppCompatActivity() {
         root.addView(Button(this).apply {
             text = value; isAllCaps = false; textSize = if (primary) 16f else 14f
             setTypeface(null,if (primary) Typeface.BOLD else Typeface.NORMAL)
-            setTextColor(if (darkText) navy else ice)
+            setTextColor(if (primary) navy else gold)
             backgroundTintList = null
-            background = backdrop(colors[0],colors[1],if (primary) null else Color.rgb(62,58,106))
+            background = if (primary) backdrop(gold,Color.rgb(208,151,54)) else backdrop(Color.rgb(25,25,28),Color.rgb(19,19,22),Color.rgb(63,55,39))
             elevation = dp(if (primary) 3 else 0).toFloat()
             minHeight = dp(if (primary) 46 else 38); minimumHeight = minHeight
             layoutParams = LinearLayout.LayoutParams(-1,-2).apply { setMargins(0,dp(4),0,dp(4)) }

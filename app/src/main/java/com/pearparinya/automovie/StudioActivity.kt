@@ -452,7 +452,7 @@ class StudioActivity : AppCompatActivity() {
         root.addView(row)
     }
     private fun testImageMenu() {
-        choiceMenu("🖼️ ทดลองสร้างรูป 1 ภาพ", listOf("🎭 ตัวละครเดิม • เลือกคนที่ต้องการ", "✨ ตัวละครสมมุติ • สร้างคนใหม่")) { choice ->
+        choiceMenu("🖼️ ทดลองสร้างรูป 1 ภาพ", listOf("🎭 ตัวละครเดิม • เลือกคนที่ต้องการ", "✨ ตัวละครสมมุติ • ใช้รูปผมหรือสร้างคนใหม่")) { choice ->
             if (choice == 0) choiceMenu("🎭 เลือกตัวละครในภาพ", listOf("👨 กวิน • คนเดียว", "👩 รินรดา • คนเดียว", "👩 เมย์ • คนเดียว", "👥 ทั้ง 3 คนในภาพเดียว")) { index ->
                 val keys = listOf("gawin", "rinlada", "mind")
                 val selected = if (index == 3) keys else listOf(keys[index])
@@ -460,7 +460,57 @@ class StudioActivity : AppCompatActivity() {
                     sendTestImage(selected, preserveMaster = mode == 0)
                 }
             }
-            else shareText("สร้างภาพหนึ่งภาพตอนนี้ด้วยเครื่องมือสร้างภาพ และแสดงภาพที่สร้างในแชต ตัวละครสมมุติผู้ใหญ่หนึ่งคน ตั้งชื่อภาษาไทยและออกแบบใบหน้าใหม่ เลือกชุดสุภาพใหม่ เลือกสถานที่และสร้างเหตุการณ์สมมุติให้ตัวละคร เช่น ทำอาหารในบ้าน อ่านหนังสือในร้านกาแฟ หรือรดน้ำต้นไม้ในสวน เลือกหนึ่งเหตุการณ์ ออกแบบฉากและสิ่งของให้เหมาะสม กำหนดการกระทำของตัวละครให้ชัดเจน ภาพละครไทยสมจริง แนวตั้ง 9:16 เห็นใบหน้าและรูปร่างตั้งแต่ศีรษะถึงต้นขา แสงชัด สถานที่และเหตุการณ์เป็นเรื่องแต่ง ภาพไม่มีข้อความหรือตราสัญลักษณ์ หลังแสดงภาพจริงแล้วจึงแจ้งชื่อตัวละคร ชุด สถานที่ และเหตุการณ์สั้น ๆ หากสร้างภาพไม่ได้ให้แจ้งตามจริง", useNewMasters = false, includeMasters = false)
+            else choiceMenu("✨ ตัวละครสมมุติ", listOf("👨 ใช้รูปผม • เปลี่ยนชุดและฉากอัตโนมัติ", "✨ สร้างคนใหม่")) { mode ->
+                if (mode == 0) personalTestImageMenu()
+                else shareText("สร้างภาพหนึ่งภาพตอนนี้ด้วยเครื่องมือสร้างภาพ และแสดงภาพที่สร้างในแชต ตัวละครสมมุติผู้ใหญ่หนึ่งคน ตั้งชื่อภาษาไทยและออกแบบใบหน้าใหม่ เลือกชุดสุภาพใหม่ เลือกสถานที่และสร้างเหตุการณ์สมมุติให้ตัวละคร เช่น ทำอาหารในบ้าน อ่านหนังสือในร้านกาแฟ หรือรดน้ำต้นไม้ในสวน เลือกหนึ่งเหตุการณ์ ออกแบบฉากและสิ่งของให้เหมาะสม กำหนดการกระทำของตัวละครให้ชัดเจน ภาพละครไทยสมจริง แนวตั้ง 9:16 เห็นใบหน้าและรูปร่างตั้งแต่ศีรษะถึงต้นขา แสงชัด สถานที่และเหตุการณ์เป็นเรื่องแต่ง ภาพไม่มีข้อความหรือตราสัญลักษณ์ หลังแสดงภาพจริงแล้วจึงแจ้งชื่อตัวละคร ชุด สถานที่ และเหตุการณ์สั้น ๆ หากสร้างภาพไม่ได้ให้แจ้งตามจริง", useNewMasters = false, includeMasters = false)
+            }
+        }
+    }
+    private val personalTestPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            val temporary = File(filesDir, "personal_test_reference.tmp")
+            try {
+                contentResolver.openInputStream(uri)?.use { input ->
+                    temporary.outputStream().use { input.copyTo(it) }
+                } ?: error("เปิดภาพไม่ได้")
+                val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                android.graphics.BitmapFactory.decodeFile(temporary.path, bounds)
+                require(bounds.outWidth > 0 && bounds.outHeight > 0) { "ไฟล์นี้ไม่ใช่ภาพที่อ่านได้" }
+                require(temporary.renameTo(File(filesDir, "personal_test_reference.master"))) { "บันทึกภาพไม่ได้" }
+                sendPersonalTestImage()
+            } catch (e: Exception) {
+                temporary.delete()
+                notice("รับรูปผมไม่สำเร็จ: ${e.message}")
+            }
+        }
+    }
+    private fun personalTestImageMenu() {
+        if (!File(filesDir, "personal_test_reference.master").exists()) {
+            personalTestPicker.launch(arrayOf("image/*"))
+            return
+        }
+        choiceMenu("👨 รูปผมสำหรับทดสอบ", listOf("🖼️ ใช้รูปที่บันทึกไว้ • สร้างภาพทดสอบ", "📷 เปลี่ยนรูปผม")) { choice ->
+            if (choice == 0) sendPersonalTestImage()
+            else personalTestPicker.launch(arrayOf("image/*"))
+        }
+    }
+    private fun sendPersonalTestImage() {
+        try {
+            val reference = File(filesDir, "personal_test_reference.master")
+            if (!reference.exists()) {
+                personalTestPicker.launch(arrayOf("image/*"))
+                return
+            }
+            val outfits = listOf("เสื้อโปโลสีกรมท่าพอดีตัวกับกางเกงขายาวสีเบจ", "เสื้อเชิ้ตสีเทาอ่อนพับแขนกับกางเกงขายาวสีดำ", "เสื้อยืดสีขาวกับเสื้อคลุมสีน้ำตาลและกางเกงขายาวสีครีม")
+            val last = prefs.getInt("personal_test_outfit_last", -1)
+            val index = outfits.indices.filter { it != last }.random()
+            prefs.edit().putInt("personal_test_outfit_last", index).apply()
+            val location = nextTestLocation()
+            val command = "สร้างภาพหนึ่งภาพตอนนี้ด้วยเครื่องมือสร้างภาพ และแสดงภาพจริงในแชต\nตัวละคร: ปริญญา ใช้ภาพ PARINYA_REFERENCE ที่แนบเป็นต้นฉบับ คงใบหน้า ผม รูปร่าง และสัดส่วนร่างกาย\nชุดใหม่: ${outfits[index]}\nสถานที่: $location\nการกระทำ: กำลังจัดผักสดลงในชามบนโต๊ะเตรียมอาหาร สีหน้าเป็นมิตร ท่ายืนเป็นธรรมชาติ\nภาพสมจริง แนวตั้ง 9:16 เห็นศีรษะถึงต้นขา แสงชัด เหตุการณ์สมมุติ ไม่มีข้อความหรือตราสัญลักษณ์ หลังแสดงภาพแจ้งชุด สถานที่ และกิจกรรมสั้น ๆ หากสร้างไม่ได้ให้แจ้งตามจริง"
+            shareText(command, useNewMasters = false, includeMasters = false,
+                referenceImages = listOf("PARINYA_REFERENCE" to reference))
+        } catch (e: Exception) {
+            notice("เตรียมภาพอ้างอิงไม่สำเร็จ: ${e.message}")
         }
     }
     private fun nextTestLocation(): String {

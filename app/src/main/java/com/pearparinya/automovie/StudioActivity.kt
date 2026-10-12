@@ -580,7 +580,7 @@ class StudioActivity : AppCompatActivity() {
             orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
             layoutParams = LinearLayout.LayoutParams(-1,-2)
         }
-        row.addView(object : View(this) {
+        row.addView(object : android.view.View(this) {
             private val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
             override fun onDraw(canvas: android.graphics.Canvas) {
                 super.onDraw(canvas)

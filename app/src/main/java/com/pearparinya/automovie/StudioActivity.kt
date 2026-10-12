@@ -341,7 +341,7 @@ class StudioActivity : AppCompatActivity() {
         }
         brandLine("DIRECTOR X 1.49", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 049 • คำสั่งทดสอบแบบ 1.46", 12, 10, muted, false, 1)
+        brandLine("รุ่น 049 • คำสั่งทดสอบแบบ 1.49", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         

@@ -338,9 +338,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.45", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.46", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 045 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
+        brandLine("รุ่น 046 • พร้อมใช้ใน Flow", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -439,15 +439,32 @@ class StudioActivity : AppCompatActivity() {
                 .setPositiveButton("เพิ่มภาพตัวละคร") { _,_ -> characterMasters() }.setNegativeButton("ยกเลิก",null).showDirector()
             return
         }
-        val names = selected.joinToString { it.second }
-        val wardrobe = selected.joinToString("; ") { (_, name) ->
-            when (name) {
-                "รินลดา" -> "รินลดาใส่เสื้อผ้าถักเนื้อละเอียดสีครีมแขนสามส่วน กระดุมหน้า คอเสื้อโค้งระดับพอดี ผ้าทึบ ทรงพอดีลำตัวและเอว กับกระโปรงสีเบจยาวถึงเข่าและผ้ากันเปื้อนสั้นสีเบจ กำลังหั่นมะเขือเทศบนเขียงไม้"
-                "มายด์" -> "มายด์ใส่เสื้อผ้าถักเนื้อละเอียดสีชมพูอ่อนแขนสามส่วน กระดุมหน้า คอเสื้อโค้งระดับพอดี ผ้าทึบ ทรงพอดีลำตัวและเอว กับกระโปรงสีครีมยาวถึงเข่าและผ้ากันเปื้อนสีครีม กำลังผัดผักในกระทะ"
-                else -> "กวินใส่เสื้อโปโลสีกรมท่าพอดีตัวกับกางเกงขายาวสีเบจ กำลังจัดผักลงในชาม"
+        val scene = JSONObject()
+        val characters = JSONArray()
+        val actions = mutableListOf<String>()
+        for ((key, name) in selected) {
+            if (StoryIdentity.keyFor(name) != key) { notice("จับคู่ตัวละครกับ MASTER ไม่ได้"); return }
+            val source = File(filesDir,"character_masters/$key.master")
+            val masterName = masterExportName(source, false)
+            if (masterName == null || !StoryIdentity.matchesMaster(name, masterName)) {
+                notice("อ่านภาพ MASTER ของ $name ไม่ได้ กรุณาเพิ่มภาพต้นฉบับใหม่"); return
             }
+            val outfit = when (name) {
+                "รินลดา" -> "เสื้อผ้าถักเนื้อละเอียดสีครีมแขนสามส่วน กระดุมหน้า คอเสื้อโค้งระดับพอดี ผ้าทึบ ทรงพอดีลำตัวและเอว กระโปรงสีเบจยาวถึงเข่า และผ้ากันเปื้อนสั้นสีเบจ"
+                "มายด์" -> "เสื้อผ้าถักเนื้อละเอียดสีชมพูอ่อนแขนสามส่วน กระดุมหน้า คอเสื้อโค้งระดับพอดี ผ้าทึบ ทรงพอดีลำตัวและเอว กระโปรงสีครีมยาวถึงเข่า และผ้ากันเปื้อนสีครีม"
+                else -> "เสื้อโปโลสีกรมท่าพอดีตัว และกางเกงขายาวสีเบจ"
+            }
+            val action = when (name) {
+                "รินลดา" -> "รินลดากำลังหั่นมะเขือเทศบนเขียงไม้"
+                "มายด์" -> "มายด์กำลังผัดผักในกระทะ"
+                else -> "กวินกำลังจัดผักลงในชาม"
+            }
+            characters.put(JSONObject().put("name", name).put("master", masterName).put("outfit", outfit))
+            actions.add(action)
         }
-        shareText("สร้างภาพหนึ่งภาพตอนนี้ด้วยเครื่องมือสร้างภาพ และแสดงภาพจริงในแชต ตัวละครผู้ใหญ่ที่เลือก: $names ใช้ภาพ MASTER ที่แนบตรงรายคน คงใบหน้า ผม รูปร่าง และสัดส่วนร่างกายตามต้นฉบับ ชุดใหม่: $wardrobe ฉากห้องครัวบ้านสมัยใหม่ เคาน์เตอร์สีเข้ม ตู้ไม้ หน้าต่างรับแสงเช้า ผักสด ชามและอุปกรณ์ทำอาหาร จัดท่ายืนเป็นธรรมชาติ เห็นลำตัวและเอวชัด เสื้อผ้าพอดีกับรูปร่างเดิม การทำอาหารชัดเจน สีหน้าเป็นมิตร ภาพละครไทยสมจริงแนวตั้ง 9:16 เห็นศีรษะถึงต้นขา แสงธรรมชาติ ภาพไม่มีข้อความหรือตราสัญลักษณ์ หลังแสดงภาพจริงแล้วแจ้งชื่อ ชุด สถานที่ และเหตุการณ์สั้น ๆ หากสร้างภาพไม่ได้ให้แจ้งตามจริง", useNewMasters = false, selectedMasterKeys = selected.map { it.first })
+        scene.put("characters", characters)
+        val command = "สร้างภาพหนึ่งภาพตอนนี้ด้วยเครื่องมือสร้างภาพ และแสดงภาพจริงในแชต\n${storyVisualGuide("original")}\nตัวละครและชุดรายคน:\n${sceneCastDescription(scene)}\nสถานที่: ห้องครัวบ้านสมัยใหม่ เคาน์เตอร์สีเข้ม ตู้ไม้ หน้าต่างรับแสงเช้า ผักสด ชามและอุปกรณ์ทำอาหาร\nการกระทำ: ${actions.joinToString("; ")}\nจัดท่ายืนเป็นธรรมชาติ สีหน้าเป็นมิตร แสงธรรมชาติ เหตุการณ์สมมุติหนึ่งเหตุการณ์ สร้างเฉพาะตัวละครในรายการนี้ ยึด MASTER ต้นฉบับรายคนเป็นหลัก ภาพทดสอบนี้เป็นฉากใหม่ ใช้ชุดและสถานที่ตามคำสั่งนี้\nหลังแสดงภาพจริงแล้วแจ้งชื่อ ชุด สถานที่ และเหตุการณ์สั้น ๆ หากสร้างภาพไม่ได้ให้แจ้งตามจริง"
+        shareText(command, useNewMasters = false, selectedMasterKeys = selected.map { it.first })
     }
     private fun stepCard(number: Int, icon: String, title: String, detail: String, enabled: Boolean = true, action: () -> Unit) {
         val colors = when (number) {
@@ -544,6 +561,15 @@ class StudioActivity : AppCompatActivity() {
             catch (e: Exception) { runOnUiThread { dialog.dismiss(); notice("ดำเนินการไม่สำเร็จ: ${e.message}") } }
         }.start()
     }
+    private fun masterExportName(source: File, useNewMasters: Boolean): String? {
+        if (!source.isFile) return null
+        val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        android.graphics.BitmapFactory.decodeFile(source.path, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        val extension = when (bounds.outMimeType) { "image/jpeg" -> "jpg"; "image/webp" -> "webp"; else -> "png" }
+        val name = if (useNewMasters) source.nameWithoutExtension else source.nameWithoutExtension + "_MASTER"
+        return "${name.uppercase()}.$extension"
+    }
     private fun shareText(text: String, lockCreation: Boolean = false, useNewMasters: Boolean = plan?.optString("character_mode") == "new", includeMasters: Boolean = true, selectedMasterKeys: List<String>? = null, referenceImages: List<Pair<String, File>> = emptyList()) {
         val uris = arrayListOf<Uri>()
         val transferId = UUID.randomUUID().toString()
@@ -554,13 +580,10 @@ class StudioActivity : AppCompatActivity() {
             return
         }
         for (source in sources) {
-            val name = if (useNewMasters) source.nameWithoutExtension else source.nameWithoutExtension + "_MASTER"
             if (source.exists()) {
-                val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                android.graphics.BitmapFactory.decodeFile(source.path, bounds)
-                if (bounds.outWidth <= 0) { notice("อ่านภาพ MASTER $name ไม่ได้ กรุณาเลือกภาพตัวละครใหม่"); return }
-                val extension = when (bounds.outMimeType) { "image/jpeg" -> "jpg"; "image/webp" -> "webp"; else -> "png" }
-                val out = File(cacheDir,"character_master_exports/$transferId/${name.uppercase()}.$extension")
+                val name = masterExportName(source, useNewMasters)
+                if (name == null) { notice("อ่านภาพ MASTER ไม่ได้ กรุณาเลือกภาพตัวละครใหม่"); return }
+                val out = File(cacheDir,"character_master_exports/$transferId/$name")
                 out.parentFile!!.mkdirs(); source.copyTo(out, overwrite = true)
                 uris.add(FileProvider.getUriForFile(this,"$packageName.fileprovider",out))
             }

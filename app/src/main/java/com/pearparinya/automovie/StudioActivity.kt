@@ -339,9 +339,9 @@ class StudioActivity : AppCompatActivity() {
                     this, minimum, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
             })
         }
-        brandLine("DIRECTOR X 1.48", 20, 14, gold, true, 1)
+        brandLine("DIRECTOR X 1.49", 20, 14, gold, true, 1)
         brandLine("ผู้กำกับอัจฉริยะ", 16, 12, ice, true, 0)
-        brandLine("รุ่น 048 • คำสั่งทดสอบแบบ 1.46", 12, 10, muted, false, 1)
+        brandLine("รุ่น 049 • คำสั่งทดสอบแบบ 1.46", 12, 10, muted, false, 1)
         header.addView(heading)
         root.addView(header)
         
@@ -617,24 +617,21 @@ class StudioActivity : AppCompatActivity() {
         val chatGptPackages = listOf("com.openai.chatgpt", "com.openai.chatgpt.beta")
         for (targetPackage in chatGptPackages) {
             val scoped = Intent(intent).setPackage(targetPackage)
-            val receivers = packageManager.queryIntentActivities(scoped, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY)
-                .filter { it.activityInfo.packageName == targetPackage && it.activityInfo.exported && it.activityInfo.enabled }
-                .sortedByDescending { it.priority }
-            for (receiver in receivers) {
-                try {
-                    val direct = Intent(intent).apply {
-                        component = android.content.ComponentName(receiver.activityInfo.packageName, receiver.activityInfo.name)
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    uris.forEach { grantUriPermission(targetPackage, it, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
-                    startActivity(direct)
-                    if (lockCreation) { File(project,"command_sent").writeText("sent"); render() }
-                    return
-                } catch (_: android.content.ActivityNotFoundException) {
-                    // Try another receiver that advertised support for this payload.
-                } catch (_: SecurityException) {
-                    // Fall back to the system resolver if this receiver is unavailable.
+            if (packageManager.queryIntentActivities(scoped, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY).isEmpty()) continue
+            try {
+                uris.forEach { grantUriPermission(targetPackage, it, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+                // Use Android's share routing; an explicit receiver may reopen a stale ChatGPT task.
+                val chooser = Intent.createChooser(scoped, "ส่งคำสั่งและภาพไป ChatGPT").apply {
+                    clipData = intent.clipData
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
+                startActivity(chooser)
+                if (lockCreation) { File(project,"command_sent").writeText("sent"); render() }
+                return
+            } catch (_: android.content.ActivityNotFoundException) {
+                // Try another installed ChatGPT package, then the full resolver.
+            } catch (_: SecurityException) {
+                // Keep the clipboard command and offer the standard share menu.
             }
         }
         AlertDialog.Builder(this).setTitle("ส่งคำสั่งและภาพไป ChatGPT")

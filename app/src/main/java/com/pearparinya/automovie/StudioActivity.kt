@@ -221,7 +221,25 @@ class StudioActivity : AppCompatActivity() {
     private val zipPicker = registerForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri != null) background { export(uri) }
     }
-    override fun onCreate(savedInstanceState: Bundle?) { super.onCreate(savedInstanceState); render() }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val masterError = runCatching { installRinladaMaster() }.exceptionOrNull()
+        render()
+        if (masterError != null) notice("ติดตั้ง MASTER รินลดาไม่สำเร็จ กรุณาเปิดแอปอีกครั้ง")
+    }
+    private fun installRinladaMaster() {
+        val revision = "rinlada_master_20261012_1732"
+        val target = File(filesDir, "character_masters/rinlada.master")
+        if (prefs.getBoolean(revision, false) && target.exists()) return
+        target.parentFile!!.mkdirs()
+        val temp = File(target.parentFile, "rinlada.master.pending")
+        assets.open("character_masters/RINLADA_MASTER.png").use { input -> temp.outputStream().use { input.copyTo(it) } }
+        require(masterExportName(temp, false) != null) { "อ่าน MASTER ไม่ได้" }
+        if (target.exists()) target.copyTo(File(target.parentFile, "rinlada.previous"), overwrite = true)
+        temp.copyTo(target, overwrite = true)
+        temp.delete()
+        prefs.edit().putBoolean(revision, true).apply()
+    }
     override fun onResume() {
         super.onResume()
         if (!importing) updater.checkAutomatically()

@@ -485,8 +485,18 @@ class StudioActivity : AppCompatActivity() {
         }
     }
     private fun personalTestImageMenu() {
-        if (!File(filesDir, "personal_test_reference.master").exists()) {
-            personalTestPicker.launch(arrayOf("image/*"))
+        val reference = File(filesDir, "personal_test_reference.master")
+        if (!reference.exists()) {
+            try {
+                assets.open("test_references/PARINYA_REFERENCE.png").use { input ->
+                    reference.outputStream().use { input.copyTo(it) }
+                }
+            } catch (e: Exception) {
+                reference.delete()
+                notice("เตรียมรูปเริ่มต้นไม่สำเร็จ: ${e.message}")
+                return
+            }
+            sendPersonalTestImage()
             return
         }
         choiceMenu("👨 รูปผมสำหรับทดสอบ", listOf("🖼️ ใช้รูปที่บันทึกไว้ • สร้างภาพทดสอบ", "📷 เปลี่ยนรูปผม")) { choice ->

@@ -483,7 +483,7 @@ class StudioActivity : AppCompatActivity() {
         stepCard(4, "🎥", "วิดีโอผ่าน Flow / Veo", "นำเข้า MP4 • รวม EP พร้อมปกเปิด 3 วินาที", enabled = p != null, completed = p != null && rows(p).all { video(it).exists() }) { moviesMenu() }
         stepCard(5, "⬇", "ดาวน์โหลดหนัง EP เป็น MP4", "ชื่อเรื่อง + เลข EP + ชื่อตอน • ZIP อยู่ในสำรอง", enabled = p != null) { moviesMenu() }
         if (p != null) button("📦 ส่งออกชุดงาน / สำรอง ZIP", false) {
-            val current = plan ?: return@stepCard
+            val current = plan ?: return@button
             exportEpisode = null; backupMode = false
             val title = current.getString("title")
             if (!Regex("[ก-๙]").containsMatchIn(title)) {
@@ -1561,7 +1561,7 @@ class StudioActivity : AppCompatActivity() {
         val job=movieJobs(ep).firstOrNull() ?: return notice("ยังไม่มีงานรวม EP นี้")
         val text=TextView(this).apply { setPadding(dp(16),dp(16),dp(16),dp(16)); textSize=16f }
         val dialog=AlertDialog.Builder(this).setTitle("รวมหนัง EP $ep").setView(text).setPositiveButton("ปิดหน้าต่าง",null).setNeutralButton("ยกเลิกงาน") { _,_ ->
-            if(EpisodeRenderService.running) startService(Intent(this,EpisodeRenderService::class.java).setAction(EpisodeRenderService.CANCEL))
+            if(EpisodeRenderService.running) startService(Intent(this,EpisodeRenderService::class.java).setAction(EpisodeRenderService.CANCEL).putExtra("job",job.path))
         }.create()
         val handler=android.os.Handler(android.os.Looper.getMainLooper())
         var ticks=0
@@ -1585,7 +1585,7 @@ class StudioActivity : AppCompatActivity() {
         } }.start()
     }
     private fun playMovie(job: File) {
-        val file=File(job,"output.mp4"); val view=VideoView(this).apply { setVideoPath(file.path); setMediaController(MediaController(this@StudioActivity).apply { setAnchorView(this@apply) }); setOnPreparedListener { start() }; setOnErrorListener { _,_,_ -> notice("เล่นหนังไฟล์นี้ไม่ได้"); true } }
+        val file=File(job,"output.mp4"); val view=VideoView(this).apply { setVideoPath(file.path); val controls=MediaController(this@StudioActivity); controls.setAnchorView(this); setMediaController(controls); setOnPreparedListener { start() }; setOnErrorListener { _,_,_ -> notice("เล่นหนังไฟล์นี้ไม่ได้"); true } }
         val dialog=AlertDialog.Builder(this).setTitle("หนัง EP").setView(view).setPositiveButton("ปิด",null).create(); dialog.setOnDismissListener { view.stopPlayback() }; dialog.show(); dialog.window?.setLayout(-1,dp(560))
     }
     private val movieDownloadPicker=registerForActivityResult(ActivityResultContracts.CreateDocument("video/mp4")) { uri ->

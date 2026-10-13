@@ -24,13 +24,14 @@ class EpisodeRenderService : Service() {
     }
     private val handler=Handler(Looper.getMainLooper())
     private var transformer: Transformer?=null
+    private var wakeLock: PowerManager.WakeLock?=null
     @Volatile private var cancelled=false
     private lateinit var job: File
     private lateinit var spec: JSONObject
     private lateinit var output: File
     override fun onBind(intent: Intent?) = null
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if(intent?.action==CANCEL) { if(::job.isInitialized) cancel() else stopSelf(); return START_NOT_STICKY }
+        if(intent?.action==CANCEL) { if(::job.isInitialized) { if(intent.getStringExtra("job")==job.path) cancel() } else stopSelf(); return START_NOT_STICKY }
         if(running || intent==null) { if(!running) stopSelf(); return START_NOT_STICKY }
         val path=intent.getStringExtra("job") ?: return START_NOT_STICKY
         job=File(path)
@@ -40,6 +41,7 @@ class EpisodeRenderService : Service() {
         getSystemService(NotificationManager::class.java).createNotificationChannel(NotificationChannel(CHANNEL,"รวมหนัง EP",NotificationManager.IMPORTANCE_LOW))
         val type=if(Build.VERSION.SDK_INT>=35) ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROCESSING else if(Build.VERSION.SDK_INT>=29) ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC else 0
         if(Build.VERSION.SDK_INT>=29) startForeground(ID,notification("กำลังเตรียมคลิป",0),type) else startForeground(ID,notification("กำลังเตรียมคลิป",0))
+        wakeLock=getSystemService(PowerManager::class.java).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"DIRECTORX:EpisodeRender").apply { acquire(30*60*1000L) }
         writeStatus("preparing",0,"กำลังเตรียมคลิป")
         Thread {
             try {
@@ -57,7 +59,7 @@ class EpisodeRenderService : Service() {
         return START_NOT_STICKY
     }
     private fun notification(text: String, progress: Int): Notification {
-        val cancel=PendingIntent.getService(this,1,Intent(this,EpisodeRenderService::class.java).setAction(CANCEL),PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val cancel=PendingIntent.getService(this,1,Intent(this,EpisodeRenderService::class.java).setAction(CANCEL).putExtra("job",job.path),PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val open=PendingIntent.getActivity(this,0,Intent(this,StudioActivity::class.java),PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         return Notification.Builder(this,CHANNEL).setSmallIcon(android.R.drawable.stat_sys_upload).setContentTitle("DIRECTOR X • EP ${spec.optInt("ep")}").setContentText(text).setContentIntent(open).setOngoing(true).setProgress(100,progress,progress==0).addAction(Notification.Action.Builder(null,"ยกเลิก",cancel).build()).build()
     }
@@ -108,7 +110,7 @@ class EpisodeRenderService : Service() {
     }
     private fun cancel() { cancelled=true; transformer?.cancel(); transformer=null; if(::job.isInitialized) { writeStatus("cancelled",0,"ยกเลิกแล้ว • ไฟล์ต้นฉบับยังอยู่"); output.delete() }; finish() }
     private fun fail(e: Exception) { if(cancelled) return; transformer?.cancel(); transformer=null; output.delete(); writeStatus("failed",0,e.message ?: "รวมไม่สำเร็จ"); finish() }
-    private fun finish() { running=false; if(::job.isInitialized) { File(job,"inputs").deleteRecursively(); File(job,"intro.mp4").delete() }; stopForeground(STOP_FOREGROUND_REMOVE); stopSelf() }
-    override fun onDestroy() { transformer?.cancel(); transformer=null; running=false; handler.removeCallbacksAndMessages(null); super.onDestroy() }
+    private fun finish() { if(wakeLock?.isHeld==true) wakeLock?.release(); wakeLock=null; running=false; if(::job.isInitialized) { File(job,"inputs").deleteRecursively(); File(job,"intro.mp4").delete() }; stopForeground(STOP_FOREGROUND_REMOVE); stopSelf() }
+    override fun onDestroy() { if(wakeLock?.isHeld==true) wakeLock?.release(); wakeLock=null; transformer?.cancel(); transformer=null; running=false; handler.removeCallbacksAndMessages(null); super.onDestroy() }
     override fun onTimeout(startId: Int, fgsType: Int) { fail(IllegalStateException("Android หยุดงานเพราะใช้เวลานานเกินไป กรุณารวมใหม่")) }
 }

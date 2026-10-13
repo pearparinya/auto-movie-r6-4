@@ -22,7 +22,7 @@ class EpisodeExportTest {
     @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     fun imageIntroAndTwoClipsProducePortraitMp4WithSilentIntroAndAudio() {
         val instrumentation=InstrumentationRegistry.getInstrumentation(); val context=instrumentation.targetContext
-        val folder=File(context.cacheDir,"test_episode").apply { deleteRecursively(); mkdirs() }
+        val folder=File(context.filesDir,"test_episode").apply { deleteRecursively(); mkdirs() }
         fun image(name: String,color: Int): File {
             val file=File(folder,name); val b=Bitmap.createBitmap(1080,1920,Bitmap.Config.ARGB_8888); b.eraseColor(color)
             file.outputStream().use { b.compress(Bitmap.CompressFormat.PNG,100,it) }; b.recycle(); return file
@@ -45,14 +45,36 @@ class EpisodeExportTest {
         val first=File(folder,"clip1.mp4"); val second=File(folder,"clip2.mp4")
         export(listOf(still(red,1000)),first); export(listOf(still(blue,1000)),second)
         val before=listOf(EpisodeMedia.digest(first),EpisodeMedia.digest(second))
-        val output=File(folder,"EP01.mp4")
-        export(listOf(still(cover,3000),EditedMediaItem.Builder(MediaItem.fromUri(Uri.fromFile(first))).setEffects(Effects(emptyList(),listOf(Presentation.createForWidthAndHeight(1080,1920,Presentation.LAYOUT_SCALE_TO_FIT)))).build(),EditedMediaItem.Builder(MediaItem.fromUri(Uri.fromFile(second))).setEffects(Effects(emptyList(),listOf(Presentation.createForWidthAndHeight(1080,1920,Presentation.LAYOUT_SCALE_TO_FIT)))).build()),output)
+        val job=File(folder,"job").apply { mkdirs() }
+        val spec=org.json.JSONObject().put("ep",1).put("filename","ทดสอบ_EP01_ปกและฉาก.mp4").put("cover",cover.path)
+            .put("clips",org.json.JSONArray(listOf(first.path,second.path))).put("fps",30).put("bitrate",24000000)
+            .put("duration_ms",5000).put("fingerprint","test").put("lossless",false).put("crop",false).put("has_audio",true)
+        File(job,"spec.json").writeText(spec.toString())
+        val activity=instrumentation.startActivitySync(android.content.Intent(context,StudioActivity::class.java).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+        instrumentation.waitForIdleSync()
+        instrumentation.runOnMainSync { androidx.core.content.ContextCompat.startForegroundService(context,android.content.Intent(context,EpisodeRenderService::class.java).putExtra("job",job.path)) }
+        val deadline=System.currentTimeMillis()+180000
+        var state=org.json.JSONObject()
+        while(System.currentTimeMillis()<deadline) {
+            state=runCatching { org.json.JSONObject(File(job,"status.json").readText()) }.getOrDefault(org.json.JSONObject())
+            if(state.optString("state") in listOf("complete","failed","cancelled")) break
+            Thread.sleep(500)
+        }
+        assertEquals("actual service export failed: ${state.optString("message")}","complete",state.optString("state"))
+        val output=File(job,"output.mp4")
+        assertTrue(File(job,"result.json").isFile)
+        instrumentation.runOnMainSync { activity.finish() }
+
         val info=EpisodeMedia.inspect(output); assertEquals(1080,info.width); assertEquals(1920,info.height); assertEquals(0,info.rotation)
         assertTrue(kotlin.math.abs(info.durationMs-5000)<300); assertNotNull(info.audioMime)
         val reader=android.media.MediaMetadataRetriever(); reader.setDataSource(output.path)
         try {
             val frame=reader.getFrameAtTime(500000,android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC)!!
             val color=frame.getPixel(frame.width/2,frame.height/2); assertTrue(Color.red(color)>150 && Color.green(color)>150 && Color.blue(color)<100); frame.recycle()
+            val redFrame=reader.getFrameAtTime(3500000,android.media.MediaMetadataRetriever.OPTION_CLOSEST)!!
+            val redPixel=redFrame.getPixel(redFrame.width/2,redFrame.height/2); assertTrue(Color.red(redPixel)>150 && Color.blue(redPixel)<100); redFrame.recycle()
+            val blueFrame=reader.getFrameAtTime(4500000,android.media.MediaMetadataRetriever.OPTION_CLOSEST)!!
+            val bluePixel=blueFrame.getPixel(blueFrame.width/2,blueFrame.height/2); assertTrue(Color.blue(bluePixel)>150 && Color.red(bluePixel)<100); blueFrame.recycle()
         } finally { reader.release() }
         assertEquals(before,listOf(EpisodeMedia.digest(first),EpisodeMedia.digest(second)))
         // Strict packet-copy either verifies compatibility or rejects it; it never encodes silently.

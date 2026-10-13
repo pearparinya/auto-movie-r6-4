@@ -93,4 +93,19 @@ class StoryFilesTest {
             assertTrue(result.failedEntries.first().contains("กู้ข้อมูล"))
         } finally { dir.deleteRecursively() }
     }
+    @Test fun truncatedFinalEntryStillSalvagesEarlierImages() {
+        val dir = Files.createTempDirectory("studio-test").toFile()
+        try {
+            val complete = archive("EP01_SC001.png" to "complete-image", "EP01_SC002.png" to "last-image-is-truncated", "story.json" to "{}")
+            fun signature(from: Int): Int = (from until complete.size - 3).first { i ->
+                complete[i] == 0x50.toByte() && complete[i + 1] == 0x4b.toByte() && complete[i + 2] == 0x03.toByte() && complete[i + 3] == 0x04.toByte()
+            }
+            val second = signature(signature(0) + 4)
+            val broken = java.io.File(dir, "truncated.zip").apply { writeBytes(complete.copyOf(second + 55)) }
+            val result = StoryFiles.unpackFile(broken, java.io.File(dir, "out"))
+            assertEquals(listOf("EP01_SC001.png"), result.files.map { it.name })
+            assertTrue(result.failedEntries.any { it.contains("EP01_SC002.png") })
+            assertFalse(result.files.any { it.name == "story.json" })
+        } finally { dir.deleteRecursively() }
+    }
 }

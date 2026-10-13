@@ -41,7 +41,7 @@ internal object StoryFiles {
                 require(++count <= 2000) { "ZIP มีไฟล์มากเกินไป" }
                 // Flatten each entry into its own directory: archive paths cannot escape staging.
                 val name = packageName(entry.name)
-                if (!entry.isDirectory && !entry.name.contains("__MACOSX/") && !name.startsWith(".") && (name.endsWith(".json", true) || name.substringAfterLast('.').lowercase() in listOf("png", "jpg", "jpeg", "webp"))) {
+                if (!entry.isDirectory && !entry.name.contains("__MACOSX/") && !name.startsWith(".") && (name.endsWith(".json", true) || name.substringAfterLast('.').lowercase() in listOf("png", "jpg", "jpeg", "webp", "mp4"))) {
                     val target = File(staging, "${files.size}/$name").apply { parentFile!!.mkdirs() }
                     target.outputStream().use { out ->
                         val buffer = ByteArray(65536)

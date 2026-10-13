@@ -12,8 +12,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         minSdk = 26
         targetSdk = 35
-        versionCode = 786
-        versionName = "1.63"
+        versionCode = 787
+        versionName = "1.64"
     }
 
     sourceSets {

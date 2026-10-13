@@ -508,11 +508,12 @@ class StudioActivity : AppCompatActivity() {
             button("🎞️ EP และฉาก • ภาพ / วิดีโอ", false) { episodesMenu() }
             button("🔎 ตรวจงานที่ขาด", false) { auditStory() }
         }
-        val sent = p != null || File(project,"command_sent").exists()
+        val packageReceived = p != null
+        val sent = packageReceived || File(project,"command_sent").exists()
         val complete = p != null && rows(p).all { image(it).exists() && video(it).exists() } && coverNames(p).all { coverFile(it).exists() }
         label(if (complete) "ภาพ วิดีโอ และปกครบแล้ว • ส่งออกชุดงานได้" else if (sent) "ขั้นตอน 2 • รับไฟล์จาก ChatGPT กลับเข้าแอป" else "ขั้นตอน 1 • เลือกเรื่องแล้วส่งไป ChatGPT", 14, true)
         stepCard(1, "🎬", if (sent) "ส่งคำสั่งแล้ว ✓" else "สร้างเรื่องและส่งไป ChatGPT", if (sent) "ล็อกการสร้างซ้ำ • เริ่มเรื่องใหม่ใช้ปุ่มด้านล่าง" else "เลือกช่องและแนว • ชื่อเรื่องภาษาไทย", enabled = !sent, completed = sent) { planning() }
-        stepCard(2, "🎭", "ตัวละครและ MASTER", "ตรวจต้นฉบับรายคน • บทบาทและรูปร่าง") { castMenu() }
+        stepCard(2, "🎭", if (packageReceived) "ตัวละครและ MASTER พร้อมแล้ว ✓" else "ตัวละครและ MASTER", if (packageReceived) "ล็อกหลังรับ ZIP • เริ่มเรื่องใหม่หากต้องการเปลี่ยนตัวละคร" else "ตรวจต้นฉบับรายคน • บทบาทและรูปร่าง", enabled = !packageReceived, completed = packageReceived) { castMenu() }
         stepCard(3, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "เพิ่มภาพฉาก / รับ ZIP", "เลือก ZIP หรือ story.json และภาพ • มีบทแล้วเพิ่มเฉพาะภาพได้") { packagePicker.launch(arrayOf("*/*")) }
         stepCard(4, "🎥", "วิดีโอผ่าน Flow / Veo", "นำเข้า MP4 • รวม EP พร้อมปกเปิด 3 วินาที", enabled = p != null, completed = p != null && rows(p).all { video(it).exists() }) { moviesMenu() }
         stepCard(5, "⬇", "ดาวน์โหลดหนัง EP เป็น MP4", "ชื่อเรื่อง + เลข EP + ชื่อตอน • ZIP อยู่ในสำรอง", enabled = p != null) { moviesMenu() }

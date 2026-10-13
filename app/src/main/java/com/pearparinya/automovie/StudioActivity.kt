@@ -74,6 +74,8 @@ class StudioActivity : AppCompatActivity() {
     private lateinit var root: LinearLayout
     private val navy = Color.rgb(18,29,49)
     private val gold = Color.rgb(232,180,82)
+    private val electricBlue = Color.rgb(30,156,255)
+    private val cyan = Color.rgb(42,220,255)
     private val ice = Color.rgb(248,246,239)
     private val muted = Color.rgb(164,164,169)
     private fun dp(n: Int) = (n * resources.displayMetrics.density).toInt()
@@ -417,7 +419,7 @@ class StudioActivity : AppCompatActivity() {
             isAppearanceLightStatusBars = false
             isAppearanceLightNavigationBars = false
         }
-        val scroll = ScrollView(this).apply { background = backdrop(Color.rgb(18,29,49),Color.rgb(30,49,73)); isFillViewport = true; clipToPadding = false }
+        val scroll = ScrollView(this).apply { background = backdrop(Color.rgb(9,18,36),Color.rgb(35,18,55)); isFillViewport = true; clipToPadding = false }
         root = LinearLayout(this).apply { orientation = 1; setPadding(dp(16),dp(12),dp(16),dp(12)) }
         scroll.addView(root)
         val host = LinearLayout(this).apply { orientation = 1; setBackgroundColor(navy) }
@@ -439,13 +441,17 @@ class StudioActivity : AppCompatActivity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(8), dp(6), dp(8), dp(6))
-            background = backdrop(Color.rgb(24,24,27), Color.rgb(17,17,20), Color.rgb(68,56,36)); elevation = dp(6).toFloat()
+            background = backdrop(Color.rgb(12,24,45), Color.rgb(31,18,45), Color.rgb(139,99,43)); elevation = dp(6).toFloat()
         }
         header.addView(ImageView(this).apply {
             setImageResource(R.drawable.director_mark)
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            layoutParams = LinearLayout.LayoutParams(dp(72), dp(72)).apply { marginEnd = dp(8) }
-            contentDescription = "DIRECTOR X"
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            layoutParams = LinearLayout.LayoutParams(dp(88), dp(88)).apply { marginEnd = dp(12) }
+            foreground = GradientDrawable().apply { setColor(Color.TRANSPARENT); setStroke(dp(2),gold); cornerRadius=dp(18).toFloat() }
+            clipToOutline = true
+            outlineProvider = android.view.ViewOutlineProvider.BACKGROUND
+            background = GradientDrawable().apply { setColor(Color.rgb(15,25,43)); cornerRadius=dp(18).toFloat() }
+            contentDescription = "รูปผู้กำกับ DIRECTOR X"
         })
         val heading = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -523,13 +529,20 @@ class StudioActivity : AppCompatActivity() {
         }
         val packageReceived = p != null
         val sent = packageReceived || File(project,"command_sent").exists()
+        val videosComplete = p != null && rows(p).isNotEmpty() && rows(p).all { video(it).exists() }
+        val currentStep = when {
+            !sent -> 1
+            p == null -> 3
+            !videosComplete -> 4
+            else -> 5
+        }
         val complete = p != null && rows(p).all { image(it).exists() && video(it).exists() } && coverNames(p).all { coverFile(it).exists() }
         label(if (complete) "ภาพ วิดีโอ และปกครบแล้ว • ส่งออกชุดงานได้" else if (sent) "ขั้นตอน 2 • รับไฟล์จาก ChatGPT กลับเข้าแอป" else "ขั้นตอน 1 • เลือกเรื่องแล้วส่งไป ChatGPT", 14, true)
-        stepCard(1, "🎬", if (sent) "ส่งคำสั่งแล้ว ✓" else "สร้างเรื่องและส่งไป ChatGPT", if (sent) "ล็อกการสร้างซ้ำ • เริ่มเรื่องใหม่ใช้ปุ่มด้านล่าง" else "เลือกช่องและแนว • ชื่อเรื่องภาษาไทย", enabled = !sent, completed = sent) { planning() }
-        stepCard(2, "🎭", if (packageReceived) "ตัวละครและ MASTER พร้อมแล้ว ✓" else "ตัวละครและ MASTER", if (packageReceived) "ล็อกหลังรับ ZIP • เริ่มเรื่องใหม่หากต้องการเปลี่ยนตัวละคร" else "ตรวจต้นฉบับรายคน • บทบาทและรูปร่าง", enabled = !packageReceived, completed = packageReceived) { castMenu() }
-        stepCard(3, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "รับบทแล้ว ✓ • เพิ่มภาพ / รับ ZIP", if (p == null) "เลือก ZIP หรือ story.json และภาพ" else "นำเข้าสำเร็จ • เมนู 4 พร้อมใช้งาน เพิ่มเฉพาะภาพได้") { packagePicker.launch(arrayOf("*/*")) }
-        stepCard(4, "🎥", "วิดีโอผ่าน Flow / Veo", "นำเข้า MP4 • รวม EP พร้อมปกเปิด 3 วินาที", enabled = p != null, completed = p != null && rows(p).all { video(it).exists() }) { moviesMenu() }
-        stepCard(5, "⬇", "ดาวน์โหลดหนัง EP เป็น MP4", "ชื่อเรื่อง + เลข EP + ชื่อตอน • ZIP อยู่ในสำรอง", enabled = p != null) { moviesMenu() }
+        stepCard(1, "🎬", if (sent) "ส่งคำสั่งแล้ว ✓" else "สร้างเรื่องและส่งไป ChatGPT", if (sent) "ล็อกการสร้างซ้ำ • เริ่มเรื่องใหม่ใช้ปุ่มด้านล่าง" else "เลือกช่องและแนว • ชื่อเรื่องภาษาไทย", enabled = !sent, completed = sent, currentStep = currentStep) { planning() }
+        stepCard(2, "🎭", if (packageReceived) "ตัวละครและ MASTER พร้อมแล้ว ✓" else "ตัวละครและ MASTER", if (packageReceived) "ล็อกหลังรับ ZIP • เริ่มเรื่องใหม่หากต้องการเปลี่ยนตัวละคร" else "ตรวจต้นฉบับรายคน • บทบาทและรูปร่าง", enabled = !packageReceived, completed = packageReceived, currentStep = currentStep) { castMenu() }
+        stepCard(3, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "รับบทแล้ว ✓ • เพิ่มภาพ / รับ ZIP", if (p == null) "เลือก ZIP หรือ story.json และภาพ" else "นำเข้าสำเร็จ • เมนู 4 พร้อมใช้งาน เพิ่มเฉพาะภาพได้", completed = packageReceived, currentStep = currentStep) { packagePicker.launch(arrayOf("*/*")) }
+        stepCard(4, "🎥", "วิดีโอผ่าน Flow / Veo", "นำเข้า MP4 • รวม EP พร้อมปกเปิด 3 วินาที", enabled = p != null, completed = videosComplete, currentStep = currentStep) { moviesMenu() }
+        stepCard(5, "⬇", "ดาวน์โหลดหนัง EP เป็น MP4", "ชื่อเรื่อง + เลข EP + ชื่อตอน • ZIP อยู่ในสำรอง", enabled = videosComplete, currentStep = currentStep) { moviesMenu() }
         if (p != null) button("📦 ส่งออกชุดงาน / สำรอง ZIP", false) {
             val current = plan ?: return@button
             exportEpisode = null; backupMode = false
@@ -722,8 +735,8 @@ class StudioActivity : AppCompatActivity() {
         val command = if (preserveMaster) "แก้ไขภาพ MASTER ที่แนบด้วยเครื่องมือแก้ไขภาพ และแสดงผลหนึ่งภาพจริงในแชต\nตัวละครผู้ใหญ่และไฟล์อ้างอิง:\n${sceneCastDescription(scene)}\nรักษาบุคคล เครื่องแต่งกาย ท่าทาง สีหน้า สายตา อุปกรณ์ และพื้นที่รอบมือจากภาพอ้างอิง เปลี่ยนเฉพาะฉากหลังเป็น $location\n${if (selected.size == 1) "รักษาระยะกล้องและมุมมองตามภาพต้นฉบับ" else "จัดแต่ละคนที่เคาน์เตอร์แยกกันในภาพเดียว เห็นใบหน้าและกิจกรรมครบ จับคู่ตัวละครกับ MASTER ของตนเอง"}\nภาพสมจริงแนวตั้ง 9:16 ไม่มีข้อความหรือตราสัญลักษณ์ หลังแสดงภาพแจ้งชื่อตัวละครและฉากหลังสั้น ๆ หากแก้ไขภาพไม่ได้ให้แจ้งตามจริง" else "สร้างภาพหนึ่งภาพตอนนี้ด้วยเครื่องมือสร้างภาพ และแสดงภาพจริงในแชต\n${storyVisualGuide("original")}\nตัวละครและชุดรายคน:\n${sceneCastDescription(scene)}\nสถานที่: $location จัดผักสด ชามและอุปกรณ์ทำอาหารให้เหมาะกับกิจกรรม\nการกระทำ: ${actions.joinToString("; ")}\nจัดท่ายืนเป็นธรรมชาติ สีหน้าเป็นมิตร แสงธรรมชาติ เหตุการณ์สมมุติหนึ่งเหตุการณ์ สร้างเฉพาะตัวละครในรายการนี้ ยึด MASTER ต้นฉบับรายคนเป็นหลัก ภาพทดสอบนี้เป็นฉากใหม่ ใช้ชุดและสถานที่ตามคำสั่งนี้\nหลังแสดงภาพจริงแล้วแจ้งชื่อ ชุด สถานที่ และเหตุการณ์สั้น ๆ หากสร้างภาพไม่ได้ให้แจ้งตามจริง"
         shareText(command, useNewMasters = false, selectedMasterKeys = selected.map { it.first })
     }
-    private fun stepCard(number: Int, icon: String, title: String, detail: String, enabled: Boolean = true, completed: Boolean = false, action: () -> Unit) {
-        val active = enabled && !completed
+    private fun stepCard(number: Int, icon: String, title: String, detail: String, enabled: Boolean = true, completed: Boolean = false, currentStep: Int, action: () -> Unit) {
+        val active = number == currentStep
         val status = if (completed) "เสร็จแล้ว" else if (enabled) "พร้อมใช้งาน" else "ล็อก • รอขั้นตอนก่อนหน้า"
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
@@ -734,12 +747,13 @@ class StudioActivity : AppCompatActivity() {
             override fun onDraw(canvas: android.graphics.Canvas) {
                 super.onDraw(canvas)
                 val x = width / 2f; val y = height / 2f; val radius = dp(14).toFloat()
-                paint.color = Color.rgb(61,54,39); paint.strokeWidth = dp(1).toFloat()
-                if (number > 1) canvas.drawLine(x,0f,x,y-radius,paint)
-                if (number < 5) canvas.drawLine(x,y+radius,x,height.toFloat(),paint)
-                paint.color = if (completed) Color.rgb(75,177,140) else if(active) gold else Color.rgb(85,102,125)
+                paint.strokeWidth = dp(if (number <= currentStep) 4 else 2).toFloat()
+                if (number > 1) { paint.color=if(number<=currentStep) electricBlue else Color.rgb(74,87,108); canvas.drawLine(x,0f,x,y-radius,paint) }
+                if (number < 5) { paint.color=if(number<currentStep) electricBlue else Color.rgb(74,87,108); canvas.drawLine(x,y+radius,x,height.toFloat(),paint) }
+                if (active) { paint.color=Color.argb(70,42,220,255); canvas.drawCircle(x,y,dp(18).toFloat(),paint) }
+                paint.color = if (completed || active) electricBlue else Color.rgb(85,102,125)
                 canvas.drawCircle(x,y,radius,paint)
-                paint.color = if (active || completed) navy else muted
+                paint.color = if (active || completed) Color.WHITE else muted
                 paint.textSize = dp(12).toFloat(); paint.textAlign = android.graphics.Paint.Align.CENTER
                 paint.typeface = Typeface.create(Typeface.DEFAULT,Typeface.BOLD)
                 canvas.drawText(if (completed) "✓" else number.toString(),x,y-(paint.ascent()+paint.descent())/2,paint)
@@ -748,7 +762,7 @@ class StudioActivity : AppCompatActivity() {
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16),dp(15),dp(16),dp(15))
-            background = backdrop(if (active) Color.rgb(255,242,211) else Color.rgb(237,241,245), Color.rgb(224,232,241), if (active) gold else Color.rgb(167,183,201))
+            background = backdrop(if (active) Color.rgb(18,51,88) else Color.rgb(24,31,47), if (active) Color.rgb(28,23,67) else Color.rgb(17,23,37), if (active) cyan else if (completed) Color.rgb(57,112,157) else Color.rgb(67,76,94))
             layoutParams = LinearLayout.LayoutParams(0,-2,1f).apply { topMargin = dp(6); bottomMargin = dp(6) }
             minimumHeight = dp(108)
             isEnabled = enabled; isClickable = enabled; isFocusable = enabled
@@ -760,16 +774,16 @@ class StudioActivity : AppCompatActivity() {
         }
         card.addView(TextView(this).apply {
             text = "ขั้นตอน $number  •  $status"; textSize = 10f
-            setTextColor(if(completed) Color.rgb(25,113,80) else if(active) Color.rgb(139,88,19) else Color.rgb(85,97,115))
+            setTextColor(if(completed || active) cyan else muted)
             setTypeface(null,Typeface.BOLD)
         })
         card.addView(TextView(this).apply {
             text = "$title  ${if (enabled) "›" else if (completed) "✓" else "🔒"}"; textSize = 16f
-            setTypeface(null,Typeface.BOLD); setTextColor(navy)
+            setTypeface(null,Typeface.BOLD); setTextColor(if(enabled || completed) ice else muted)
             setPadding(0,dp(7),0,0)
         })
         card.addView(TextView(this).apply {
-            text = detail; textSize = 12f; setTextColor(Color.rgb(79,91,110)); setPadding(0,dp(6),0,0)
+            text = detail; textSize = 12f; setTextColor(if(enabled || completed) Color.rgb(185,198,218) else Color.rgb(112,120,137)); setPadding(0,dp(6),0,0)
         })
         row.addView(card)
         root.addView(row)

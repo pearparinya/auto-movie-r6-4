@@ -82,4 +82,15 @@ class StoryFilesTest {
             assertTrue(result.failedEntries.isEmpty())
         } finally { dir.deleteRecursively() }
     }
+    @Test fun archiveWithoutEndDirectorySalvagesLocalEntries() {
+        val dir = Files.createTempDirectory("studio-test").toFile()
+        try {
+            val complete = archive("story.json" to "{}", "EP01/EP01_SC001.png" to "image")
+            val central = complete.indices.first { i -> i + 3 < complete.size && complete[i] == 0x50.toByte() && complete[i + 1] == 0x4b.toByte() && complete[i + 2] == 0x01.toByte() && complete[i + 3] == 0x02.toByte() }
+            val broken = java.io.File(dir, "missing-end.zip").apply { writeBytes(complete.copyOf(central)) }
+            val result = StoryFiles.unpackFile(broken, java.io.File(dir, "out"))
+            assertEquals(listOf("story.json", "EP01_SC001.png"), result.files.map { it.name })
+            assertTrue(result.failedEntries.first().contains("กู้ข้อมูล"))
+        } finally { dir.deleteRecursively() }
+    }
 }

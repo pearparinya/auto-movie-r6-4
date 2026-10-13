@@ -25,6 +25,25 @@ import java.util.UUID
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
+internal fun buildChatShareIntent(text: String, uris: ArrayList<Uri>): Intent =
+    Intent(if (uris.size <= 1) Intent.ACTION_SEND else Intent.ACTION_SEND_MULTIPLE).apply {
+        type = if (uris.isEmpty()) "text/plain" else {
+            val extensions = uris.map { it.lastPathSegment?.substringAfterLast('.')?.lowercase() }.distinct()
+            when (extensions.singleOrNull()) { "jpg", "jpeg" -> "image/jpeg"; "png" -> "image/png"; "webp" -> "image/webp"; else -> "image/*" }
+        }
+        putExtra(Intent.EXTRA_TEXT,text)
+        putExtra(Intent.EXTRA_SUBJECT,"คำสั่งจาก DIRECTOR X")
+        putExtra(Intent.EXTRA_TITLE,"DIRECTOR X")
+        clipData = ClipData.newPlainText("คำสั่ง DIRECTOR X",text).apply {
+            uris.forEach { addItem(ClipData.Item(it)) }
+        }
+        if (uris.isNotEmpty()) {
+            if (uris.size == 1) putExtra(Intent.EXTRA_STREAM,uris[0])
+            else putParcelableArrayListExtra(Intent.EXTRA_STREAM,uris)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+    }
+
 /** Whole-story workspace. Legacy preferences and character masters stay untouched. */
 class StudioActivity : AppCompatActivity() {
     private val base get() = File(filesDir, "studio").apply { mkdirs() }
@@ -294,10 +313,15 @@ class StudioActivity : AppCompatActivity() {
         if (retry != null) {
             pendingStoryShare = null
             AlertDialog.Builder(this).setTitle("ตรวจข้อมูลใน ChatGPT")
-                .setMessage("$pendingStorySummary\nเปิดหน้าส่งแชร์แล้ว แต่แอปตรวจข้อความใน ChatGPT โดยตรงไม่ได้\nข้อมูลเข้าครบทั้งคำสั่งและภาพหรือไม่? หากภาพเข้าแต่ข้อความว่าง ให้วางคำสั่งที่คัดลอกไว้")
+                .setMessage("$pendingStorySummary\nตรวจว่าช่องพิมพ์ใน ChatGPT มีคำสั่งและภาพครบก่อนกดส่ง\nหากเป็นแชทเปล่า ให้กลับมากด ‘คัดลอกแล้วเปิดใหม่’ จากนั้นแตะช่องพิมพ์ค้างและเลือก วาง")
                 .setPositiveButton("ข้อมูลเข้าครบแล้ว") { _, _ -> pendingReceipt?.invoke(); pendingReceipt = null; render() }
                 .setNeutralButton("ส่งข้อมูลอีกครั้ง") { _, _ -> retry() }
-                .setNegativeButton("ยังไม่เข้า") { _, _ -> render() }.showDirector()
+                .setNegativeButton("คัดลอกแล้วเปิดใหม่") { _, _ ->
+                    val command = File(project,"last_command.txt").takeIf { it.exists() }
+                        ?: File(project,"last_story_command.txt").takeIf { it.exists() }
+                    command?.let { copyCommand(it.readText()) }
+                    retry()
+                }.showDirector()
         } else if (!importing) updater.checkAutomatically()
     }
     private fun rows(p: JSONObject): List<JSONObject> {
@@ -798,19 +822,10 @@ class StudioActivity : AppCompatActivity() {
             out.parentFile!!.mkdirs(); source.copyTo(out, overwrite = true)
             uris.add(FileProvider.getUriForFile(this,"$packageName.fileprovider",out))
         }
-        val intent = Intent(if (uris.size <= 1) Intent.ACTION_SEND else Intent.ACTION_SEND_MULTIPLE).apply {
-            type = if (uris.isEmpty()) "text/plain" else {
-                val extensions = uris.map { it.lastPathSegment?.substringAfterLast('.')?.lowercase() }.distinct()
-                when (extensions.singleOrNull()) { "jpg", "jpeg" -> "image/jpeg"; "png" -> "image/png"; "webp" -> "image/webp"; else -> "image/*" }
-            }
-            putExtra(Intent.EXTRA_TEXT,text)
-            if (uris.isNotEmpty()) {
-                if (uris.size == 1) putExtra(Intent.EXTRA_STREAM,uris[0])
-                else putParcelableArrayListExtra(Intent.EXTRA_STREAM,uris)
-                clipData = ClipData.newUri(contentResolver,"MASTER",uris[0]).apply { uris.drop(1).forEach { addItem(ClipData.Item(it)) } }
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-        }
+        // ChatGPT Android builds do not all read the same share field. Keep
+        // the command in both EXTRA_TEXT and the first ClipData item, then
+        // append every granted image URI to that same ClipData payload.
+        val intent = buildChatShareIntent(text,uris)
         (getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager)
             .setPrimaryClip(ClipData.newPlainText("คำสั่ง DIRECTOR X", text))
         val destination = project
@@ -848,7 +863,7 @@ class StudioActivity : AppCompatActivity() {
         }
         val preview = LinearLayout(this).apply { orientation = 1; setPadding(dp(16),dp(12),dp(16),dp(12)) }
         preview.addView(TextView(this).apply {
-            this.text = "$pendingStorySummary\n$imageList\nตรวจภาพและข้อความใน ChatGPT แล้วกดส่งเอง หากข้อความว่างให้เลือกวาง"
+            this.text = "$pendingStorySummary\n$imageList\nระบบส่งคำสั่งซ้ำทั้งข้อความแชร์และคลิปบอร์ด ตรวจภาพและข้อความใน ChatGPT ก่อนกดส่ง หากช่องว่างให้แตะค้างแล้วเลือก วาง"
             textSize = 13f
         })
         uris.forEach { uri -> preview.addView(ImageView(this).apply {
@@ -859,7 +874,7 @@ class StudioActivity : AppCompatActivity() {
         preview.addView(TextView(this).apply { this.text = text; textSize = 14f; setTextIsSelectable(true) })
         AlertDialog.Builder(this).setTitle("ตรวจคำสั่งและภาพก่อนส่ง")
             .setView(ScrollView(this).apply { addView(preview) })
-            .setPositiveButton("เปิด ChatGPT") { _,_ -> launchShare() }
+            .setPositiveButton("ส่งและเปิด ChatGPT") { _,_ -> launchShare() }
             .setNeutralButton("คัดลอก") { _,_ -> copyCommand(text) }
             .setNegativeButton("ยกเลิก",null).showDirector()
     }

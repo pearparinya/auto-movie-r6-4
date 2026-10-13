@@ -279,7 +279,7 @@ class StudioActivity : AppCompatActivity() {
                         importing=false; dialog.dismiss()
                         val preview=TextView(this).apply { text=details; setPadding(dp(16),dp(12),dp(16),dp(12)) }
                         AlertDialog.Builder(this).setTitle("ตรวจชุดไฟล์ก่อนนำเข้า").setView(ScrollView(this).apply { addView(preview) })
-                            .setPositiveButton("ยืนยันและเปิดเมนู 4") { _,_ -> receivePackage(selected,true) }.setNegativeButton("ยกเลิก",null).showDirector()
+                            .setPositiveButton("ยืนยันและเปิดเมนูวิดีโอ") { _,_ -> receivePackage(selected,true) }.setNegativeButton("ยกเลิก",null).showDirector()
                     }
                     return@Thread
                 }
@@ -525,6 +525,7 @@ class StudioActivity : AppCompatActivity() {
             summaryText(p.optString("channel", originalChannel),12f,Color.rgb(71,85,106))
             summaryText(p.getString("category"),12f,Color.rgb(71,85,106))
             p.optString("tagline").takeIf { it.isNotBlank() }?.let { summaryText(it,13f,navy) }
+            p.optString("episode_reason").takeIf { it.isNotBlank() }?.let { summaryText("เหตุผลจำนวน EP • $it",12f,Color.rgb(71,85,106)) }
             val episodes = p.getJSONArray("episodes")
             for (i in 0 until episodes.length()) {
                 val ep = episodes.getJSONObject(i)
@@ -552,17 +553,16 @@ class StudioActivity : AppCompatActivity() {
         val videosComplete = p != null && rows(p).isNotEmpty() && rows(p).all { video(it).exists() }
         val currentStep = when {
             !sent -> 1
-            p == null -> 3
-            !videosComplete -> 4
-            else -> 5
+            p == null -> 2
+            !videosComplete -> 3
+            else -> 4
         }
         val complete = p != null && rows(p).all { image(it).exists() && video(it).exists() } && coverNames(p).all { coverFile(it).exists() }
-        label(if (complete) "ภาพ วิดีโอ และปกครบแล้ว • ส่งออกชุดงานได้" else if (sent) "ขั้นตอน 2 • รับไฟล์จาก ChatGPT กลับเข้าแอป" else "ขั้นตอน 1 • เลือกเรื่องแล้วส่งไป ChatGPT", 14, true)
+        label(if (complete) "ภาพ วิดีโอ และปกครบแล้ว • ส่งออกชุดงานได้" else if (p != null) "ขั้นตอน $currentStep • ทำวิดีโอและส่งออกหนัง" else if (sent) "ขั้นตอน 2 • รับไฟล์จาก ChatGPT กลับเข้าแอป" else "ขั้นตอน 1 • เลือกเรื่องแล้วส่งไป ChatGPT", 14, true)
         stepCard(1, "🎬", if (sent) "ส่งคำสั่งแล้ว ✓" else "สร้างเรื่องและส่งไป ChatGPT", if (sent) "ล็อกการสร้างซ้ำ • เริ่มเรื่องใหม่ใช้ปุ่มด้านล่าง" else "เลือกช่องและแนว • ชื่อเรื่องภาษาไทย", enabled = !sent, completed = sent, currentStep = currentStep) { planning() }
-        stepCard(2, "🎭", if (packageReceived) "ตัวละครและ MASTER พร้อมแล้ว ✓" else "ตัวละครและ MASTER", if (packageReceived) "ล็อกหลังรับ ZIP • เริ่มเรื่องใหม่หากต้องการเปลี่ยนตัวละคร" else "ตรวจต้นฉบับรายคน • บทบาทและรูปร่าง", enabled = !packageReceived, completed = packageReceived, currentStep = currentStep) { castMenu() }
-        stepCard(3, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "รับบทแล้ว ✓ • เพิ่มภาพ / รับ ZIP", if (p == null) "เลือก ZIP หรือ story.json และภาพ" else "นำเข้าสำเร็จ • เมนู 4 พร้อมใช้งาน เพิ่มเฉพาะภาพได้", completed = packageReceived, currentStep = currentStep) { packagePicker.launch(arrayOf("*/*")) }
-        stepCard(4, "🎥", "วิดีโอผ่าน Flow / Veo", "นำเข้า MP4 • รวม EP พร้อมปกเปิด 3 วินาที", enabled = p != null, completed = videosComplete, currentStep = currentStep) { moviesMenu() }
-        stepCard(5, "⬇", "ดาวน์โหลดหนัง EP เป็น MP4", "ชื่อเรื่อง + เลข EP + ชื่อตอน • ZIP อยู่ในสำรอง", enabled = videosComplete, currentStep = currentStep) { moviesMenu() }
+        stepCard(2, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "รับบทแล้ว ✓ • เพิ่มภาพ / รับ ZIP", if (p == null) "เลือก ZIP หรือ story.json และภาพ" else "นำเข้าสำเร็จ • เมนู 3 พร้อมใช้งาน เพิ่มเฉพาะภาพได้", completed = packageReceived, currentStep = currentStep) { packagePicker.launch(arrayOf("*/*")) }
+        stepCard(3, "🎥", "วิดีโอผ่าน Flow / Veo", "นำเข้า MP4 • รวม EP พร้อมปกเปิด 3 วินาที", enabled = p != null, completed = videosComplete, currentStep = currentStep) { moviesMenu() }
+        stepCard(4, "⬇", "ดาวน์โหลดหนัง EP เป็น MP4", "ชื่อเรื่อง + เลข EP + ชื่อตอน • ZIP อยู่ในสำรอง", enabled = videosComplete, currentStep = currentStep) { moviesMenu() }
         if (p != null) button("📦 ส่งออกชุดงาน / สำรอง ZIP", false) {
             val current = plan ?: return@button
             exportEpisode = null; backupMode = false
@@ -581,7 +581,7 @@ class StudioActivity : AppCompatActivity() {
             AlertDialog.Builder(this).setTitle("เริ่มเรื่องใหม่?").setMessage("เรื่องปัจจุบันเก็บไว้ในรายการเรื่องที่บันทึก สามารถกลับมาทำต่อได้")
                 .setPositiveButton("เริ่มเรื่องใหม่") { _,_ -> prefs.edit().putString("project", UUID.randomUUID().toString()).apply(); render() }.setNegativeButton("ทำเรื่องเดิมต่อ",null).showDirector()
         }, colors = listOf(menuColors[3], menuColors[4]))
-        splitActions("🎭 ตัวละครรายเรื่อง", "🖼️ ทดลองสร้างรูป", { castMenu() }, { testImageMenu() })
+        splitActions("🎭 คลังตัวละคร / MASTER", "🖼️ ทดลองสร้างรูป", { castMenu() }, { testImageMenu() })
         splitActions("📚 เรื่องของฉัน", "🏠 หน้าหลัก", { storiesMenu() }, { render() })
     }
     private fun splitActions(left: String, right: String, leftAction: () -> Unit, rightAction: () -> Unit, colors: List<IntArray> = listOf(menuColors[1], menuColors[2])) {
@@ -769,7 +769,7 @@ class StudioActivity : AppCompatActivity() {
                 val x = width / 2f; val y = height / 2f; val radius = dp(14).toFloat()
                 paint.strokeWidth = dp(if (number <= currentStep) 4 else 2).toFloat()
                 if (number > 1) { paint.color=if(number<=currentStep) electricBlue else Color.rgb(74,87,108); canvas.drawLine(x,0f,x,y-radius,paint) }
-                if (number < 5) { paint.color=if(number<currentStep) electricBlue else Color.rgb(74,87,108); canvas.drawLine(x,y+radius,x,height.toFloat(),paint) }
+                if (number < 4) { paint.color=if(number<currentStep) electricBlue else Color.rgb(74,87,108); canvas.drawLine(x,y+radius,x,height.toFloat(),paint) }
                 if (active) { paint.color=Color.argb(70,42,220,255); canvas.drawCircle(x,y,dp(18).toFloat(),paint) }
                 paint.color = if (completed || active) electricBlue else Color.rgb(85,102,125)
                 canvas.drawCircle(x,y,radius,paint)
@@ -1092,6 +1092,14 @@ class StudioActivity : AppCompatActivity() {
             })
             panel.addView(card)
         }
+        panel.addView(Button(this).apply {
+            text = "🎭 ตรวจ / เปลี่ยน MASTER ก่อนสร้างเรื่อง"; isAllCaps = false
+            setOnClickListener { dialog.dismiss(); characterMasters() }
+        })
+        panel.addView(TextView(this).apply {
+            text = "ตรวจภาพต้นฉบับก่อนส่ง • เลือกช่องด้านล่างเมื่อพร้อม"; textSize = 12f
+            setTextColor(ice); setPadding(0,dp(6),0,dp(10))
+        })
         option(true, "🎬 สตอรี่หลังบ้าน\nซีรีส์สั้นดราม่าผัวเมีย", intArrayOf(Color.rgb(255,204,86), Color.rgb(255,174,38))) {
             chooseGenre(originalChannel, "original")
         }
@@ -1121,12 +1129,13 @@ class StudioActivity : AppCompatActivity() {
             shareText("""วางบทหนัง/ละครให้ช่อง $channel จนจบครบทุก EP ตามแนวที่เลือก
 แนวคิด: ${idea.text.toString().ifBlank { "คิดเรื่องใหม่อัตโนมัติ" }}
 หมวดหมู่ที่ผู้ใช้เลือก: $category
-ก่อนเริ่มสร้างภาพ ต้องแสดงข้อมูลโครงการในแชตให้ครบ ห้ามข้าม: ชื่อช่อง "$channel", ชื่อหมวด "$category", ชื่อเรื่องภาษาไทย, คำโปรยเรื่องสั้น 1–2 ประโยค, จำนวน EP ทั้งหมด และจำนวนซีนรวม
+ก่อนเริ่มสร้างภาพ ต้องแสดงข้อมูลโครงการในแชตให้ครบ ห้ามข้าม: ชื่อช่อง "$channel", ชื่อหมวด "$category", ชื่อเรื่องภาษาไทย, คำโปรยเรื่องสั้น 1–2 ประโยค, จำนวน EP ทั้งหมด, เหตุผลที่เลือกจำนวน EP หนึ่งประโยค และจำนวนซีนรวม
 ตามด้วยตารางทุก EP: เลข EP | ชื่อตอนภาษาไทย | คำโปรยตอนสั้น | จำนวนซีน | เวลารวม (จำนวนซีน × 8 วินาที) ต้องระบุจำนวนจริง ไม่ใช้คำว่าแล้วแต่เนื้อหาแทนตัวเลข
 ชื่อช่องและหมวดใช้ค่าจากแอปตรงตามนี้ ไม่เปลี่ยนชื่อช่องเอง ตั้งชื่อเรื่องและชื่อทุก EP ใหม่ให้เข้ากับเนื้อหา ${if (mode == "original") "รูปแบบซีรีส์สั้นสตอรี่หลังบ้าน ดราม่าชีวิตคู่ มีจุดเปิดเรื่อง ปมและจุดจบชัดเจนแต่ละ EP พร้อมเส้นเรื่องต่อเนื่อง" else "รูปแบบหนัง/ละครหลายแนว ให้โทนเรื่อง จังหวะ ความสัมพันธ์ และบทสรุปตรงกับแนวที่เลือก ถ้าเรื่องจบในตอนเดียวใช้ 1 EP ถ้าต้องต่อเนื่องแบ่งหลาย EP อย่างมีเหตุผล"}
 วางบทครบทุก EP ก่อนสร้างภาพ เก็บข้อมูลสรุปเดียวกันใน story.json และตรวจตัวเลขให้ตรงกับจำนวนสมาชิก episodes และ scenes จริง ห้ามส่ง JSON ตัวอย่างที่มีแค่ฉากเดียวแทนบทเต็ม
 ตั้งชื่อเรื่องเป็นภาษาไทยเท่านั้น ใส่ชื่อภาษาไทยในค่า title ของ story.json และตั้งชื่อไฟล์ ZIP เป็นชื่อเรื่องภาษาไทย.zip ห้ามใช้ชื่อหมวดภาษาอังกฤษเป็นชื่อเรื่องหรือชื่อ ZIP
 สร้างชื่อเรื่องและพล็อตให้ตรงหมวดนี้ ใช้ค่า category ใน story.json เป็น "$category" ตรงทุกตัวอักษร
+เกณฑ์ Auto EP: ห้ามใช้ 3 EP เป็นค่าเริ่มต้นซ้ำโดยไม่มีเหตุผล เรื่องสั้นปมเดียวใช้ 1–2 EP เรื่องระดับกลางมีจุดพลิกใช้ 3–4 EP เรื่องซับซ้อนหลายความสัมพันธ์หรือหลายปมใช้ 5–6 EP เลือกเท่าที่จำเป็นเพื่อเล่าจบ ไม่ยืดเรื่อง และอธิบายเหตุผลหนึ่งประโยคก่อนตาราง หากค่าตั้งต้นผู้ใช้กำหนดตัวเลข EP ให้ใช้ตัวเลขนั้นแทนเกณฑ์ Auto บันทึกเหตุผลเดียวกันใน story.json ด้วยฟิลด์ episode_reason
 ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ${if (mode == "original") "ตัวละครหลัก กวิน รินรดา เมย์ อ้างอิง MASTER ของแต่ละคนเพื่อรักษาเอกลักษณ์ ใบหน้า ทรงผม ช่วงวัย และบุคลิกตรงรายคน" else "สร้างชื่อ ใบหน้า และทรงผมใหม่สำหรับตัวละครของเรื่องนี้ ก่อนสร้างแต่ละ CHARACTER MASTER ให้เลือก GAWIN_MASTER, RINLADA_MASTER หรือ MIND_MASTER หนึ่งภาพเป็น design_reference ด้านโครงร่างโดยรวม ท่าทาง ความสมจริง และการจัดเฟรม กระจายการเลือกให้เหมาะกับตัวละครใหม่ บันทึกชื่อ design_reference ไว้ใน bible แล้วสร้าง CHARACTER_01.png, CHARACTER_02.png ตามจำนวนที่ต้องใช้ ใช้ CHARACTER MASTER ใหม่เดิมอย่างต่อเนื่องทุกฉาก"}\n${storyVisualGuide(mode)}\nใช้วิธีเดียวกับการทดสอบสร้างภาพ: MASTER รายคนเป็นต้นฉบับของตัวละคร ชุด สถานที่และการกระทำเป็นข้อมูลใหม่ตามบท เขียน image_prompt พร้อมใช้ของแต่ละฉากอย่างกระชับ: ตัวละครและ MASTER รายคน → ชุดรายคน → สถานที่และสิ่งของ → การกระทำ → สีหน้าและสายตา ระบุชนิด สี และทรงชุดให้เหมาะกับบทบาท รวมทั้งสถานที่จริงในแต่ละฉากเพื่อสร้างซ้ำได้ ชุดเปลี่ยนตามวันหรือเหตุการณ์ และคงเดิมในเหตุการณ์ต่อเนื่อง ใช้คำอธิบายเชิงบวกสั้น ๆ โดยไม่เพิ่มรายการข้อห้ามยาวซ้ำทุกฉาก เหตุการณ์ทุกฉากมาจากบทของเรื่องนี้ จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน แยก speaker และ narration ผู้บรรยายชายเป็นเสียงนอกภาพ ตัวละครไม่ขยับปากตามเสียงบรรยาย
 แผนความต่อเนื่องของตัวละคร: เก็บชื่อ → ไฟล์ MASTER ตายตัวใน bible: กวิน → GAWIN_MASTER, รินรดา → RINLADA_MASTER, เมย์ → MIND_MASTER ใช้นามสกุล .png/.jpg/.webp ตามไฟล์ภาพที่แนบ โดยชื่อฐานจับคู่ตรงคน สำหรับช่องตัวละครใหม่ใช้ชื่อใหม่ → CHARACTER_01.png ตามที่สร้าง แต่ละฉากมี characters เฉพาะคนที่ปรากฏ พร้อม name, master, outfit ระบุ location และ continuity_group เหตุการณ์เดียวกันใช้รหัสกลุ่มเดียวกัน ชุดและรายละเอียดสถานที่เหมือนเดิม เมื่อเปลี่ยนวันหรือเหตุการณ์จึงเปลี่ยนกลุ่ม
 ก่อนใช้เครื่องมือสร้างภาพแต่ละฉาก อ้างอิง MASTER ต้นฉบับตรงรายคนอีกครั้ง ใช้ภาพฉากก่อนหน้าในกลุ่มเดียวกันเป็นตัวช่วยเรื่องชุด สถานที่ และสิ่งของ โดยตัวตนยึด MASTER เป็นหลัก ตรวจชื่อและชุดของแต่ละคนก่อนส่งสร้าง ไม่ใช้ภาพที่คลาดเคลื่อนแทน MASTER หากขาดต้นฉบับให้แจ้งก่อนสร้าง
@@ -1135,7 +1144,7 @@ class StudioActivity : AppCompatActivity() {
 การส่งชุดงานสุดท้าย: ส่ง story.json เป็นไฟล์แยก และส่งภาพฉากกับปกเป็น ZIP แยกราย EP ใช้ MASTER เป็นภาพอ้างอิงระหว่างสร้าง แต่ไม่ใส่ไฟล์ภาพ MASTER หรือโฟลเดอร์ MASTER/characters ลงใน ZIP คำสั่ง Flow รวมหนึ่งไฟล์ต่อ EP: EP01_FLOW.txt, EP02_FLOW.txt ตามจำนวนตอนจริง แต่ละไฟล์มีชื่อตอนและทุกซีนเรียงเลข แต่ละซีนแสดงเลขฉาก เหตุการณ์ บทพูด และคำสั่ง Flow แยกเป็นบล็อกสำหรับคัดลอกทีละซีน ไม่แยกเป็นไฟล์ Flow รายซีน คำสั่ง flow_prompt ใน story.json ยังต้องครบทุกซีนตามเดิม
 ตัวเลข 1 ในตัวอย่างเป็นเพียงรูปแบบ ต้องแทนด้วยจำนวนจริงของบทเต็ม เพิ่ม EP และฉากเท่าที่เรื่องต้องใช้ เรียงเลขจาก 1 ไม่กำหนดจำนวนตายตัว หลังวางบททั้งเรื่อง ต้องส่ง story.json เป็นไฟล์ดาวน์โหลดแยกทันที ก่อนเริ่มสร้างภาพ ห้ามรอใส่ story.json ไว้ท้าย ZIP เท่านั้น จากนั้นใช้เครื่องมือสร้างภาพและแสดงภาพจริงในแชตแยกหนึ่งฉากหนึ่งไฟล์ตามลำดับครบทุก EP จนจบ ตั้งชื่อ EP01_SC001.png ตามเลข EP และฉาก ไม่ทำภาพรวมหลายฉาก ${if (mode == "original") "ใช้ MASTER ที่แนบให้ตรงรายคน" else "ใช้ CHARACTER MASTER ใหม่ที่สร้างสำหรับเรื่องนี้ตรงรายคน"} พร้อมคำสั่งสำหรับ Flow / Veo 3.1 Lite ทุกฉาก ผู้ใช้ต้องการบทและภาพพร้อมนำไปทำวิดีโอ
 เพื่อป้องกันไฟล์ขนาดใหญ่ถูกตัด ให้ส่ง ZIP แยกหนึ่งไฟล์ต่อ EP ชื่อ EP01_IMAGES.zip, EP02_IMAGES.zip ตามจริง แต่ละ ZIP ใส่เฉพาะภาพฉากและปกของ EP นั้น หลังสร้าง ZIP แต่ละ EP ให้เปิดตรวจว่าอ่านได้ ตรวจจำนวนภาพฉากและปก แล้วรายงานจำนวนที่ตรวจจริง ห้ามแจ้งว่าครบจากแผนโดยไม่ตรวจไฟล์ ห้ามรวมภาพทุก EP เป็น ZIP ก้อนใหญ่ไฟล์เดียว
-หลังสร้างฉากสุดท้ายของแต่ละ EP ให้สร้างปกแยก 2 ไฟล์ทันที: EP01_COVER_9x16.png ขนาด 9:16 และ EP01_COVER_16x9.png ขนาด 16:9 เปลี่ยนเลขตาม EP จัดองค์ประกอบแต่ละสัดส่วนใหม่ ใช้ตัวละครจาก MASTER รายคน สื่อเหตุการณ์เด่นของตอนนั้น ข้อความภาษาไทย 3 บรรทัดจัดกึ่งกลางในพื้นที่กลางภาพ เว้นขอบซ้ายขวาอย่างน้อย 10% และขอบบนล่าง 20%: บรรทัด 1 ชื่อช่อง (เล็กกว่า), บรรทัด 2 ชื่อเรื่อง (ใหญ่ที่สุด), บรรทัด 3 EP 01 • ชื่อตอน (ขนาดรอง) ปรับขนาดอักษรให้ครบทั้งบรรทัด อ่านชัดบนมือถือ ไม่ทับใบหน้า ชื่อเรื่องและชื่อตอนต้องตรง story.json รวมปกทุก EP ใน ZIP ชื่อเรื่องภาษาไทยด้วย""", lockCreation = true, useNewMasters = false)
+หลังสร้างฉากสุดท้ายของแต่ละ EP ให้สร้างปกแยก 2 ไฟล์ทันที: EP01_COVER_9x16.png ขนาด 9:16 และ EP01_COVER_16x9.png ขนาด 16:9 เปลี่ยนเลขตาม EP จัดองค์ประกอบแต่ละสัดส่วนใหม่ ใช้ตัวละครจาก MASTER รายคน สื่อเหตุการณ์เด่นของตอนนั้น ข้อความภาษาไทย 3 บรรทัดจัดกึ่งกลางในพื้นที่กลางภาพ เว้นขอบซ้ายขวาอย่างน้อย 10% และขอบบนล่าง 20%: บรรทัด 1 ชื่อช่อง (เล็กกว่า), บรรทัด 2 ชื่อเรื่อง (ใหญ่ที่สุด), บรรทัด 3 EP 01 • ชื่อตอน (ขนาดรอง) ปรับขนาดอักษรให้ครบทั้งบรรทัด อ่านชัดบนมือถือ ไม่ทับใบหน้า ชื่อเรื่องและชื่อตอนต้องตรง story.json รวมปกไว้ใน ZIP ราย EP ที่ตรงกับเลขตอนด้วย""", lockCreation = true, useNewMasters = false)
         }.setNegativeButton("ยกเลิก",null).showDirector()
     }
     private fun sceneCommands() {

@@ -73,4 +73,13 @@ class StoryFilesTest {
         val dir = Files.createTempDirectory("studio-test").toFile()
         try { StoryFiles.unpack(ByteArrayInputStream(archive("story.json" to "123456")), dir, 5) } finally { dir.deleteRecursively() }
     }
+    @Test fun downloadedArchiveUsesCentralDirectory() {
+        val dir = Files.createTempDirectory("studio-test").toFile()
+        try {
+            val archiveFile = java.io.File(dir, "download.zip").apply { writeBytes(archive("story.json" to "{}", "EP01/EP01_SC001.png" to "image")) }
+            val result = StoryFiles.unpackFile(archiveFile, java.io.File(dir, "out"))
+            assertEquals(listOf("story.json", "EP01_SC001.png"), result.files.map { it.name })
+            assertTrue(result.failedEntries.isEmpty())
+        } finally { dir.deleteRecursively() }
+    }
 }

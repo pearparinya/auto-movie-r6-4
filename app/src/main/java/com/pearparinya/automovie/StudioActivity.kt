@@ -204,9 +204,15 @@ class StudioActivity : AppCompatActivity() {
                 File(cacheDir,"story_import").deleteRecursively()
                 val staging = File(cacheDir, "story_import/${UUID.randomUUID()}").apply { mkdirs() }
                 val files = mutableListOf<Uri>()
+                val failedZipEntries = mutableListOf<String>()
                 for (uri in selected) {
                     if (displayName(uri).endsWith(".zip", true) || contentResolver.getType(uri) in listOf("application/zip", "application/x-zip-compressed")) {
-                        contentResolver.openInputStream(uri)!!.use { input -> files.addAll(StoryFiles.unpack(input, File(staging, files.size.toString())).map { Uri.fromFile(it) }) }
+                        val archive = File(staging, "archive-${files.size}.zip")
+                        contentResolver.openInputStream(uri)!!.use { input -> archive.outputStream().use { input.copyTo(it) } }
+                        require(archive.length() > 4 && archive.inputStream().use { it.read() == 'P'.code && it.read() == 'K'.code }) { "ไฟล์ที่เลือกไม่ใช่ ZIP ที่สมบูรณ์" }
+                        val unpacked = StoryFiles.unpackFile(archive, File(staging, "unpacked-${files.size}"))
+                        files.addAll(unpacked.files.map { Uri.fromFile(it) })
+                        failedZipEntries.addAll(unpacked.failedEntries)
                     } else files.add(uri)
                 }
                 val scripts = files.filter { displayName(it).equals("story.json", true) }
@@ -246,7 +252,7 @@ class StudioActivity : AppCompatActivity() {
                     val details = "เรื่อง: ${destinationStory.optString("title")}\n" + files.joinToString("\n") { uri ->
                         val filename=displayName(uri); val number=StoryFiles.sceneNumber(filename)
                         filename + if(number != null) " → EP${number.first} ฉาก ${number.second}" else ""
-                    } + "\n\nตรวจจับคู่ก่อนนำเข้า • ภาพฉากเดิมจะถามก่อนแทน ภาพ MASTER และปกที่ซ้ำจะเก็บเวอร์ชันก่อนแทน"
+                    } + (if (failedZipEntries.isEmpty()) "" else "\n\n⚠ อ่านไม่ได้ ${failedZipEntries.size} ไฟล์:\n${failedZipEntries.joinToString("\n")}") + "\n\nตรวจจับคู่ก่อนนำเข้า • ภาพฉากเดิมจะถามก่อนแทน ภาพ MASTER และปกที่ซ้ำจะเก็บเวอร์ชันก่อนแทน"
                     runOnUiThread {
                         importing=false; dialog.dismiss()
                         val preview=TextView(this).apply { text=details; setPadding(dp(16),dp(12),dp(16),dp(12)) }
@@ -285,7 +291,7 @@ class StudioActivity : AppCompatActivity() {
                     if (scenes.isNotEmpty()) importImages(scenes)
                     else if (videos.isNotEmpty()) notice("รับวิดีโอแล้ว ${videos.size} ฉาก")
                     else if (covers.isNotEmpty()) notice("รับปกแล้ว ${covers.size} ไฟล์ ตรวจจำนวนภาพและปกบนหน้าแรกได้เลย")
-                    else notice(if (candidate != null) "รับบทแล้ว ขั้นตอน 2: เพิ่มภาพฉากได้เลย ไม่ต้องเลือก story.json ซ้ำ" else "รับภาพ MASTER แล้ว เพิ่มภาพฉากในขั้นตอน 2 ได้เลย")
+                    else notice(if (failedZipEntries.isNotEmpty()) "รับส่วนที่สมบูรณ์แล้ว • ข้ามไฟล์ที่อ่านไม่ได้ ${failedZipEntries.size} ไฟล์ กดตรวจงานที่ขาดเพื่อเพิ่มเฉพาะไฟล์" else if (candidate != null) "รับบทแล้ว ขั้นตอน 2: เพิ่มภาพฉากได้เลย ไม่ต้องเลือก story.json ซ้ำ" else "รับภาพ MASTER แล้ว เพิ่มภาพฉากในขั้นตอน 2 ได้เลย")
                 }
             } catch (e: Exception) { runOnUiThread { importing = false; dialog.dismiss(); render(); notice("นำเข้าบทและภาพไม่สำเร็จ: ${e.message}") } }
         }.start()

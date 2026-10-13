@@ -12,4 +12,5 @@
     <cache-path
         name="scene_reference_exports"
         path="scene_reference_exports/" />
+    <cache-path name="movie_exports" path="movie_exports/" />
 </paths>

@@ -257,7 +257,7 @@ class StudioActivity : AppCompatActivity() {
                         importing=false; dialog.dismiss()
                         val preview=TextView(this).apply { text=details; setPadding(dp(16),dp(12),dp(16),dp(12)) }
                         AlertDialog.Builder(this).setTitle("ตรวจชุดไฟล์ก่อนนำเข้า").setView(ScrollView(this).apply { addView(preview) })
-                            .setPositiveButton("นำเข้าชุดนี้") { _,_ -> receivePackage(selected,true) }.setNegativeButton("ยกเลิก",null).showDirector()
+                            .setPositiveButton("ยืนยันและเปิดเมนู 4") { _,_ -> receivePackage(selected,true) }.setNegativeButton("ยกเลิก",null).showDirector()
                     }
                     return@Thread
                 }
@@ -274,8 +274,14 @@ class StudioActivity : AppCompatActivity() {
                             if(!target.exists() && source.exists()) { target.parentFile!!.mkdirs(); source.copyTo(target) }
                         }
                     }
-                    File(folder,"story.json").writeText(candidate.toString(2))
-                    prefs.edit().putString("project",folder.name).commit()
+                    val storyFile = File(folder,"story.json")
+                    storyFile.writeText(candidate.toString(2))
+                    require(storyFile.isFile && storyFile.length() > 0) { "บันทึก story.json ไม่สำเร็จ" }
+                    require(prefs.edit().putString("project",folder.name).commit()) { "ตั้งค่าโครงการปัจจุบันไม่สำเร็จ" }
+                    val persisted = JSONObject(File(project,"story.json").readText())
+                    validate(persisted)
+                    plan = persisted
+                    File(project,"package_imported").writeText(System.currentTimeMillis().toString())
                 } else {
                     require(plan != null) { "ยังไม่มีบท กรุณานำเข้า story.json หรือ ZIP ที่มีบทก่อน" }
                     importNewMasters(masters)
@@ -288,6 +294,7 @@ class StudioActivity : AppCompatActivity() {
                 checkedCovers.forEach { (name, temp) -> coverFile(name).apply { parentFile!!.mkdirs() }.let { if(it.exists()) archiveVersion(it,project,name,"cover"); temp.copyTo(it,overwrite=true) } }
                 runOnUiThread {
                     importing = false; dialog.dismiss(); render()
+                    if (candidate != null && plan == null) return@runOnUiThread notice("รับไฟล์แล้วแต่ยังเปิดโครงการไม่ได้ กรุณานำเข้า ZIP อีกครั้ง")
                     if (scenes.isNotEmpty()) importImages(scenes)
                     else if (videos.isNotEmpty()) notice("รับวิดีโอแล้ว ${videos.size} ฉาก")
                     else if (covers.isNotEmpty()) notice("รับปกแล้ว ${covers.size} ไฟล์ ตรวจจำนวนภาพและปกบนหน้าแรกได้เลย")
@@ -520,7 +527,7 @@ class StudioActivity : AppCompatActivity() {
         label(if (complete) "ภาพ วิดีโอ และปกครบแล้ว • ส่งออกชุดงานได้" else if (sent) "ขั้นตอน 2 • รับไฟล์จาก ChatGPT กลับเข้าแอป" else "ขั้นตอน 1 • เลือกเรื่องแล้วส่งไป ChatGPT", 14, true)
         stepCard(1, "🎬", if (sent) "ส่งคำสั่งแล้ว ✓" else "สร้างเรื่องและส่งไป ChatGPT", if (sent) "ล็อกการสร้างซ้ำ • เริ่มเรื่องใหม่ใช้ปุ่มด้านล่าง" else "เลือกช่องและแนว • ชื่อเรื่องภาษาไทย", enabled = !sent, completed = sent) { planning() }
         stepCard(2, "🎭", if (packageReceived) "ตัวละครและ MASTER พร้อมแล้ว ✓" else "ตัวละครและ MASTER", if (packageReceived) "ล็อกหลังรับ ZIP • เริ่มเรื่องใหม่หากต้องการเปลี่ยนตัวละคร" else "ตรวจต้นฉบับรายคน • บทบาทและรูปร่าง", enabled = !packageReceived, completed = packageReceived) { castMenu() }
-        stepCard(3, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "เพิ่มภาพฉาก / รับ ZIP", "เลือก ZIP หรือ story.json และภาพ • มีบทแล้วเพิ่มเฉพาะภาพได้") { packagePicker.launch(arrayOf("*/*")) }
+        stepCard(3, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "รับบทแล้ว ✓ • เพิ่มภาพ / รับ ZIP", if (p == null) "เลือก ZIP หรือ story.json และภาพ" else "นำเข้าสำเร็จ • เมนู 4 พร้อมใช้งาน เพิ่มเฉพาะภาพได้") { packagePicker.launch(arrayOf("*/*")) }
         stepCard(4, "🎥", "วิดีโอผ่าน Flow / Veo", "นำเข้า MP4 • รวม EP พร้อมปกเปิด 3 วินาที", enabled = p != null, completed = p != null && rows(p).all { video(it).exists() }) { moviesMenu() }
         stepCard(5, "⬇", "ดาวน์โหลดหนัง EP เป็น MP4", "ชื่อเรื่อง + เลข EP + ชื่อตอน • ZIP อยู่ในสำรอง", enabled = p != null) { moviesMenu() }
         if (p != null) button("📦 ส่งออกชุดงาน / สำรอง ZIP", false) {

@@ -71,10 +71,10 @@ class StudioActivity : AppCompatActivity() {
         val dialog = AlertDialog.Builder(this).setView(panel).setCancelable(cancelable).create()
         choices.forEachIndexed { index, value ->
             list.addView(TextView(this).apply {
-                text = value; textSize = 16f; setTextColor(ice); setTypeface(null,Typeface.BOLD)
+                text = value; textSize = 16f; setTextColor(navy); setTypeface(null,Typeface.BOLD)
                 gravity = Gravity.CENTER_VERTICAL; minHeight = dp(60)
                 setPadding(dp(14),dp(14),dp(14),dp(14))
-                background = backdrop(Color.rgb(34,31,25),Color.rgb(24,24,27),Color.rgb(86,68,39))
+                background = backdrop(Color.rgb(248,246,239),Color.rgb(226,234,243),Color.rgb(173,187,204))
                 layoutParams = LinearLayout.LayoutParams(-1,-2).apply { bottomMargin = dp(10) }
                 isClickable = true; isFocusable = true
                 val attr = android.util.TypedValue()
@@ -841,7 +841,9 @@ class StudioActivity : AppCompatActivity() {
         val cast = scene.optJSONArray("characters") ?: return ""
         return (0 until cast.length()).joinToString("\n") { i ->
             val person = cast.getJSONObject(i)
-            "${person.optString("name")} → ${person.optString("master")} | ชุด: ${person.optString("outfit")}" }
+            val master=masterFor(person)
+            val exported=masterExportName(master,person.optString("master").startsWith("CHARACTER",true)) ?: person.optString("master")
+            "${person.optString("name")} → $exported | ชุด: ${person.optString("outfit")}" }
     }
     private fun storySceneCommand(p: JSONObject, scene: JSONObject): String {
         val scenes = rows(p)
@@ -863,8 +865,13 @@ class StudioActivity : AppCompatActivity() {
             it.optString("continuity_group") == group && image(it).exists()
         }
         val references = previous?.let { listOf(key(it) to image(it)) } ?: emptyList()
+        val masterRefs = if(cast != null) (0 until cast.length()).map { cast.getJSONObject(it) }.map { person ->
+            val source=masterFor(person)
+            val exported=masterExportName(source,!original) ?: run { notice("ขาด MASTER ของ ${person.optString("name")}"); return }
+            exported.substringBeforeLast('.') to source
+        } else keys.map { id -> val source=File(project,"original_masters/$id.master").takeIf { it.exists() } ?: File(filesDir,"character_masters/$id.master"); "${id.uppercase()}_MASTER" to source }
         rememberScene(scene)
-        shareText(storySceneCommand(p,scene), selectedMasterKeys = if (original) keys else null, referenceImages = references)
+        shareText(storySceneCommand(p,scene),includeMasters=false,referenceImages=masterRefs+references)
     }
     private fun wholeStoryCommands() {
         val p = plan ?: return notice("นำเข้าแผนเรื่องก่อนครับ")
@@ -1029,7 +1036,9 @@ class StudioActivity : AppCompatActivity() {
             val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
             android.graphics.BitmapFactory.decodeFile(temporary.path, bounds)
             require(bounds.outWidth > 0 && bounds.outHeight > 0) { "ไฟล์ MASTER ไม่ใช่ภาพ" }
-            require(temporary.renameTo(File(dir, "CHARACTER_$index.png"))) { "บันทึก MASTER ไม่สำเร็จ" }
+            val target=File(dir,"CHARACTER_$index.png")
+            if(target.exists()) archiveVersion(target,folder,"CHARACTER_$index","master")
+            require(temporary.renameTo(target)) { "บันทึก MASTER ไม่สำเร็จ" }
         }
     }
     private fun importImages(uris: List<Uri>, confirmedOrder: Boolean = false) {
@@ -1119,6 +1128,7 @@ class StudioActivity : AppCompatActivity() {
     }
     private fun rememberScene(s: JSONObject) {
         prefs.edit().putString("last_scene_${project.name}",key(s)).apply()
+        File(project,"last_scene.txt").writeText(key(s))
     }
     private fun video(s: JSONObject) = File(project,"videos/${key(s)}.mp4")
     private fun archiveVersion(source: File, folder: File, id: String, kind: String) {
@@ -1128,7 +1138,7 @@ class StudioActivity : AppCompatActivity() {
     private fun resumeScene() {
         val p = plan ?: return notice("สร้างหรือนำเข้าบทก่อนครับ")
         val scenes = rows(p)
-        val last = prefs.getString("last_scene_${project.name}","")
+        val last = prefs.getString("last_scene_${project.name}",null) ?: File(project,"last_scene.txt").takeIf { it.exists() }?.readText().orEmpty()
         sceneMenu(scenes.firstOrNull { key(it) == last } ?: scenes.firstOrNull { !image(it).exists() } ?: scenes.first())
     }
     private fun episodesMenu() {
@@ -1212,7 +1222,10 @@ class StudioActivity : AppCompatActivity() {
             }.setNegativeButton("ยกเลิก",null).showDirector()
     }
     private fun masterFor(person: JSONObject): File {
-        if (plan?.optString("character_mode","original") == "new") return File(project,"masters/${person.optString("master")}")
+        if (person.optString("master").startsWith("CHARACTER",true)) {
+            val requested=person.optString("master"); val exact=File(project,"masters/$requested")
+            return if(exact.exists()) exact else File(project,"masters").listFiles()?.firstOrNull { it.nameWithoutExtension.equals(requested.substringBeforeLast('.'),true) } ?: exact
+        }
         val id = StoryIdentity.keyFor(person.optString("name")) ?: return File(project,"missing.master")
         return File(project,"original_masters/$id.master").takeIf { it.exists() } ?: File(filesDir,"character_masters/$id.master")
     }
@@ -1223,7 +1236,7 @@ class StudioActivity : AppCompatActivity() {
             val change = input.text.toString().trim()
             if (change.isBlank()) { notice("ระบุส่วนที่ต้องแก้ก่อน"); return@setPositiveButton }
             val cast = s.optJSONArray("characters") ?: JSONArray()
-            val refs = (0 until cast.length()).map { cast.getJSONObject(it) }.map { it.optString("master").substringBeforeLast('.') to masterFor(it) } + (key(s) to image(s))
+            val refs = (0 until cast.length()).map { cast.getJSONObject(it) }.map { (masterExportName(masterFor(it),it.optString("master").startsWith("CHARACTER",true)) ?: it.optString("master")).substringBeforeLast('.') to masterFor(it) } + (key(s) to image(s))
             shareText("แก้ภาพ ${key(s)} ที่แนบด้วยเครื่องมือแก้ไขภาพ แสดงภาพจริงหนึ่งภาพ\n$change\nคงใบหน้า ผม รูปร่างและสัดส่วนตาม MASTER ตรงรายคน คงองค์ประกอบส่วนอื่นของภาพฉาก\n${sceneCastDescription(s)}\nตั้งชื่อ ${key(s)}.png",includeMasters=false,referenceImages=refs)
         }.setNegativeButton("ยกเลิก",null).showDirector()
     }

@@ -23,6 +23,7 @@ class ChatSharePayloadTest {
         assertEquals("สร้างภาพทดสอบ",intent.getStringExtra(Intent.EXTRA_TEXT))
         assertEquals(images,intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM))
         assertTrue(intent.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0)
+        assertTrue(intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0)
         assertEquals(4,intent.clipData!!.itemCount)
         assertEquals("สร้างภาพทดสอบ",intent.clipData!!.getItemAt(0).text.toString())
         images.forEachIndexed { index, uri -> assertEquals(uri,intent.clipData!!.getItemAt(index + 1).uri) }
@@ -34,5 +35,6 @@ class ChatSharePayloadTest {
         assertEquals("text/plain",intent.type)
         assertEquals("คำสั่งเดียว",intent.getStringExtra(Intent.EXTRA_TEXT))
         assertEquals("คำสั่งเดียว",intent.clipData!!.getItemAt(0).text.toString())
+        assertTrue(intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0)
     }
 }

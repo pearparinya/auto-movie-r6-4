@@ -1488,7 +1488,7 @@ class StudioActivity : AppCompatActivity() {
         choiceMenu("🎬 รวมหนังและดาวน์โหลด MP4",(0 until eps.length()).map { i -> val ep=eps.getJSONObject(i); "EP ${ep.getInt("ep")} • ${ep.optString("title")}" }) { i -> movieEpisode(eps.getJSONObject(i)) }
     }
     private fun movieEpisode(ep: JSONObject) {
-        choiceMenu("EP ${ep.getInt("ep")} • ${ep.optString("title")}",listOf("🎬 ตรวจคลิปและรวม EP", "⏳ ดูความคืบหน้า / ยกเลิก", "▶ ดูหนังที่รวมแล้ว", "⬇ ดาวน์โหลด MP4", "↗ แชร์ MP4", "🗂️ หนังเวอร์ชันก่อนหน้า", "🎞️ จัดการคลิปฉาก")) { i -> when(i) {
+        choiceMenu("EP ${ep.getInt("ep")} • ${ep.optString("title")}",listOf("🎬 ตรวจคลิปและรวม EP", "⏳ ดูความคืบหน้า / ยกเลิก", "▶ ดูหนังที่รวมแล้ว", "⬇ ดาวน์โหลด MP4", "↗ แชร์ MP4", "🗂️ หนังเวอร์ชันก่อนหน้า", "🎞️ จัดการคลิปฉาก", "↕ จัดลำดับคลิป")) { i -> when(i) {
             0 -> prepareMovie(ep)
             1 -> movieProgress(ep.getInt("ep"))
             2 -> latestMovie(ep.getInt("ep"))?.let { playMovie(it) } ?: notice("ยังไม่มีหนังที่รวมสำเร็จ")
@@ -1500,19 +1500,43 @@ class StudioActivity : AppCompatActivity() {
                 }
             }
             6 -> episodesMenu()
+            7 -> reorderMovie(ep)
         } }
+    }
+    private fun orderedMovieScenes(ep: JSONObject): List<JSONObject> {
+        val scenes=rows(plan!!).filter { it.getInt("ep")==ep.getInt("ep") }.sortedBy { it.getInt("scene") }
+        val order=ep.optJSONArray("render_order") ?: return scenes
+        val keys=(0 until order.length()).map { order.getString(it) }
+        require(keys.size==scenes.size && keys.toSet()==scenes.map { key(it) }.toSet()) { "ลำดับคลิปไม่ตรงบท กรุณาจัดลำดับใหม่หรือคืนลำดับเลขฉาก" }
+        return keys.map { id -> scenes.first { key(it)==id } }
+    }
+    private fun reorderMovie(ep: JSONObject) {
+        val scenes=rows(plan!!).filter { it.getInt("ep")==ep.getInt("ep") }.sortedBy { it.getInt("scene") }
+        val ordered=runCatching { orderedMovieScenes(ep) }.getOrDefault(scenes)
+        val ids=ordered.map { key(it) }.toMutableList()
+        choiceMenu("จัดลำดับ • เลือกคลิปเพื่อเลื่อน",ids.mapIndexed { i,id -> "${i+1}. $id" }+"คืนลำดับเลขฉาก") { index ->
+            if(index==ids.size) { ep.remove("render_order"); saveStory(); reorderMovie(ep) }
+            else choiceMenu(ids[index],listOf("เลื่อนขึ้น", "เลื่อนลง")) { action ->
+                val destination=if(action==0) index-1 else index+1
+                if(destination !in ids.indices) notice("อยู่ปลายลำดับแล้ว") else {
+                    val item=ids.removeAt(index); ids.add(destination,item); ep.put("render_order",JSONArray(ids)); saveStory(); reorderMovie(ep)
+                }
+            }
+        }
     }
     private fun movieJobs(ep: Int) = File(project,"movies/EP%02d".format(ep)).listFiles()?.filter { it.isDirectory }?.sortedByDescending { it.name }.orEmpty()
     private fun readMovieState(job: File): JSONObject = runCatching { JSONObject(File(job,"status.json").readText()) }.getOrDefault(JSONObject())
     private fun latestMovie(ep: Int) = movieJobs(ep).firstOrNull { readMovieState(it).optString("state")=="complete" && File(it,"output.mp4").isFile }
     private fun movieFingerprint(ep: Int): String {
-        val scenes=rows(plan!!).filter { it.getInt("ep")==ep }.sortedBy { it.getInt("scene") }
+        val episodes=plan!!.getJSONArray("episodes")
+        val episode=(0 until episodes.length()).map { episodes.getJSONObject(it) }.first { it.getInt("ep")==ep }
+        val scenes=orderedMovieScenes(episode)
         val cover=coverFile("EP%02d_COVER_9x16".format(ep))
-        return (listOf(cover)+scenes.map { video(it) }).joinToString("|") { if(it.exists()) EpisodeMedia.digest(it) else "missing" }
+        return scenes.joinToString(",") { key(it) }+"|"+(listOf(cover)+scenes.map { video(it) }).joinToString("|") { if(it.exists()) EpisodeMedia.digest(it) else "missing" }
     }
     private fun prepareMovie(ep: JSONObject) {
         if(EpisodeRenderService.running) return movieProgress(ep.getInt("ep"))
-        val number=ep.getInt("ep"); val scenes=rows(plan!!).filter { it.getInt("ep")==number }.sortedBy { it.getInt("scene") }
+        val number=ep.getInt("ep"); val scenes=runCatching { orderedMovieScenes(ep) }.getOrElse { notice(it.message ?: "ตรวจลำดับคลิป"); return }
         val missing=scenes.filter { !video(it).exists() }
         if(missing.isNotEmpty()) return notice("ยังขาดคลิป ${missing.joinToString { key(it) }}\nนำเข้าให้ครบก่อนรวม")
         val cover=coverFile("EP%02d_COVER_9x16".format(number))
@@ -1548,7 +1572,7 @@ class StudioActivity : AppCompatActivity() {
                                 if(mode==1 && infos.any { it.width!=1080 || it.height!=1920 || it.rotation!=0 || kotlin.math.abs(it.fps-infos.first().fps)>0.1f }) { notice("ขนาด/เฟรมเรตต่างกัน ต้องเลือกปรับไฟล์คุณภาพสูง"); return@choiceMenu }
                                 val message=if(mode==0) "ปกและคลิปจะเข้ารหัสใหม่เป็น H.264 คุณภาพสูง ${bitrate/1_000_000} Mbps เสียง AAC รักษาเสียงเดิม ไม่มีดนตรีเพิ่ม คุณภาพอาจเปลี่ยนเล็กน้อย\nไฟล์ขนาดเล็กกว่าจะถูกขยาย แต่ไม่เพิ่มรายละเอียดจริง" else "สร้างปกเปิดก่อน แล้วตรวจ codec/config และเสียง ถ้าไม่ตรงจะหยุดและแจ้ง ไม่แปลงคลิปเอง"
                                 AlertDialog.Builder(this).setTitle("ยืนยันวิธีรวม").setMessage(message).setPositiveButton("ดำเนินการ") { _,_ ->
-                                    if(mode==0 && infos.any { it.width.toDouble()/it.height !in 0.55..0.58 || it.rotation!=0 }) choiceMenu("จัดภาพต่างสัดส่วน",listOf("เว้นขอบ • เห็นภาพครบ", "ครอปกึ่งกลาง • เต็มจอ อาจตัดขอบ")) { layout -> start(layout==1) }
+                                    if(mode==0 && infos.any { it.width.toDouble()/it.height !in 0.55..0.58 || it.rotation!=0 }) choiceMenu("จัดภาพต่างสัดส่วน",listOf("เว้นขอบ • เห็นภาพครบ", "ครอปกึ่งกลาง • เต็มจอ อาจตัดขอบ")) { layout -> movieLayoutPreview(infos.first { it.width.toDouble()/it.height !in 0.55..0.58 || it.rotation!=0 }.file,layout==1) { start(layout==1) } }
                                     else start(false)
                                 }.setNegativeButton("ยกเลิก",null).showDirector()
                             }
@@ -1556,6 +1580,23 @@ class StudioActivity : AppCompatActivity() {
                 }
             } catch(e: Exception) { runOnUiThread { dialog.dismiss(); notice("ตรวจคลิปไม่ผ่าน: ${e.message}") } }
         }.start()
+    }
+    private fun movieLayoutPreview(file: File, crop: Boolean, proceed: () -> Unit) {
+        val reader=android.media.MediaMetadataRetriever()
+        val bitmap=runCatching {
+            reader.setDataSource(file.path)
+            if(android.os.Build.VERSION.SDK_INT>=27) reader.getScaledFrameAtTime(0,android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC,540,960) else reader.getFrameAtTime(0)
+        }.getOrNull()
+        reader.release()
+        val view=ImageView(this).apply {
+            setImageBitmap(bitmap); setBackgroundColor(Color.BLACK)
+            scaleType=if(crop) ImageView.ScaleType.CENTER_CROP else ImageView.ScaleType.FIT_CENTER
+            layoutParams=LinearLayout.LayoutParams(dp(270),dp(480))
+        }
+        val panel=LinearLayout(this).apply { orientation=1; gravity=Gravity.CENTER; addView(view) }
+        val dialog=AlertDialog.Builder(this).setTitle(if(crop) "ตัวอย่างครอปกึ่งกลาง 9:16" else "ตัวอย่างเว้นขอบ 9:16").setView(panel)
+            .setPositiveButton("ใช้รูปแบบนี้") { _,_ -> proceed() }.setNegativeButton("ยกเลิก",null).create()
+        dialog.setOnDismissListener { view.setImageDrawable(null); bitmap?.recycle() }; dialog.show()
     }
     private fun movieProgress(ep: Int) {
         val job=movieJobs(ep).firstOrNull() ?: return notice("ยังไม่มีงานรวม EP นี้")
@@ -1590,13 +1631,18 @@ class StudioActivity : AppCompatActivity() {
     }
     private val movieDownloadPicker=registerForActivityResult(ActivityResultContracts.CreateDocument("video/mp4")) { uri ->
         val path=prefs.getString("movie_download_job",null)
-        if(uri!=null && path!=null) background {
-            val job=File(path); val file=File(job,"output.mp4"); require(file.isFile) { "ไม่พบ MP4" }
-            contentResolver.openOutputStream(uri,"wt")!!.use { output -> file.inputStream().use { it.copyTo(output) } }
-            val size=contentResolver.openFileDescriptor(uri,"r")?.use { it.statSize }
-            require(size==null || size<0 || size==file.length()) { "บันทึกไฟล์ไม่ครบ" }
-            File(job,"downloaded.json").writeText(JSONObject().put("uri",uri.toString()).put("time",System.currentTimeMillis()).toString())
-            runOnUiThread { notice("ดาวน์โหลด MP4 สำเร็จ • ${displayName(uri)}") }
+        if(uri!=null && path!=null) {
+            val dialog=AlertDialog.Builder(this).setMessage("กำลังบันทึก MP4 ลงตำแหน่งที่เลือก…").setCancelable(false).showDirector()
+            Thread {
+                try {
+                    val job=File(path); val file=File(job,"output.mp4"); require(file.isFile) { "ไม่พบ MP4" }
+                    contentResolver.openOutputStream(uri,"wt")!!.use { output -> file.inputStream().use { it.copyTo(output) } }
+                    val size=contentResolver.openFileDescriptor(uri,"r")?.use { it.statSize }
+                    require(size==null || size<0 || size==file.length()) { "บันทึกไฟล์ไม่ครบ" }
+                    File(job,"downloaded.json").writeText(JSONObject().put("uri",uri.toString()).put("time",System.currentTimeMillis()).toString())
+                    runOnUiThread { dialog.dismiss(); notice("ดาวน์โหลด MP4 สำเร็จ • ${displayName(uri)}") }
+                } catch(e: Exception) { runOnUiThread { dialog.dismiss(); notice("ดาวน์โหลดไม่สำเร็จ: ${e.message} • ไฟล์ที่ตำแหน่งปลายทางอาจยังไม่ครบ กรุณาบันทึกใหม่") } }
+            }.start()
         }
         prefs.edit().remove("movie_download_job").apply()
     }

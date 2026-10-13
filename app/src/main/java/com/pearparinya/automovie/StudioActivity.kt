@@ -48,6 +48,12 @@ internal fun buildChatShareIntent(text: String, uris: ArrayList<Uri>): Intent =
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
 
+internal fun neutralIdentityGuide(source: String, aspect: String): String =
+    "ใช้ $source ตรงรายคนเป็นภาพอ้างอิง รักษาเอกลักษณ์ ใบหน้า ทรงผม ช่วงวัย บุคลิก และโครงร่างโดยรวมของตัวละคร " +
+    "ใช้เครื่องแต่งกายตามบท ระบุสถานที่ สิ่งของ และการกระทำให้ชัดเจน ภาพละครไทยสมจริง สัดส่วน $aspect " +
+    "เห็นใบหน้าและการกระทำครบ สีหน้าและสายตาตามเหตุการณ์ รักษาชุดและสถานที่เดิมเมื่อเป็นเหตุการณ์ต่อเนื่อง " +
+    "ภาพไม่มีข้อความหรือตราสัญลักษณ์ สร้างด้วยเครื่องมือสร้างภาพและแสดงภาพจริงในแชต หากสร้างไม่ได้ให้แจ้งตามจริง"
+
 /** Whole-story workspace. Legacy preferences and character masters stay untouched. */
 class StudioActivity : AppCompatActivity() {
     private val base get() = File(filesDir, "studio").apply { mkdirs() }
@@ -615,7 +621,7 @@ class StudioActivity : AppCompatActivity() {
             val index = outfits.indices.filter { it != last }.random()
             prefs.edit().putInt("personal_test_outfit_last", index).apply()
             val location = nextTestLocation()
-            val command = "สร้างภาพหนึ่งภาพตอนนี้ด้วยเครื่องมือสร้างภาพ และแสดงภาพจริงในแชต\nตัวละคร: ปริญญา ใช้ภาพ PARINYA_REFERENCE ที่แนบเป็นต้นฉบับ คงใบหน้า ผม รูปร่าง และสัดส่วนร่างกาย\nชุดใหม่: ${outfits[index]}\nสถานที่: $location\nการกระทำ: กำลังจัดผักสดลงในชามบนโต๊ะเตรียมอาหาร สีหน้าเป็นมิตร ท่ายืนเป็นธรรมชาติ\nภาพสมจริง แนวตั้ง 9:16 เห็นศีรษะถึงต้นขา แสงชัด เหตุการณ์สมมุติ ไม่มีข้อความหรือตราสัญลักษณ์ หลังแสดงภาพแจ้งชุด สถานที่ และกิจกรรมสั้น ๆ หากสร้างไม่ได้ให้แจ้งตามจริง"
+            val command = "สร้างภาพหนึ่งภาพตอนนี้ด้วยเครื่องมือสร้างภาพ และแสดงภาพจริงในแชต\nตัวละคร: ปริญญา ใช้ภาพ PARINYA_REFERENCE ที่แนบเป็นต้นฉบับ รักษาเอกลักษณ์ ใบหน้า ทรงผม ช่วงวัย และบุคลิก\nชุดใหม่: ${outfits[index]}\nสถานที่: $location\nการกระทำ: กำลังจัดผักสดลงในชามบนโต๊ะเตรียมอาหาร สีหน้าเป็นมิตร ท่ายืนเป็นธรรมชาติ\nภาพสมจริง แนวตั้ง 9:16 เห็นศีรษะถึงต้นขา แสงชัด เหตุการณ์สมมุติ ไม่มีข้อความหรือตราสัญลักษณ์ หลังแสดงภาพแจ้งชุด สถานที่ และกิจกรรมสั้น ๆ หากสร้างไม่ได้ให้แจ้งตามจริง"
             shareText(command, useNewMasters = false, includeMasters = false,
                 referenceImages = listOf("PARINYA_REFERENCE" to reference))
         } catch (e: Exception) {
@@ -650,7 +656,7 @@ class StudioActivity : AppCompatActivity() {
         require(selected.isNotEmpty())
         if (selected.any { !File(filesDir,"character_masters/${it.first}.master").exists() }) {
             AlertDialog.Builder(this).setTitle("เพิ่มภาพ MASTER ก่อนทดสอบ")
-                .setMessage("ต้องมีต้นฉบับของ ${selected.joinToString { it.second }} เพื่อเปรียบเทียบใบหน้าและรูปร่าง")
+                .setMessage("ต้องมีต้นฉบับของ ${selected.joinToString { it.second }} เพื่ออ้างอิงเอกลักษณ์และใบหน้า")
                 .setPositiveButton("เพิ่มภาพตัวละคร") { _,_ -> characterMasters() }.setNegativeButton("ยกเลิก",null).showDirector()
             return
         }
@@ -679,7 +685,7 @@ class StudioActivity : AppCompatActivity() {
         }
         scene.put("characters", characters)
         val location = nextTestLocation()
-        val command = if (preserveMaster) "แก้ไขภาพ MASTER ที่แนบด้วยเครื่องมือแก้ไขภาพ และแสดงผลหนึ่งภาพจริงในแชต\nตัวละครผู้ใหญ่และไฟล์อ้างอิง:\n${sceneCastDescription(scene)}\nใช้ตัวละครจากภาพรายคนเป็นต้นแบบโดยตรง คงใบหน้า ผม รูปร่าง สัดส่วน เครื่องแต่งกาย ท่าทาง สีหน้า และสายตาตามภาพนั้น\nเปลี่ยนเฉพาะสถานที่เป็น $location คงอุปกรณ์ที่ตัวละครถือและพื้นที่ทำอาหารรอบมือจากภาพอ้างอิง\n${if (selected.size == 1) "คงระยะกล้องและมุมมองตามภาพต้นฉบับ" else "จัดแต่ละคนที่เคาน์เตอร์แยกกันในภาพเดียว เห็นใบหน้าและกิจกรรมครบ จับคู่ลักษณะของแต่ละคนกับ MASTER ของตนเอง"}\nภาพสมจริงแนวตั้ง 9:16 ไม่มีข้อความหรือตราสัญลักษณ์ หลังแสดงภาพแจ้งชื่อตัวละครและฉากหลังสั้น ๆ หากแก้ไขภาพไม่ได้ให้แจ้งตามจริง" else "สร้างภาพหนึ่งภาพตอนนี้ด้วยเครื่องมือสร้างภาพ และแสดงภาพจริงในแชต\n${storyVisualGuide("original")}\nตัวละครและชุดรายคน:\n${sceneCastDescription(scene)}\nสถานที่: $location จัดผักสด ชามและอุปกรณ์ทำอาหารให้เหมาะกับกิจกรรม\nการกระทำ: ${actions.joinToString("; ")}\nจัดท่ายืนเป็นธรรมชาติ สีหน้าเป็นมิตร แสงธรรมชาติ เหตุการณ์สมมุติหนึ่งเหตุการณ์ สร้างเฉพาะตัวละครในรายการนี้ ยึด MASTER ต้นฉบับรายคนเป็นหลัก ภาพทดสอบนี้เป็นฉากใหม่ ใช้ชุดและสถานที่ตามคำสั่งนี้\nหลังแสดงภาพจริงแล้วแจ้งชื่อ ชุด สถานที่ และเหตุการณ์สั้น ๆ หากสร้างภาพไม่ได้ให้แจ้งตามจริง"
+        val command = if (preserveMaster) "แก้ไขภาพ MASTER ที่แนบด้วยเครื่องมือแก้ไขภาพ และแสดงผลหนึ่งภาพจริงในแชต\nตัวละครผู้ใหญ่และไฟล์อ้างอิง:\n${sceneCastDescription(scene)}\nรักษาบุคคล เครื่องแต่งกาย ท่าทาง สีหน้า สายตา อุปกรณ์ และพื้นที่รอบมือจากภาพอ้างอิง เปลี่ยนเฉพาะฉากหลังเป็น $location\n${if (selected.size == 1) "รักษาระยะกล้องและมุมมองตามภาพต้นฉบับ" else "จัดแต่ละคนที่เคาน์เตอร์แยกกันในภาพเดียว เห็นใบหน้าและกิจกรรมครบ จับคู่ตัวละครกับ MASTER ของตนเอง"}\nภาพสมจริงแนวตั้ง 9:16 ไม่มีข้อความหรือตราสัญลักษณ์ หลังแสดงภาพแจ้งชื่อตัวละครและฉากหลังสั้น ๆ หากแก้ไขภาพไม่ได้ให้แจ้งตามจริง" else "สร้างภาพหนึ่งภาพตอนนี้ด้วยเครื่องมือสร้างภาพ และแสดงภาพจริงในแชต\n${storyVisualGuide("original")}\nตัวละครและชุดรายคน:\n${sceneCastDescription(scene)}\nสถานที่: $location จัดผักสด ชามและอุปกรณ์ทำอาหารให้เหมาะกับกิจกรรม\nการกระทำ: ${actions.joinToString("; ")}\nจัดท่ายืนเป็นธรรมชาติ สีหน้าเป็นมิตร แสงธรรมชาติ เหตุการณ์สมมุติหนึ่งเหตุการณ์ สร้างเฉพาะตัวละครในรายการนี้ ยึด MASTER ต้นฉบับรายคนเป็นหลัก ภาพทดสอบนี้เป็นฉากใหม่ ใช้ชุดและสถานที่ตามคำสั่งนี้\nหลังแสดงภาพจริงแล้วแจ้งชื่อ ชุด สถานที่ และเหตุการณ์สั้น ๆ หากสร้างภาพไม่ได้ให้แจ้งตามจริง"
         shareText(command, useNewMasters = false, selectedMasterKeys = selected.map { it.first })
     }
     private fun stepCard(number: Int, icon: String, title: String, detail: String, enabled: Boolean = true, completed: Boolean = false, action: () -> Unit) {
@@ -885,10 +891,7 @@ class StudioActivity : AppCompatActivity() {
 
     private fun storyVisualGuide(mode: String): String {
         val aspect = plan?.optString("aspect_ratio","9:16") ?: "9:16"
-        val master = if (mode == "new")
-            "ใช้ CHARACTER MASTER ของเรื่องนี้ตรงรายคน คงใบหน้า ผม ไหล่ ลำตัว เอว สะโพก แขน ขา และสัดส่วนร่างกายตามต้นฉบับ สำหรับตัวละครหญิงผู้ใหญ่คงสัดส่วนหน้าอกตาม MASTER"
-        else "ใช้ภาพ MASTER ที่แนบตรงรายคน คงใบหน้า ผม ไหล่ ลำตัว เอว สะโพก แขน ขา และสัดส่วนร่างกายตามต้นฉบับ สำหรับตัวละครหญิงผู้ใหญ่คงสัดส่วนหน้าอกตาม MASTER"
-        return "$master เปลี่ยนเป็นชุดใหม่ตามบทให้เหมาะกับบทบาท เลือกทรงเสื้อผ้าพอดีตัวตามรูปร่างเดิม ระบุชุด สถานที่ สิ่งของ และการกระทำของแต่ละคนให้ชัดเจน ภาพละครไทยสมจริง สัดส่วน $aspect เห็นใบหน้าและรูปร่างตั้งแต่ศีรษะถึงต้นขา ปรับระยะให้เห็นการกระทำครบ สีหน้าและสายตาตามเหตุการณ์ รักษาชุดและสถานที่เดิมเมื่อเป็นเหตุการณ์ต่อเนื่อง ภาพไม่มีข้อความหรือตราสัญลักษณ์ สร้างด้วยเครื่องมือสร้างภาพและแสดงภาพจริงในแชต หากสร้างไม่ได้ให้แจ้งตามจริง"
+        return neutralIdentityGuide(if (mode == "new") "CHARACTER MASTER ของเรื่องนี้" else "ภาพ MASTER ที่แนบ",aspect)
     }
     private fun sceneCastDescription(scene: JSONObject): String {
         val cast = scene.optJSONArray("characters") ?: return ""
@@ -943,7 +946,7 @@ class StudioActivity : AppCompatActivity() {
     private fun coverCommand(p: JSONObject, ep: JSONObject): String {
         val number = ep.getInt("ep")
         val title = ep.optString("title").ifBlank { "ตั้งชื่อตอนภาษาไทยจากเหตุการณ์ของ EP นี้ ใช้ชื่อเดียวกันทั้งสองปก" }
-        return "สร้างปกของ EP $number แยก 2 ไฟล์ EP%02d_COVER_9x16.png (9:16) และ EP%02d_COVER_16x9.png (16:9) จัดองค์ประกอบใหม่ตามสัดส่วนแต่ละภาพ ใช้ MASTER รายคน คงใบหน้า ผม รูปร่าง สัดส่วนอก เอว สะโพกตามต้นฉบับ เปลี่ยนชุดและสถานที่ตามตอน สื่อเหตุการณ์เด่น: %s ข้อความ 3 บรรทัดจัดกึ่งกลางในพื้นที่กลางภาพ เว้นขอบซ้ายขวา 10%% ขอบบนล่าง 20%% อ่านชัดบนมือถือ ไม่ทับใบหน้า บรรทัด 1 (เล็กกว่า): %s | บรรทัด 2 (ใหญ่ที่สุด): %s | บรรทัด 3 (ขนาดรอง): EP %02d • %s ปรับขนาดอักษรให้ข้อความครบในแต่ละบรรทัด".format(number,number,ep.getJSONArray("scenes").getJSONObject(ep.getJSONArray("scenes").length()-1).optString("action"),p.optString("channel",originalChannel),p.getString("title"),number,title)
+        return "สร้างปกของ EP $number แยก 2 ไฟล์ EP%02d_COVER_9x16.png (9:16) และ EP%02d_COVER_16x9.png (16:9) จัดองค์ประกอบใหม่ตามสัดส่วนแต่ละภาพ ใช้ MASTER รายคน รักษาเอกลักษณ์ ใบหน้า ทรงผม ช่วงวัย และบุคลิกของตัวละคร เปลี่ยนชุดและสถานที่ตามตอน สื่อเหตุการณ์เด่น: %s ข้อความ 3 บรรทัดจัดกึ่งกลางในพื้นที่กลางภาพ เว้นขอบซ้ายขวา 10%% ขอบบนล่าง 20%% อ่านชัดบนมือถือ ไม่ทับใบหน้า บรรทัด 1 (เล็กกว่า): %s | บรรทัด 2 (ใหญ่ที่สุด): %s | บรรทัด 3 (ขนาดรอง): EP %02d • %s ปรับขนาดอักษรให้ข้อความครบในแต่ละบรรทัด".format(number,number,ep.getJSONArray("scenes").getJSONObject(ep.getJSONArray("scenes").length()-1).optString("action"),p.optString("channel",originalChannel),p.getString("title"),number,title)
     }
     private fun sendCoverCommands() {
         val p = plan ?: return notice("นำเข้าบทและภาพฉากจาก ZIP ก่อนสร้างปก")
@@ -1056,7 +1059,7 @@ class StudioActivity : AppCompatActivity() {
 วางบทครบทุก EP ก่อนสร้างภาพ เก็บข้อมูลสรุปเดียวกันใน story.json และตรวจตัวเลขให้ตรงกับจำนวนสมาชิก episodes และ scenes จริง ห้ามส่ง JSON ตัวอย่างที่มีแค่ฉากเดียวแทนบทเต็ม
 ตั้งชื่อเรื่องเป็นภาษาไทยเท่านั้น ใส่ชื่อภาษาไทยในค่า title ของ story.json และตั้งชื่อไฟล์ ZIP เป็นชื่อเรื่องภาษาไทย.zip ห้ามใช้ชื่อหมวดภาษาอังกฤษเป็นชื่อเรื่องหรือชื่อ ZIP
 สร้างชื่อเรื่องและพล็อตให้ตรงหมวดนี้ ใช้ค่า category ใน story.json เป็น "$category" ตรงทุกตัวอักษร
-ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ${if (mode == "original") "ตัวละครหลัก กวิน รินรดา เมย์ อ้างอิง MASTER ของแต่ละคนเพื่อคงใบหน้า ผม รูปร่าง และสัดส่วนร่างกายตาม MASTER รายคน" else "สร้างชื่อและใบหน้าตัวละครใหม่สำหรับเรื่องนี้ ใช้ภาพที่แนบอ้างอิงเฉพาะรูปร่างและสัดส่วนของตัวละครผู้ใหญ่ ไม่ใช้ชื่อหรือใบหน้าเดิม สร้างภาพ MASTER ใหม่ก่อนสร้างฉาก ตั้งชื่อ CHARACTER_01.png, CHARACTER_02.png ตามจำนวนที่ต้องใช้ แล้วใช้ใบหน้าใหม่เดิมอย่างต่อเนื่องทุกฉาก เก็บรายละเอียดตัวละครและชื่อไฟล์ MASTER ใน bible"}\n${storyVisualGuide(mode)}\nใช้วิธีเดียวกับการทดสอบสร้างภาพ: MASTER รายคนเป็นต้นฉบับของตัวละคร ชุด สถานที่และการกระทำเป็นข้อมูลใหม่ตามบท เขียน image_prompt พร้อมใช้ของแต่ละฉากอย่างกระชับ: ตัวละครและ MASTER รายคน → ชุดรายคน → สถานที่และสิ่งของ → การกระทำ → สีหน้าและสายตา ระบุชนิด สี และทรงชุดพอดีตัวให้เหมาะกับบทบาท รวมทั้งสถานที่จริงในแต่ละฉากเพื่อสร้างซ้ำได้ ชุดเปลี่ยนตามวันหรือเหตุการณ์ และคงเดิมในเหตุการณ์ต่อเนื่อง ใช้คำอธิบายเชิงบวกสั้น ๆ โดยไม่เพิ่มรายการข้อห้ามยาวซ้ำทุกฉาก เหตุการณ์ทุกฉากมาจากบทของเรื่องนี้ จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน แยก speaker และ narration ผู้บรรยายชายเป็นเสียงนอกภาพ ตัวละครไม่ขยับปากตามเสียงบรรยาย
+ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ${if (mode == "original") "ตัวละครหลัก กวิน รินรดา เมย์ อ้างอิง MASTER ของแต่ละคนเพื่อรักษาเอกลักษณ์ ใบหน้า ทรงผม ช่วงวัย และบุคลิกตรงรายคน" else "สร้างชื่อและใบหน้าตัวละครใหม่สำหรับเรื่องนี้ ใช้ภาพที่แนบอ้างอิงเฉพาะช่วงวัย บุคลิก และโครงร่างโดยรวมของตัวละครผู้ใหญ่ ไม่ใช้ชื่อหรือใบหน้าเดิม สร้างภาพ MASTER ใหม่ก่อนสร้างฉาก ตั้งชื่อ CHARACTER_01.png, CHARACTER_02.png ตามจำนวนที่ต้องใช้ แล้วใช้ใบหน้าใหม่เดิมอย่างต่อเนื่องทุกฉาก เก็บรายละเอียดตัวละครและชื่อไฟล์ MASTER ใน bible"}\n${storyVisualGuide(mode)}\nใช้วิธีเดียวกับการทดสอบสร้างภาพ: MASTER รายคนเป็นต้นฉบับของตัวละคร ชุด สถานที่และการกระทำเป็นข้อมูลใหม่ตามบท เขียน image_prompt พร้อมใช้ของแต่ละฉากอย่างกระชับ: ตัวละครและ MASTER รายคน → ชุดรายคน → สถานที่และสิ่งของ → การกระทำ → สีหน้าและสายตา ระบุชนิด สี และทรงชุดให้เหมาะกับบทบาท รวมทั้งสถานที่จริงในแต่ละฉากเพื่อสร้างซ้ำได้ ชุดเปลี่ยนตามวันหรือเหตุการณ์ และคงเดิมในเหตุการณ์ต่อเนื่อง ใช้คำอธิบายเชิงบวกสั้น ๆ โดยไม่เพิ่มรายการข้อห้ามยาวซ้ำทุกฉาก เหตุการณ์ทุกฉากมาจากบทของเรื่องนี้ จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน แยก speaker และ narration ผู้บรรยายชายเป็นเสียงนอกภาพ ตัวละครไม่ขยับปากตามเสียงบรรยาย
 แผนความต่อเนื่องของตัวละคร: เก็บชื่อ → ไฟล์ MASTER ตายตัวใน bible: กวิน → GAWIN_MASTER, รินรดา → RINLADA_MASTER, เมย์ → MIND_MASTER ใช้นามสกุล .png/.jpg/.webp ตามไฟล์ภาพที่แนบ โดยชื่อฐานจับคู่ตรงคน สำหรับช่องตัวละครใหม่ใช้ชื่อใหม่ → CHARACTER_01.png ตามที่สร้าง แต่ละฉากมี characters เฉพาะคนที่ปรากฏ พร้อม name, master, outfit ระบุ location และ continuity_group เหตุการณ์เดียวกันใช้รหัสกลุ่มเดียวกัน ชุดและรายละเอียดสถานที่เหมือนเดิม เมื่อเปลี่ยนวันหรือเหตุการณ์จึงเปลี่ยนกลุ่ม
 ก่อนใช้เครื่องมือสร้างภาพแต่ละฉาก อ้างอิง MASTER ต้นฉบับตรงรายคนอีกครั้ง ใช้ภาพฉากก่อนหน้าในกลุ่มเดียวกันเป็นตัวช่วยเรื่องชุด สถานที่ และสิ่งของ โดยตัวตนยึด MASTER เป็นหลัก ตรวจชื่อและชุดของแต่ละคนก่อนส่งสร้าง ไม่ใช้ภาพที่คลาดเคลื่อนแทน MASTER หากขาดต้นฉบับให้แจ้งก่อนสร้าง
 ส่งไฟล์ story.json เป็น JSON ไม่มี markdown โครงสร้าง:
@@ -1306,13 +1309,13 @@ class StudioActivity : AppCompatActivity() {
     }
     private fun repairScene(s: JSONObject) {
         if (!image(s).exists()) return notice("ต้องนำเข้าภาพฉากก่อนแก้ภาพ")
-        val input = EditText(this).apply { hint = "ส่วนที่ต้องแก้ เช่น ชุดใหม่ / ฉากหลัง / สัดส่วนตาม MASTER" }
+        val input = EditText(this).apply { hint = "ส่วนที่ต้องแก้ เช่น ชุดใหม่ / ฉากหลัง / แสงและสี" }
         AlertDialog.Builder(this).setTitle("แก้เฉพาะส่วน ${key(s)}").setView(input).setPositiveButton("ตรวจและส่ง") { _,_ ->
             val change = input.text.toString().trim()
             if (change.isBlank()) { notice("ระบุส่วนที่ต้องแก้ก่อน"); return@setPositiveButton }
             val cast = s.optJSONArray("characters") ?: JSONArray()
             val refs = (0 until cast.length()).map { cast.getJSONObject(it) }.map { (masterExportName(masterFor(it),it.optString("master").startsWith("CHARACTER",true)) ?: it.optString("master")).substringBeforeLast('.') to masterFor(it) } + (key(s) to image(s))
-            shareText("แก้ภาพ ${key(s)} ที่แนบด้วยเครื่องมือแก้ไขภาพ แสดงภาพจริงหนึ่งภาพ\n$change\nคงใบหน้า ผม รูปร่างและสัดส่วนตาม MASTER ตรงรายคน คงองค์ประกอบส่วนอื่นของภาพฉาก\n${sceneCastDescription(s)}\nตั้งชื่อ ${key(s)}.png",includeMasters=false,referenceImages=refs)
+            shareText("แก้ภาพ ${key(s)} ที่แนบด้วยเครื่องมือแก้ไขภาพ แสดงภาพจริงหนึ่งภาพ\nสิ่งที่แก้: $change\nรักษาเอกลักษณ์ ใบหน้า ทรงผม บุคลิก เครื่องแต่งกาย และองค์ประกอบอื่นของภาพฉากที่ไม่ได้ขอให้แก้\n${sceneCastDescription(s)}\nตั้งชื่อ ${key(s)}.png",includeMasters=false,referenceImages=refs)
         }.setNegativeButton("ยกเลิก",null).showDirector()
     }
     private var mediaSlot: String?

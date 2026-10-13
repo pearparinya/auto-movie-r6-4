@@ -242,7 +242,7 @@ class StudioActivity : AppCompatActivity() {
                     File(pendingRecovery,"recovery.txt").writeText("กู้ภาพ ${pictures.size} ไฟล์\n" + failedZipEntries.joinToString("\n"))
                     runOnUiThread {
                         importing=false; dialog.dismiss(); render()
-                        notice("กู้ภาพที่สมบูรณ์ไว้แล้ว ${pictures.size} ไฟล์ • ZIP ขาด story.json\n\nดาวน์โหลด story.json จาก ChatGPT แล้วเลือกผ่านเมนู 3 อีกครั้ง แอปจะรวมภาพที่กู้ไว้ให้อัตโนมัติ ไม่ต้องเลือก ZIP ซ้ำ")
+                        notice("กู้ภาพที่สมบูรณ์ไว้แล้ว ${pictures.size} ไฟล์ • ZIP ขาด story.json\n\nดาวน์โหลด story.json จาก ChatGPT แล้วเลือกผ่านเมนู 2 อีกครั้ง แอปจะรวมภาพที่กู้ไว้ให้อัตโนมัติ ไม่ต้องเลือก ZIP ซ้ำ")
                     }
                     return@Thread
                 }
@@ -320,7 +320,7 @@ class StudioActivity : AppCompatActivity() {
                     if (scenes.isNotEmpty()) importImages(scenes)
                     else if (videos.isNotEmpty()) notice("รับวิดีโอแล้ว ${videos.size} ฉาก")
                     else if (covers.isNotEmpty()) { pendingRecovery.deleteRecursively(); notice("รับปกแล้ว ${covers.size} ไฟล์ ตรวจจำนวนภาพและปกบนหน้าแรกได้เลย") }
-                    else notice(if (failedZipEntries.isNotEmpty()) "รับส่วนที่สมบูรณ์แล้ว • ข้ามไฟล์ที่อ่านไม่ได้ ${failedZipEntries.size} ไฟล์ กดตรวจงานที่ขาดเพื่อเพิ่มเฉพาะไฟล์" else if (candidate != null) "รับบทแล้ว ขั้นตอน 2: เพิ่มภาพฉากได้เลย ไม่ต้องเลือก story.json ซ้ำ" else "รับภาพ MASTER แล้ว เพิ่มภาพฉากในขั้นตอน 2 ได้เลย")
+                    else notice(if (failedZipEntries.isNotEmpty()) "รับส่วนที่สมบูรณ์แล้ว • ข้ามไฟล์ที่อ่านไม่ได้ ${failedZipEntries.size} ไฟล์ กดตรวจงานที่ขาดเพื่อเพิ่มเฉพาะไฟล์" else if (candidate != null) "รับ story.json แล้ว • นำเข้า ZIP ภาพและปกของแต่ละ EP ผ่านเมนู 2 ต่อได้ ไม่ต้องเลือกบทซ้ำ" else "รับภาพ MASTER แล้ว เพิ่มภาพฉากในขั้นตอน 2 ได้เลย")
                 }
             } catch (e: Exception) { runOnUiThread { importing = false; dialog.dismiss(); render(); notice("นำเข้าบทและภาพไม่สำเร็จ: ${e.message}") } }
         }.start()
@@ -559,10 +559,10 @@ class StudioActivity : AppCompatActivity() {
         }
         val complete = p != null && rows(p).all { image(it).exists() && video(it).exists() } && coverNames(p).all { coverFile(it).exists() }
         label(if (complete) "ภาพ วิดีโอ และปกครบแล้ว • ส่งออกชุดงานได้" else if (p != null) "ขั้นตอน $currentStep • ทำวิดีโอและส่งออกหนัง" else if (sent) "ขั้นตอน 2 • รับไฟล์จาก ChatGPT กลับเข้าแอป" else "ขั้นตอน 1 • เลือกเรื่องแล้วส่งไป ChatGPT", 14, true)
-        stepCard(1, "🎬", if (sent) "ส่งคำสั่งแล้ว ✓" else "สร้างเรื่องและส่งไป ChatGPT", if (sent) "ล็อกการสร้างซ้ำ • เริ่มเรื่องใหม่ใช้ปุ่มด้านล่าง" else "เลือกช่องและแนว • ชื่อเรื่องภาษาไทย", enabled = !sent, completed = sent, currentStep = currentStep) { planning() }
-        stepCard(2, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "รับบทแล้ว ✓ • เพิ่มภาพ / รับ ZIP", if (p == null) "เลือก ZIP หรือ story.json และภาพ" else "นำเข้าสำเร็จ • เมนู 3 พร้อมใช้งาน เพิ่มเฉพาะภาพได้", completed = packageReceived, currentStep = currentStep) { packagePicker.launch(arrayOf("*/*")) }
-        stepCard(3, "🎥", "วิดีโอผ่าน Flow / Veo", "นำเข้า MP4 • รวม EP พร้อมปกเปิด 3 วินาที", enabled = p != null, completed = videosComplete, currentStep = currentStep) { moviesMenu() }
-        stepCard(4, "⬇", "ดาวน์โหลดหนัง EP เป็น MP4", "ชื่อเรื่อง + เลข EP + ชื่อตอน • ZIP อยู่ในสำรอง", enabled = videosComplete, currentStep = currentStep) { moviesMenu() }
+        stepCard(1, "🎬", if (sent) "ส่งคำสั่งแล้ว ✓" else "สร้างเรื่องและส่งไป ChatGPT", if (sent) "ล็อกการสร้างซ้ำ • เริ่มเรื่องใหม่ใช้ปุ่มด้านล่าง" else "ตรวจ MASTER → เลือกช่องและแนว → ส่งคำสั่งไป ChatGPT", enabled = !sent, completed = sent, currentStep = currentStep) { planning() }
+        stepCard(2, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "รับบทแล้ว ✓ • นำเข้า ZIP ราย EP", if (p == null) "นำเข้า story.json ก่อน → นำเข้า ZIP ภาพและปกของแต่ละ EP" else "นำเข้า ZIP ภาพและปกราย EP ต่อได้ • ตรวจงานที่ขาดก่อนทำวิดีโอ", completed = packageReceived, currentStep = currentStep) { packagePicker.launch(arrayOf("*/*")) }
+        stepCard(3, "🎥", "วิดีโอผ่าน Flow / Veo", "ใช้ภาพและคำสั่งสร้างคลิปใน Flow → นำเข้า MP4 รายฉาก → รวม EP พร้อมปกเปิด 3 วินาที", enabled = p != null, completed = videosComplete, currentStep = currentStep) { moviesMenu() }
+        stepCard(4, "⬇", "ดาวน์โหลดหนัง EP เป็น MP4", "รวม EP ให้สำเร็จก่อน → บันทึก / แชร์ MP4 ชื่อเรื่อง + เลข EP + ชื่อตอน", enabled = videosComplete, currentStep = currentStep) { moviesMenu() }
         if (p != null) button("📦 ส่งออกชุดงาน / สำรอง ZIP", false) {
             val current = plan ?: return@button
             exportEpisode = null; backupMode = false
@@ -818,7 +818,7 @@ class StudioActivity : AppCompatActivity() {
                     choiceMenu("📚 เรื่องของคุณ", folders.map { "📖 " + JSONObject(File(it,"story.json").readText()).getString("title") }) { i -> prefs.edit().putString("project",folders[i].name).apply(); render() }
                 }
                 3 -> wholeStoryCommands()
-                4 -> notice("1. ตั้งภาพต้นฉบับตัวละคร แล้วกดสร้างเรื่องและส่งไป ChatGPT เลือกช่องและแนวละคร ส่งไป ChatGPT ช่องเดิมใช้ตัวละครเดิม ช่องอื่นสร้างใบหน้าใหม่โดยอ้างอิงรูปร่าง และใช้ MASTER ใหม่ต่อเนื่องทั้งเรื่อง\n2. บันทึก story.json และภาพแต่ละฉากจาก ChatGPT สำหรับช่องอื่นบันทึกภาพ CHARACTER_01.png เป็นต้นฉบับใหม่ด้วย กดขั้นตอน 2 เลือก ZIP ทั้งชุด หรือ story.json พร้อมภาพ ถ้ามีบทแล้วเพิ่มเฉพาะภาพได้ ไม่ต้องเลือกบทซ้ำ\n3. เมื่อภาพครบ ปุ่มบันทึกชุดงานล่าสุด จะเปิดให้บันทึก ZIP ชื่อเรื่องภาษาไทย และนำภาพกับคำสั่งไปใช้ใน Flow / Veo 3.1 Lite 8 วินาที\n\nChatGPT เป็นผู้สร้างบทและภาพ แอปจัดไฟล์และตรวจฉากที่ขาด ไม่ได้สร้างภาพเองผ่าน Plus อัตโนมัติ")
+                4 -> notice("1. สร้างเรื่อง: ตรวจ MASTER เลือกช่องและแนว ส่งคำสั่งไป ChatGPT แล้วส่งข้อความใน ChatGPT เพื่อเริ่มสร้างบทและภาพ\n\n2. รับบทและภาพ: ดาวน์โหลดและนำเข้า story.json ก่อน จากนั้นนำเข้า ZIP ภาพและปกของแต่ละ EP ผ่านเมนู 2 เพิ่มต่อทีละ EP ได้ ไม่ต้องเลือกบทซ้ำ ตรวจงานที่ขาดก่อนทำวิดีโอ\n\n3. ทำวิดีโอ: ใช้ภาพฉากและคำสั่งใน Flow / Veo สร้างคลิปเอง ดาวน์โหลด MP4 แล้วนำกลับเข้าฉากที่ตรงกันในแอป จัดลำดับและรวม EP พร้อมปกเปิด 3 วินาที\n\n4. ดาวน์โหลดหนัง: เมื่อรวม EP สำเร็จ บันทึกหรือแชร์ MP4 ชื่อเรื่อง + เลข EP + ชื่อตอน ส่วน ZIP ใช้สำรองงาน\n\nแอปเปิดบริการภายนอกและจัดไฟล์ ผู้ใช้ต้องส่งข้อความใน ChatGPT และอัปโหลดภาพใน Flow เอง")
             }
         }
     }
@@ -1208,7 +1208,7 @@ class StudioActivity : AppCompatActivity() {
         importing = true
         val remaining = uris.toMutableList()
         fun next() {
-            if (remaining.isEmpty()) { importing = false; pendingRecovery.deleteRecursively(); render(); val missing = rows(plan!!).count { !image(it).exists() }; val missingCovers = coverNames(plan!!).count { !coverFile(it).exists() }; notice(if (missing == 0 && missingCovers == 0) "รับภาพและปกครบแล้ว ขั้นตอน 3: บันทึกชุดงานล่าสุดได้เลย" else if (missing == 0) "ภาพฉากครบแล้ว ยังขาดปก $missingCovers ไฟล์ กดสร้างปกทุก EP แล้วรับไฟล์กลับในขั้นตอน 2" else "รับภาพแล้ว ยังขาด $missing ฉาก เพิ่มภาพต่อในขั้นตอน 2 ได้เลย"); return }
+            if (remaining.isEmpty()) { importing = false; pendingRecovery.deleteRecursively(); render(); val missing = rows(plan!!).count { !image(it).exists() }; val missingCovers = coverNames(plan!!).count { !coverFile(it).exists() }; notice(if (missing == 0 && missingCovers == 0) "รับภาพและปกครบแล้ว • เมนู 3: นำภาพและคำสั่งไปสร้างคลิปใน Flow แล้วนำเข้า MP4 รายฉาก" else if (missing == 0) "ภาพฉากครบแล้ว ยังขาดปก $missingCovers ไฟล์ กดสร้างปกทุก EP แล้วรับไฟล์กลับในขั้นตอน 2" else "รับภาพแล้ว ยังขาด $missing ฉาก เพิ่มภาพต่อในขั้นตอน 2 ได้เลย"); return }
             val uri = remaining.removeAt(0)
             val name = displayName(uri)
             val match = StoryFiles.sceneNumber(name)

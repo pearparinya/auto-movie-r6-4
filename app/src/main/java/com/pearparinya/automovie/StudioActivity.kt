@@ -35,8 +35,12 @@ class StudioActivity : AppCompatActivity() {
     private var pendingStoryShare: (() -> Unit)? = null
     private var pendingStorySummary = ""
     private var pendingReceipt: (() -> Unit)? = null
-    private var exportEpisode: Int? = null
-    private var backupMode = false
+    private var exportEpisode: Int?
+        get() = prefs.getInt("export_episode",0).takeIf { it>0 }
+        set(value) { prefs.edit().putInt("export_episode",value ?: 0).apply() }
+    private var backupMode: Boolean
+        get() = prefs.getBoolean("backup_mode",false)
+        set(value) { prefs.edit().putBoolean("backup_mode",value).apply() }
     private val updater = StudioUpdater(this)
     private lateinit var root: LinearLayout
     private val navy = Color.rgb(18,29,49)
@@ -766,7 +770,7 @@ class StudioActivity : AppCompatActivity() {
         val text = if (lockCreation && !inputText.contains("ค่าตั้งต้นผู้ใช้ (ใช้แทนค่าตัวอย่าง)")) inputText + "\nค่าตั้งต้นผู้ใช้ (ใช้แทนค่าตัวอย่าง): EP=${prefs.getString("plan_episodes", "").orEmpty().ifBlank { "AI ประเมิน" }} ฉาก/EP=${prefs.getString("plan_scenes", "").orEmpty().ifBlank { "AI ประเมิน" }} เวลา=${prefs.getString("plan_duration", "8")} วินาที สัดส่วน=${prefs.getString("plan_ratio", "9:16")} กำหนด duration_seconds และ aspect_ratio ใน story.json และคำสั่งทุกฉากตามนี้" else inputText
         val uris = arrayListOf<Uri>()
         val transferId = UUID.randomUUID().toString()
-        val sources = if (!includeMasters) emptyList<File>() else if (useNewMasters) File(project, "masters").listFiles()?.toList() ?: emptyList()
+        val sources = if (!includeMasters) emptyList<File>() else if (useNewMasters) File(project, "masters").listFiles()?.filter { it.isFile && !it.name.endsWith(".tmp") && !it.name.endsWith(".pending") } ?: emptyList()
             else (selectedMasterKeys ?: listOf("gawin", "rinlada", "mind")).map { File(project, "original_masters/$it.master").takeIf { f -> f.exists() } ?: File(filesDir, "character_masters/$it.master") }
         if (includeMasters && (sources.isEmpty() || sources.any { !it.exists() })) {
             notice("ภาพ MASTER ยังไม่ครบสำหรับคำสั่งนี้ กรุณาเพิ่มต้นฉบับตัวละครก่อนส่ง เพื่อไม่สร้างตัวละครผิดคน")
@@ -1466,7 +1470,7 @@ class StudioActivity : AppCompatActivity() {
             choiceMenu(name,listOf("🖼️ ดู MASTER", "📷 เปลี่ยน MASTER รายเรื่อง", "✏️ บทบาทตัวละคร")) { action -> when(action) {
                 0 -> { val file=masterFor(person); if(file.exists()) fullImage(file,name) else notice("ยังไม่มี MASTER") }
                 1 -> { val id=StoryIdentity.keyFor(name)
-                    val file=if(p.optString("character_mode","original")=="new") File(project,"masters/${person.optString("master")}") else if(id!=null) File(project,"original_masters/$id.master") else return@choiceMenu
+                    val file=if(p.optString("character_mode","original")=="new") masterFor(person) else if(id!=null) File(project,"original_masters/$id.master") else return@choiceMenu
                     AlertDialog.Builder(this).setMessage("เปลี่ยน MASTER ของ $name เฉพาะเรื่องนี้ • ฉากที่ใช้คนนี้จะถูกระบุว่าต้องตรวจใหม่")
                         .setPositiveButton("เลือกรูป") { _,_ -> castTarget=name to file; castPicker.launch(arrayOf("image/*")) }.setNegativeButton("ยกเลิก",null).showDirector() }
                 2 -> { val input=EditText(this).apply { hint="บทบาทและลักษณะตัวละคร"; setText(p.optJSONObject("cast_roles")?.optString(name)) }

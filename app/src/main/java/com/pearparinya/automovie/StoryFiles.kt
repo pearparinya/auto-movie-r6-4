@@ -2,10 +2,12 @@ package com.pearparinya.automovie
 
 import java.io.File
 import java.io.InputStream
+import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
 
 /** File formats shared by ChatGPT packages and Studio exports. */
 internal object StoryFiles {
+    data class UnpackResult(val files: List<File>, val failedEntries: List<String>)
     fun zipName(title: String): String = title.replace(Regex("[\\\\/:*?\"<>|\\p{Cntrl}]"), "_").trim().take(100).ifBlank { "เรื่องใหม่" } + ".zip"
     fun episodeFlow(ep: Int, title: String, scenes: List<Triple<String, String, String>>): String =
         "EP %02d • %s\nFlow / Veo 3.1 Lite • 8 วินาทีต่อซีน • 9:16\n\n".format(ep, title) +
@@ -60,5 +62,44 @@ internal object StoryFiles {
             }
         }
         return files
+    }
+
+    /** Reads a downloaded archive through its central directory and salvages valid entries. */
+    fun unpackFile(archive: File, staging: File, maxBytes: Long = 512L * 1024 * 1024): UnpackResult {
+        val files = mutableListOf<File>()
+        val failed = mutableListOf<String>()
+        var total = 0L
+        ZipFile(archive).use { zip ->
+            val entries = zip.entries().toList()
+            require(entries.size <= 2000) { "ZIP มีไฟล์มากเกินไป" }
+            entries.forEach { entry ->
+                val name = packageName(entry.name)
+                if (!entry.isDirectory && !entry.name.contains("__MACOSX/") && !name.startsWith(".") && (name.endsWith(".json", true) || name.substringAfterLast('.').lowercase() in listOf("png", "jpg", "jpeg", "webp", "mp4"))) {
+                    val target = File(staging, "${files.size}/$name").apply { parentFile!!.mkdirs() }
+                    try {
+                        zip.getInputStream(entry).use { input ->
+                            target.outputStream().use { out ->
+                                val buffer = ByteArray(65536)
+                                var n = input.read(buffer)
+                                while (n >= 0) {
+                                    if (n > 0) {
+                                        total += n
+                                        require(total <= maxBytes) { "ชุดไฟล์ใหญ่เกินขนาดที่รองรับ" }
+                                        out.write(buffer, 0, n)
+                                    }
+                                    n = input.read(buffer)
+                                }
+                            }
+                        }
+                        files.add(target)
+                    } catch (error: Exception) {
+                        target.delete()
+                        if (error is IllegalArgumentException && error.message == "ชุดไฟล์ใหญ่เกินขนาดที่รองรับ") throw error
+                        failed.add(entry.name)
+                    }
+                }
+            }
+        }
+        return UnpackResult(files, failed)
     }
 }

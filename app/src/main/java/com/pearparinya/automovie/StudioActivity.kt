@@ -475,11 +475,13 @@ class StudioActivity : AppCompatActivity() {
             button("🔎 ตรวจงานที่ขาด", false) { auditStory() }
         }
         val sent = p != null || File(project,"command_sent").exists()
-        val complete = p != null && rows(p).all { image(it).exists() } && coverNames(p).all { coverFile(it).exists() }
-        label(if (complete) "ภาพและปกครบแล้ว • บันทึกชุดงานล่าสุดได้" else if (sent) "ขั้นตอน 2 • รับไฟล์จาก ChatGPT กลับเข้าแอป" else "ขั้นตอน 1 • เลือกเรื่องแล้วส่งไป ChatGPT", 14, true)
+        val complete = p != null && rows(p).all { image(it).exists() && video(it).exists() } && coverNames(p).all { coverFile(it).exists() }
+        label(if (complete) "ภาพ วิดีโอ และปกครบแล้ว • ส่งออกชุดงานได้" else if (sent) "ขั้นตอน 2 • รับไฟล์จาก ChatGPT กลับเข้าแอป" else "ขั้นตอน 1 • เลือกเรื่องแล้วส่งไป ChatGPT", 14, true)
         stepCard(1, "🎬", if (sent) "ส่งคำสั่งแล้ว ✓" else "สร้างเรื่องและส่งไป ChatGPT", if (sent) "ล็อกการสร้างซ้ำ • เริ่มเรื่องใหม่ใช้ปุ่มด้านล่าง" else "เลือกช่องและแนว • ชื่อเรื่องภาษาไทย", enabled = !sent, completed = sent) { planning() }
-        stepCard(2, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "เพิ่มภาพฉาก / รับ ZIP", "เลือก ZIP หรือ story.json และภาพ • มีบทแล้วเพิ่มเฉพาะภาพได้") { packagePicker.launch(arrayOf("*/*")) }
-        stepCard(3, "📦", "บันทึกชุดงานล่าสุด", if (complete) "รวมบท ภาพฉาก และปกเป็น ZIP" else "ส่งออกงานระหว่างทำได้ • รายการที่ขาดแนบใน ZIP", enabled = p != null) {
+        stepCard(2, "🎭", "ตัวละครและ MASTER", "ตรวจต้นฉบับรายคน • บทบาทและรูปร่าง") { castMenu() }
+        stepCard(3, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "เพิ่มภาพฉาก / รับ ZIP", "เลือก ZIP หรือ story.json และภาพ • มีบทแล้วเพิ่มเฉพาะภาพได้") { packagePicker.launch(arrayOf("*/*")) }
+        stepCard(4, "🎥", "วิดีโอผ่าน Flow / Veo", "คัดลอกคำสั่งรายฉาก • นำเข้าและเล่น MP4 จริง", enabled = p != null, completed = p != null && rows(p).all { video(it).exists() }) { episodesMenu() }
+        stepCard(5, "📦", "บันทึกชุดงานล่าสุด", if (complete) "รวมบท ภาพฉาก และปกเป็น ZIP" else "ส่งออกงานระหว่างทำได้ • รายการที่ขาดแนบใน ZIP", enabled = p != null) {
             val current = plan ?: return@stepCard
             exportEpisode = null; backupMode = false
             val title = current.getString("title")
@@ -665,8 +667,8 @@ class StudioActivity : AppCompatActivity() {
                 val x = width / 2f; val y = height / 2f; val radius = dp(14).toFloat()
                 paint.color = Color.rgb(61,54,39); paint.strokeWidth = dp(1).toFloat()
                 if (number > 1) canvas.drawLine(x,0f,x,y-radius,paint)
-                if (number < 3) canvas.drawLine(x,y+radius,x,height.toFloat(),paint)
-                paint.color = if (active || completed) gold else Color.rgb(50,50,55)
+                if (number < 5) canvas.drawLine(x,y+radius,x,height.toFloat(),paint)
+                paint.color = if (completed) Color.rgb(75,177,140) else if(active) gold else Color.rgb(85,102,125)
                 canvas.drawCircle(x,y,radius,paint)
                 paint.color = if (active || completed) navy else muted
                 paint.textSize = dp(12).toFloat(); paint.textAlign = android.graphics.Paint.Align.CENTER
@@ -689,7 +691,7 @@ class StudioActivity : AppCompatActivity() {
         }
         card.addView(TextView(this).apply {
             text = "ขั้นตอน $number  •  $status"; textSize = 10f
-            setTextColor(if (active || completed) Color.rgb(139,88,19) else Color.rgb(85,97,115))
+            setTextColor(if(completed) Color.rgb(25,113,80) else if(active) Color.rgb(139,88,19) else Color.rgb(85,97,115))
             setTypeface(null,Typeface.BOLD)
         })
         card.addView(TextView(this).apply {

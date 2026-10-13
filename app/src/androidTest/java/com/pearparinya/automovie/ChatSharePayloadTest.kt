@@ -10,6 +10,13 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class ChatSharePayloadTest {
+    @Test fun identityGuideUsesNeutralProductionLanguage() {
+        val guide = neutralIdentityGuide("ภาพ MASTER ที่แนบ","9:16")
+        assertTrue(guide.contains("เอกลักษณ์"))
+        assertTrue(guide.contains("เครื่องแต่งกายตามบท"))
+        assertTrue(!guide.contains("หน้าอก") && !guide.contains("สะโพก"))
+    }
+
     @Test fun textAndAllImagesArePresentInEverySupportedShareField() {
         val images = arrayListOf(
             Uri.parse("content://director-x/GAWIN_MASTER.png"),

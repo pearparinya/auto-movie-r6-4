@@ -178,13 +178,24 @@ class StudioActivity : AppCompatActivity() {
                 }
                 val scripts = files.filter { displayName(it).equals("story.json", true) }
                 require(scripts.size <= 1) { "เลือก story.json ของเรื่องเดียวเท่านั้น" }
+                val videos = files.filter { displayName(it).endsWith(".mp4",true) || contentResolver.getType(it)=="video/mp4" }
                 val pictures = files.filter { displayName(it).substringAfterLast('.').lowercase() in listOf("png", "jpg", "jpeg", "webp") || contentResolver.getType(it)?.startsWith("image/") == true }
                 val masters = pictures.filter { Regex("^CHARACTER_\\d+\\.", RegexOption.IGNORE_CASE).containsMatchIn(displayName(it)) }
                 val covers = pictures.filter { StoryFiles.coverName(displayName(it)) != null }
                 val scenes = pictures.filter { !StoryFiles.isMaster(displayName(it)) } - covers.toSet()
-                require(scripts.isNotEmpty() || pictures.isNotEmpty()) { "ไม่พบ story.json หรือภาพในไฟล์ที่เลือก กรุณาเลือก ZIP ชุดงาน หรือ JSON/PNG/JPG" }
+                require(scripts.isNotEmpty() || pictures.isNotEmpty() || videos.isNotEmpty()) { "ไม่พบ story.json หรือภาพในไฟล์ที่เลือก กรุณาเลือก ZIP ชุดงาน หรือ JSON/PNG/JPG" }
                 val candidate = scripts.firstOrNull()?.let { contentResolver.openInputStream(it)!!.bufferedReader().use { reader -> JSONObject(reader.readText().removePrefix("\uFEFF")) } }
                 val destinationStory = candidate ?: plan ?: error("ยังไม่มีบท กรุณานำเข้า story.json ก่อน")
+                val checkedVideos = videos.map { uri ->
+                    val number=StoryFiles.sceneNumber(displayName(uri)) ?: error("วิดีโอต้องชื่อ EP01_SC001.mp4: ${displayName(uri)}")
+                    val scene=rows(destinationStory).firstOrNull { it.getInt("ep")==number.first && it.getInt("scene")==number.second } ?: error("วิดีโอไม่ตรงกับบท: ${displayName(uri)}")
+                    val temp=File(staging,"checked_videos/${key(scene)}.mp4").apply { parentFile!!.mkdirs() }
+                    contentResolver.openInputStream(uri)!!.use { input -> temp.outputStream().use { input.copyTo(it) } }
+                    val reader=android.media.MediaMetadataRetriever()
+                    try { reader.setDataSource(temp.path); require(reader.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()?.let { it>0 }==true) { "วิดีโออ่านไม่ได้" } } finally { reader.release() }
+                    key(scene) to temp
+                }
+                require(checkedVideos.map { it.first }.distinct().size==videos.size) { "มีวิดีโอฉากซ้ำ" }
                 val checkedCovers = covers.map { uri ->
                     val name = StoryFiles.coverName(displayName(uri))!!
                     require(name in coverNames(destinationStory)) { "ปก $name ไม่ตรงกับ EP ในเรื่อง" }
@@ -230,10 +241,16 @@ class StudioActivity : AppCompatActivity() {
                     require(plan != null) { "ยังไม่มีบท กรุณานำเข้า story.json หรือ ZIP ที่มีบทก่อน" }
                     importNewMasters(masters)
                 }
+                checkedVideos.forEach { (id,temp) ->
+                    val target=File(project,"videos/$id.mp4").apply { parentFile!!.mkdirs() }
+                    if(target.exists()) archiveVersion(target,project,id,"video")
+                    temp.copyTo(target,overwrite=true)
+                }
                 checkedCovers.forEach { (name, temp) -> coverFile(name).apply { parentFile!!.mkdirs() }.let { if(it.exists()) archiveVersion(it,project,name,"cover"); temp.copyTo(it,overwrite=true) } }
                 runOnUiThread {
                     importing = false; dialog.dismiss(); render()
                     if (scenes.isNotEmpty()) importImages(scenes)
+                    else if (videos.isNotEmpty()) notice("รับวิดีโอแล้ว ${videos.size} ฉาก")
                     else if (covers.isNotEmpty()) notice("รับปกแล้ว ${covers.size} ไฟล์ ตรวจจำนวนภาพและปกบนหน้าแรกได้เลย")
                     else notice(if (candidate != null) "รับบทแล้ว ขั้นตอน 2: เพิ่มภาพฉากได้เลย ไม่ต้องเลือก story.json ซ้ำ" else "รับภาพ MASTER แล้ว เพิ่มภาพฉากในขั้นตอน 2 ได้เลย")
                 }
@@ -412,6 +429,16 @@ class StudioActivity : AppCompatActivity() {
         }
         fun summaryText(value: String, size: Float, color: Int, bold: Boolean = false) {
             summary.addView(TextView(this).apply { text = value; textSize = size; setTextColor(color); setPadding(0,dp(3),0,dp(3)); if (bold) setTypeface(null,Typeface.BOLD) })
+        }
+        if (p != null) {
+            val hero=coverNames(p).map { coverFile(it) }.firstOrNull { it.exists() } ?: rows(p).map { image(it) }.firstOrNull { it.exists() }
+            if(hero != null) summary.addView(ImageView(this).apply {
+                setImageBitmap(previewBitmap(Uri.fromFile(hero))); scaleType=ImageView.ScaleType.CENTER_CROP
+                layoutParams=LinearLayout.LayoutParams(-1,dp(170)); contentDescription="ภาพหนังที่กำลังสร้าง"
+                setOnClickListener { fullImage(hero,p.optString("title")) }
+            })
+            val last=prefs.getString("last_scene_${project.name}",null) ?: File(project,"last_scene.txt").takeIf { it.exists() }?.readText()
+            if(last != null) summaryText("ทำล่าสุด • $last",12f,Color.rgb(71,85,106),true)
         }
         if (p == null) {
             summaryText(if (File(project,"command_sent").exists()) "ส่งไป ChatGPT แล้ว • รอรับบทและภาพในขั้นตอน 2" else "🎬 พร้อมสร้างเรื่องใหม่ • ครบทุก EP",14f,navy,true)
@@ -923,7 +950,6 @@ class StudioActivity : AppCompatActivity() {
                 val commands = references.joinToString("\n\n") { scene ->
                     val ep = (0 until eps.length()).map { eps.getJSONObject(it) }.first { it.getInt("ep") == scene.getInt("ep") }
                     val number = ep.getInt("ep")
-                if (exportEpisode != null && number != exportEpisode) continue
                     "สร้างปก EP $number จากภาพ ${key(scene)} ที่แนบ เป็น 2 ไฟล์ EP%02d_COVER_9x16.png และ EP%02d_COVER_16x9.png จัดองค์ประกอบใหม่ให้เหมาะกับแต่ละสัดส่วน ใช้ตัวละครเดิม ใบหน้า ผม รูปร่าง ชุด สถานที่ และสิ่งของจากภาพฉากนี้ รักษาเหตุการณ์: %s รายละเอียดบทอ้างอิง: %s ข้อความไทย 3 บรรทัดในพื้นที่กลางภาพ เว้นขอบซ้ายขวา 10%% บนล่าง 20%% ไม่ทับใบหน้า: บรรทัด 1 ขนาดเล็ก %s | บรรทัด 2 ใหญ่ที่สุด %s | บรรทัด 3 EP %02d • %s ปรับขนาดให้ครบ อ่านชัดบนมือถือ".format(number,number,scene.optString("action"),scene.optString("image_prompt"),p.optString("channel",originalChannel),p.getString("title"),number,ep.optString("title").ifBlank { "ตั้งชื่อตอนภาษาไทยตามเหตุการณ์" })
                 }
                 shareText("ใช้ภาพฉากที่แนบจากชุดงานที่นำเข้าเป็นต้นแบบปก แก้จากภาพเดิม โดยคงชุดและสถานที่ของภาพนั้น\nสิ่งที่ผู้ใช้ขอปรับ: ${edits.text.toString().ifBlank { "ออกแบบปกให้สวยงาม อ่านชัด" }}\n$commands\nแสดงปกจริงแยกไฟล์ และรวมเฉพาะปกที่สร้างใน ZIP สำหรับนำเข้ากลับ DIRECTOR X หากสร้างไม่ได้ให้แจ้งตามจริง", includeMasters = false, referenceImages = references.map { key(it) to image(it) })
@@ -1391,7 +1417,9 @@ class StudioActivity : AppCompatActivity() {
             else { val edit=prefs.edit(); values.forEach { (k,v) -> edit.putString("plan_$k",v) }; edit.apply(); notice("บันทึกค่าตั้งต้นแล้ว ใช้กับคำสั่งสร้างเรื่องใหม่") }
         }.setNegativeButton("ยกเลิก",null).showDirector()
     }
-    private var castTarget: Pair<String,File>? = null
+    private var castTarget: Pair<String,File>?
+        get() { val name=prefs.getString("cast_target_name",null) ?: return null; val path=prefs.getString("cast_target_path",null) ?: return null; return name to File(path) }
+        set(value) { prefs.edit().putString("cast_target_name",value?.first).putString("cast_target_path",value?.second?.path).apply() }
     private val castPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         val target=castTarget; castTarget=null
         if(uri!=null && target!=null) background {

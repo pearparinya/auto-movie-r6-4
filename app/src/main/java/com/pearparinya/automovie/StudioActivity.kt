@@ -42,6 +42,10 @@ internal fun buildChatShareIntent(text: String, uris: ArrayList<Uri>): Intent =
             else putParcelableArrayListExtra(Intent.EXTRA_STREAM,uris)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
+        // Keep ChatGPT in its own Android task. Without NEW_TASK, some Android
+        // launchers place the ChatGPT screen inside DIRECTOR X's Recents card,
+        // so selecting DIRECTOR X only reopens ChatGPT.
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
 
 /** Whole-story workspace. Legacy preferences and character masters stay untouched. */

@@ -52,6 +52,11 @@ class EpisodeRenderService : Service() {
                     copy.put(dst.path)
                 }
                 val cover=File(job,"cover.png"); File(spec.getString("cover")).copyTo(cover)
+                spec.optJSONArray("input_hashes")?.let { hashes ->
+                    require(hashes.length()==copy.length()+1) { "รายการตรวจไฟล์ไม่ครบ" }
+                    require(EpisodeMedia.digest(cover)==hashes.getString(0)) { "ปกเปลี่ยนระหว่างเตรียมงาน กรุณารวมใหม่" }
+                    for(i in 0 until copy.length()) require(EpisodeMedia.digest(File(copy.getString(i)))==hashes.getString(i+1)) { "คลิปเปลี่ยนระหว่างเตรียมงาน กรุณารวมใหม่" }
+                }
                 spec.put("copies",copy)
                 handler.post { if(!cancelled) runExport(cover,copy) }
             } catch(e: Exception) { handler.post { fail(e) } }

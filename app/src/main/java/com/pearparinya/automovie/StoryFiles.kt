@@ -2,6 +2,7 @@ package com.pearparinya.automovie
 
 import java.io.File
 import java.io.InputStream
+import java.util.zip.ZipException
 import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
 
@@ -66,6 +67,14 @@ internal object StoryFiles {
 
     /** Reads a downloaded archive through its central directory and salvages valid entries. */
     fun unpackFile(archive: File, staging: File, maxBytes: Long = 512L * 1024 * 1024): UnpackResult {
+        return try { unpackCentralDirectory(archive, staging, maxBytes) }
+        catch (error: ZipException) {
+            if (error.message?.contains("END header", true) != true) throw error
+            unpackLocalEntries(archive, staging, maxBytes)
+        }
+    }
+
+    private fun unpackCentralDirectory(archive: File, staging: File, maxBytes: Long): UnpackResult {
         val files = mutableListOf<File>()
         val failed = mutableListOf<String>()
         var total = 0L
@@ -100,6 +109,47 @@ internal object StoryFiles {
                 }
             }
         }
+        return UnpackResult(files, failed)
+    }
+
+    /** Recovers local ZIP entries when the archive was delivered without its final directory. */
+    private fun unpackLocalEntries(archive: File, staging: File, maxBytes: Long): UnpackResult {
+        val files = mutableListOf<File>()
+        val failed = mutableListOf("ส่วนปิดท้าย ZIP ไม่สมบูรณ์ • ระบบเปิดโหมดกู้ข้อมูล")
+        var total = 0L
+        var count = 0
+        ZipInputStream(archive.inputStream()).use { zip ->
+            while (true) {
+                val entry = try { zip.nextEntry } catch (_: Exception) { break } ?: break
+                require(++count <= 2000) { "ZIP มีไฟล์มากเกินไป" }
+                val name = packageName(entry.name)
+                if (!entry.isDirectory && !entry.name.contains("__MACOSX/") && !name.startsWith(".") && (name.endsWith(".json", true) || name.substringAfterLast('.').lowercase() in listOf("png", "jpg", "jpeg", "webp", "mp4"))) {
+                    val target = File(staging, "${files.size}/$name").apply { parentFile!!.mkdirs() }
+                    try {
+                        target.outputStream().use { out ->
+                            val buffer = ByteArray(65536)
+                            var n = zip.read(buffer)
+                            while (n >= 0) {
+                                if (n > 0) {
+                                    total += n
+                                    require(total <= maxBytes) { "ชุดไฟล์ใหญ่เกินขนาดที่รองรับ" }
+                                    out.write(buffer, 0, n)
+                                }
+                                n = zip.read(buffer)
+                            }
+                        }
+                        files.add(target)
+                    } catch (error: Exception) {
+                        target.delete()
+                        if (error is IllegalArgumentException && error.message == "ชุดไฟล์ใหญ่เกินขนาดที่รองรับ") throw error
+                        failed.add("${entry.name} • อ่านไม่ครบ")
+                        break
+                    }
+                }
+                try { zip.closeEntry() } catch (_: Exception) { break }
+            }
+        }
+        require(files.isNotEmpty()) { "ZIP ไม่มีรายการที่กู้คืนได้ กรุณารับ story.json และภาพแยกไฟล์" }
         return UnpackResult(files, failed)
     }
 }

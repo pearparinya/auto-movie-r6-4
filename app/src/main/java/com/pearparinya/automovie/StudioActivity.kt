@@ -274,12 +274,12 @@ class StudioActivity : AppCompatActivity() {
                     val details = "เรื่อง: ${destinationStory.optString("title")}\n" + files.joinToString("\n") { uri ->
                         val filename=displayName(uri); val number=StoryFiles.sceneNumber(filename)
                         filename + if(number != null) " → EP${number.first} ฉาก ${number.second}" else ""
-                    } + (if (failedZipEntries.isEmpty()) "" else "\n\n⚠ อ่านไม่ได้ ${failedZipEntries.size} ไฟล์:\n${failedZipEntries.joinToString("\n")}") + "\n\nตรวจจับคู่ก่อนนำเข้า • ภาพฉากเดิมจะถามก่อนแทน ภาพ MASTER และปกที่ซ้ำจะเก็บเวอร์ชันก่อนแทน"
+                    } + (if (failedZipEntries.isEmpty()) "" else "\n\n⚠ อ่านไม่ได้ ${failedZipEntries.size} ไฟล์:\n${failedZipEntries.joinToString("\n")}") + "\n\nแอปจะนำเข้าไฟล์ตามรายการ" + (if (scenes.isNotEmpty()) " • ภาพฉากที่ซ้ำจะถามก่อนแทน" else "") + (if (covers.isNotEmpty()) " • ปกที่ซ้ำจะเก็บเวอร์ชันเดิมก่อนแทน" else "") + (if (masters.isNotEmpty()) " • MASTER ที่ซ้ำจะเก็บเวอร์ชันเดิมก่อนแทน" else "") + "\nเมื่อนำเข้าสำเร็จ ไปเมนู 3 เพื่อทำวิดีโอผ่าน Flow / Veo ได้"
                     runOnUiThread {
                         importing=false; dialog.dismiss()
                         val preview=TextView(this).apply { text=details; setPadding(dp(16),dp(12),dp(16),dp(12)) }
                         AlertDialog.Builder(this).setTitle("ตรวจชุดไฟล์ก่อนนำเข้า").setView(ScrollView(this).apply { addView(preview) })
-                            .setPositiveButton("ยืนยันและเปิดเมนูวิดีโอ") { _,_ -> receivePackage(selected,true) }.setNegativeButton("ยกเลิก",null).showDirector()
+                            .setPositiveButton("ยืนยันนำเข้า") { _,_ -> receivePackage(selected,true) }.setNegativeButton("ยกเลิก",null).showDirector()
                     }
                     return@Thread
                 }
@@ -318,8 +318,8 @@ class StudioActivity : AppCompatActivity() {
                     importing = false; dialog.dismiss(); render()
                     if (candidate != null && plan == null) return@runOnUiThread notice("รับไฟล์แล้วแต่ยังเปิดโครงการไม่ได้ กรุณานำเข้า ZIP อีกครั้ง")
                     if (scenes.isNotEmpty()) importImages(scenes)
-                    else if (videos.isNotEmpty()) notice("รับวิดีโอแล้ว ${videos.size} ฉาก")
-                    else if (covers.isNotEmpty()) { pendingRecovery.deleteRecursively(); notice("รับปกแล้ว ${covers.size} ไฟล์ ตรวจจำนวนภาพและปกบนหน้าแรกได้เลย") }
+                    else if (videos.isNotEmpty()) showImportReceipt()
+                    else if (covers.isNotEmpty()) { pendingRecovery.deleteRecursively(); showImportReceipt() }
                     else notice(if (failedZipEntries.isNotEmpty()) "รับส่วนที่สมบูรณ์แล้ว • ข้ามไฟล์ที่อ่านไม่ได้ ${failedZipEntries.size} ไฟล์ กดตรวจงานที่ขาดเพื่อเพิ่มเฉพาะไฟล์" else if (candidate != null) "รับ story.json แล้ว • นำเข้า ZIP ภาพและปกของแต่ละ EP ผ่านเมนู 2 ต่อได้ ไม่ต้องเลือกบทซ้ำ" else "รับภาพ MASTER แล้ว เพิ่มภาพฉากในขั้นตอน 2 ได้เลย")
                 }
             } catch (e: Exception) { runOnUiThread { importing = false; dialog.dismiss(); render(); notice("นำเข้าบทและภาพไม่สำเร็จ: ${e.message}") } }
@@ -853,6 +853,20 @@ class StudioActivity : AppCompatActivity() {
             setOnClickListener { if (!importing) action() else Toast.makeText(this@StudioActivity,"กำลังนำเข้าภาพ กรุณารอสักครู่",Toast.LENGTH_SHORT).show() }
         })
     }
+    private fun showImportReceipt() {
+        val story = plan ?: return
+        val scenes = rows(story)
+        val imageCount = scenes.count { image(it).isFile && image(it).length() > 0 }
+        val covers = coverNames(story)
+        val coverCount = covers.count { coverFile(it).isFile && coverFile(it).length() > 0 }
+        val missing = scenes.size - imageCount
+        val missingCovers = covers.size - coverCount
+        val message = "เรื่อง: ${story.optString("title")}\nภาพฉาก $imageCount/${scenes.size} • ปก $coverCount/${covers.size}" +
+            if (missing == 0 && missingCovers == 0) "\nภาพและปกครบแล้ว พร้อมทำวิดีโอ" else "\nยังขาดภาพฉาก $missing ภาพ และปก $missingCovers ภาพ เพิ่มไฟล์ผ่านเมนู 2 หรือตรวจงานที่ขาด"
+        AlertDialog.Builder(this).setTitle("บันทึกชุดงานแล้ว").setMessage(message)
+            .setPositiveButton("ไปเมนู 3 — ทำวิดีโอ") { _, _ -> moviesMenu() }
+            .setNegativeButton("กลับหน้าหลัก", null).showDirector()
+    }
     private fun notice(text: String) { AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setMessage(text).setPositiveButton("ตกลง", null).showDirector() }
     private fun background(block: () -> Unit) {
         importing = true
@@ -1208,7 +1222,11 @@ class StudioActivity : AppCompatActivity() {
         importing = true
         val remaining = uris.toMutableList()
         fun next() {
-            if (remaining.isEmpty()) { importing = false; pendingRecovery.deleteRecursively(); render(); val missing = rows(plan!!).count { !image(it).exists() }; val missingCovers = coverNames(plan!!).count { !coverFile(it).exists() }; notice(if (missing == 0 && missingCovers == 0) "รับภาพและปกครบแล้ว • เมนู 3: นำภาพและคำสั่งไปสร้างคลิปใน Flow แล้วนำเข้า MP4 รายฉาก" else if (missing == 0) "ภาพฉากครบแล้ว ยังขาดปก $missingCovers ไฟล์ กดสร้างปกทุก EP แล้วรับไฟล์กลับในขั้นตอน 2" else "รับภาพแล้ว ยังขาด $missing ฉาก เพิ่มภาพต่อในขั้นตอน 2 ได้เลย"); return }
+            if (remaining.isEmpty()) {
+                importing = false; pendingRecovery.deleteRecursively(); render()
+                showImportReceipt()
+                return
+            }
             val uri = remaining.removeAt(0)
             val name = displayName(uri)
             val match = StoryFiles.sceneNumber(name)

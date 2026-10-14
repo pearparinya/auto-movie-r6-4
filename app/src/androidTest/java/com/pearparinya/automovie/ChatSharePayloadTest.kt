@@ -12,10 +12,10 @@ import org.junit.runner.RunWith
 class ChatSharePayloadTest {
     @Test fun identityGuideUsesNeutralProductionLanguage() {
         val guide = neutralIdentityGuide("ภาพ MASTER ที่แนบ","9:16")
-        assertTrue(guide.contains("เอกลักษณ์"))
+        assertTrue(guide.contains("ใบหน้า") && guide.contains("ทรงผม"))
         assertTrue(guide.contains("เครื่องแต่งกายตามบท"))
         assertTrue(guide.contains("สัดส่วนรูปร่าง") && guide.contains("MASTER รายคน"))
-        assertTrue(guide.contains("ตามธรรมชาติ"))
+        assertTrue(guide.contains("เป็นธรรมชาติ"))
     }
 
     @Test fun textAndAllImagesArePresentInEverySupportedShareField() {

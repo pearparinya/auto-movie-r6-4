@@ -49,10 +49,9 @@ internal fun buildChatShareIntent(text: String, uris: ArrayList<Uri>): Intent =
     }
 
 internal fun neutralIdentityGuide(source: String, aspect: String): String =
-    "ใช้ $source ตรงรายคนเป็นภาพอ้างอิง รักษาเอกลักษณ์ ใบหน้า ทรงผม ช่วงวัย บุคลิก และสัดส่วนรูปร่างของตัวละครตาม MASTER รายคน ได้แก่ ความกว้างไหล่ ช่วงลำตัว เอว สะโพก แขนขา และสัดส่วนหน้าอกตามธรรมชาติที่เห็นในต้นฉบับ ใช้ชุดตามบทที่พอดีกับรูปร่างต้นฉบับ " +
-    "ใช้เครื่องแต่งกายตามบท ระบุสถานที่ สิ่งของ และการกระทำให้ชัดเจน ภาพละครไทยสมจริง สัดส่วน $aspect " +
-    "เห็นใบหน้าและการกระทำครบ สีหน้าและสายตาตามเหตุการณ์ รักษาชุดและสถานที่เดิมเมื่อเป็นเหตุการณ์ต่อเนื่อง " +
-    "ภาพไม่มีข้อความหรือตราสัญลักษณ์ สร้างด้วยเครื่องมือสร้างภาพและแสดงภาพจริงในแชต หากสร้างไม่ได้ให้แจ้งตามจริง"
+    "ใช้ $source เป็นภาพต้นฉบับตรงรายคน คงใบหน้า ทรงผม และสัดส่วนรูปร่างตาม MASTER รายคน " +
+    "ใช้เครื่องแต่งกายตามบท เปลี่ยนสถานที่และการกระทำตามฉาก จัดท่าทางเป็นธรรมชาติ " +
+    "ภาพละครไทยสมจริง $aspect เห็นใบหน้าและการกระทำครบ ไม่มีข้อความ สร้างภาพจริงด้วยเครื่องมือสร้างภาพ หากทำไม่ได้ให้แจ้งตามจริง"
 
 /** Whole-story workspace. Legacy preferences and character masters stay untouched. */
 class StudioActivity : AppCompatActivity() {
@@ -1028,11 +1027,11 @@ class StudioActivity : AppCompatActivity() {
             "${person.optString("name")} → $exported | ชุด: ${person.optString("outfit")}" }
     }
     private fun storySceneCommand(p: JSONObject, scene: JSONObject): String {
-        val scenes = rows(p)
-        val index = scenes.indexOfFirst { key(it) == key(scene) }
-        val previous = scenes.getOrNull(index - 1)?.optString("action").orEmpty()
-        val details = sceneCastDescription(scene)
-        return "สร้างภาพหนึ่งภาพฉาก ${key(scene)} เรื่อง ${p.getString("title")}\n${storyVisualGuide(p.optString("character_mode","original"))}\n$details\nบทบาท: ${p.optJSONObject("cast_roles") ?: ""}\nสถานที่: ${scene.optString("location")}\nเวลาในเรื่อง: ${scene.optString("story_time")}\nอุปกรณ์: ${scene.optString("props")}\nผู้พูด: ${scene.optString("speaker")}\nเสียงบรรยาย: ${scene.optString("narration")}\nเหตุการณ์ต่อเนื่อง: ${scene.optString("continuity_group")}\nรายละเอียดฉาก: ${scene.getString("image_prompt")}\nการกระทำ: ${scene.getString("action")}\nบทพูดและอารมณ์: ${scene.optString("dialogue")}\nเหตุการณ์ก่อนหน้า: $previous\nภาพฉากก่อนหน้าที่แนบใช้เฉพาะความต่อเนื่องของชุด สถานที่ และสิ่งของ ตัวตนแต่ละคนยึด MASTER ต้นฉบับเป็นหลัก สร้างเฉพาะตัวละครในรายการฉากนี้ ตั้งชื่อ ${key(scene)}.png"
+        val guide=neutralIdentityGuide(if(p.optString("character_mode","original")=="new") "CHARACTER MASTER ที่แนบ" else "MASTER ที่แนบ",p.optString("aspect_ratio","9:16"))
+        val details=sceneCastDescription(scene)
+        val setting=listOf(scene.optString("location"),scene.optString("story_time"),scene.optString("props")).filter { it.isNotBlank() }.joinToString(" • ")
+        val action=scene.optString("action").ifBlank { scene.optString("image_prompt") }
+        return "สร้างภาพจริงหนึ่งภาพ ${key(scene)}\n$guide\nตัวละครและชุด:\n$details\nสถานที่: $setting\nการกระทำ: $action\nอารมณ์ตามบท: ${scene.optString("dialogue")}\nภาพฉากก่อนหน้าที่แนบใช้รักษาชุด สถานที่ และสิ่งของในเหตุการณ์เดียวกัน ตัวตนยึด MASTER รายคน ตั้งชื่อ ${key(scene)}.png"
     }
     private fun sendSceneImage(p: JSONObject, scene: JSONObject) {
         val cast = scene.optJSONArray("characters")

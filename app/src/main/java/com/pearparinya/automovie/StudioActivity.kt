@@ -1651,7 +1651,12 @@ class StudioActivity : AppCompatActivity() {
     private fun moviesMenu() {
         val p=plan ?: return notice("นำเข้าบทและคลิปก่อนครับ")
         val eps=p.getJSONArray("episodes")
-        choiceMenu("🎬 รวมหนังและดาวน์โหลด MP4",(0 until eps.length()).map { i -> val ep=eps.getJSONObject(i); "EP ${ep.getInt("ep")} • ${ep.optString("title")}" }) { i -> movieEpisode(eps.getJSONObject(i)) }
+        choiceMenu("🎬 เลือก EP เพื่อทำวิดีโอ",(0 until eps.length()).map { i ->
+            val ep=eps.getJSONObject(i)
+            val scenes=rows(p).filter { it.getInt("ep")==ep.getInt("ep") }
+            val count=scenes.count { video(it).isFile && video(it).length()>0 }
+            "EP ${ep.getInt("ep")} • ${ep.optString("title")}\nคลิป $count/${scenes.size} • " + if(count==scenes.size && scenes.isNotEmpty()) "พร้อมตรวจและรวม EP" else "นำเข้า MP4 รายฉากก่อนรวม"
+        }) { i -> movieEpisode(eps.getJSONObject(i)) }
     }
     private fun movieEpisode(ep: JSONObject) {
         choiceMenu("EP ${ep.getInt("ep")} • ${ep.optString("title")}",listOf("🎬 ตรวจคลิปและรวม EP", "⏳ ดูความคืบหน้า / ยกเลิก", "▶ ดูหนังที่รวมแล้ว", "⬇ ดาวน์โหลด MP4", "↗ แชร์ MP4", "🗂️ หนังเวอร์ชันก่อนหน้า", "🎞️ จัดการคลิปฉาก", "↕ จัดลำดับคลิป")) { i -> when(i) {

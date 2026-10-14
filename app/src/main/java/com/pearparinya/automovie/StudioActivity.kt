@@ -271,15 +271,9 @@ class StudioActivity : AppCompatActivity() {
                 require(checkedCovers.map { it.first }.distinct().size == covers.size) { "มีไฟล์ปกซ้ำ กรุณาเลือกหนึ่งภาพต่อสัดส่วนต่อ EP" }
                 if (candidate != null) validate(candidate)
                 if (!confirmed) {
-                    val details = "เรื่อง: ${destinationStory.optString("title")}\n" + files.joinToString("\n") { uri ->
-                        val filename=displayName(uri); val number=StoryFiles.sceneNumber(filename)
-                        filename + if(number != null) " → EP${number.first} ฉาก ${number.second}" else ""
-                    } + (if (failedZipEntries.isEmpty()) "" else "\n\n⚠ อ่านไม่ได้ ${failedZipEntries.size} ไฟล์:\n${failedZipEntries.joinToString("\n")}") + "\n\nแอปจะนำเข้าไฟล์ตามรายการ" + (if (scenes.isNotEmpty()) " • ภาพฉากที่ซ้ำจะถามก่อนแทน" else "") + (if (covers.isNotEmpty()) " • ปกที่ซ้ำจะเก็บเวอร์ชันเดิมก่อนแทน" else "") + (if (masters.isNotEmpty()) " • MASTER ที่ซ้ำจะเก็บเวอร์ชันเดิมก่อนแทน" else "") + "\nเมื่อนำเข้าสำเร็จ ไปเมนู 3 เพื่อทำวิดีโอผ่าน Flow / Veo ได้"
                     runOnUiThread {
                         importing=false; dialog.dismiss()
-                        val preview=TextView(this).apply { text=details; setPadding(dp(16),dp(12),dp(16),dp(12)) }
-                        AlertDialog.Builder(this).setTitle("ตรวจชุดไฟล์ก่อนนำเข้า").setView(ScrollView(this).apply { addView(preview) })
-                            .setPositiveButton("ยืนยันนำเข้า") { _,_ -> receivePackage(selected,true) }.setNegativeButton("ยกเลิก",null).showDirector()
+                        showPackagePreview(destinationStory, files, failedZipEntries) { receivePackage(selected,true) }
                     }
                     return@Thread
                 }
@@ -551,16 +545,17 @@ class StudioActivity : AppCompatActivity() {
         val packageReceived = p != null
         val sent = packageReceived || File(project,"command_sent").exists()
         val videosComplete = p != null && rows(p).isNotEmpty() && rows(p).all { video(it).exists() }
+        val imagesComplete = p != null && rows(p).isNotEmpty() && rows(p).all { image(it).isFile } && coverNames(p).all { coverFile(it).isFile }
         val currentStep = when {
             !sent -> 1
-            p == null -> 2
+            p == null || !imagesComplete -> 2
             !videosComplete -> 3
             else -> 4
         }
         val complete = p != null && rows(p).all { image(it).exists() && video(it).exists() } && coverNames(p).all { coverFile(it).exists() }
         label(if (complete) "ภาพ วิดีโอ และปกครบแล้ว • ส่งออกชุดงานได้" else if (p != null) "ขั้นตอน $currentStep • ทำวิดีโอและส่งออกหนัง" else if (sent) "ขั้นตอน 2 • รับไฟล์จาก ChatGPT กลับเข้าแอป" else "ขั้นตอน 1 • เลือกเรื่องแล้วส่งไป ChatGPT", 14, true)
         stepCard(1, "🎬", if (sent) "ส่งคำสั่งแล้ว ✓" else "สร้างเรื่องและส่งไป ChatGPT", if (sent) "ล็อกการสร้างซ้ำ • เริ่มเรื่องใหม่ใช้ปุ่มด้านล่าง" else "ตรวจ MASTER → เลือกช่องและแนว → ส่งคำสั่งไป ChatGPT", enabled = !sent, completed = sent, currentStep = currentStep) { planning() }
-        stepCard(2, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "รับบทแล้ว ✓ • นำเข้า ZIP ราย EP", if (p == null) "นำเข้า story.json ก่อน → นำเข้า ZIP ภาพและปกของแต่ละ EP" else "นำเข้า ZIP ภาพและปกราย EP ต่อได้ • ตรวจงานที่ขาดก่อนทำวิดีโอ", completed = packageReceived, currentStep = currentStep) { packagePicker.launch(arrayOf("*/*")) }
+        stepCard(2, "🎨", if (p == null) "รับบทและภาพจาก ChatGPT" else "รับบทแล้ว ✓ • นำเข้า ZIP ราย EP", if (p == null) "นำเข้า story.json ก่อน → นำเข้า ZIP ภาพและปกของแต่ละ EP" else "นำเข้า ZIP ภาพและปกราย EP ต่อได้ • ตรวจงานที่ขาดก่อนทำวิดีโอ", completed = imagesComplete, currentStep = currentStep) { packagePicker.launch(arrayOf("*/*")) }
         stepCard(3, "🎥", "วิดีโอผ่าน Flow / Veo", "ใช้ภาพและคำสั่งสร้างคลิปใน Flow → นำเข้า MP4 รายฉาก → รวม EP พร้อมปกเปิด 3 วินาที", enabled = p != null, completed = videosComplete, currentStep = currentStep) { moviesMenu() }
         stepCard(4, "⬇", "ดาวน์โหลดหนัง EP เป็น MP4", "รวม EP ให้สำเร็จก่อน → บันทึก / แชร์ MP4 ชื่อเรื่อง + เลข EP + ชื่อตอน", enabled = videosComplete, currentStep = currentStep) { moviesMenu() }
         if (p != null) button("📦 ส่งออกชุดงาน / สำรอง ZIP", false) {
@@ -853,7 +848,55 @@ class StudioActivity : AppCompatActivity() {
             setOnClickListener { if (!importing) action() else Toast.makeText(this@StudioActivity,"กำลังนำเข้าภาพ กรุณารอสักครู่",Toast.LENGTH_SHORT).show() }
         })
     }
-    private fun showImportReceipt() {
+    private fun showPackagePreview(story: JSONObject, files: List<Uri>, warnings: List<String>, confirm: () -> Unit) {
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL; setPadding(dp(16),dp(16),dp(16),dp(12))
+            background = backdrop(navy,Color.rgb(35,18,55),gold)
+        }
+        fun text(parent: LinearLayout, value: String, color: Int = ice, size: Float = 13f): TextView = TextView(this).apply {
+            this.text=value; textSize=size; setTextColor(color); setPadding(0,dp(5),0,dp(5)); parent.addView(this)
+        }
+        text(panel,"ตรวจชุดไฟล์ก่อนนำเข้า",gold,20f)
+        text(panel,story.optString("title"),ice,16f)
+        val names=files.map { displayName(it) }
+        val sceneCount=names.count { StoryFiles.sceneNumber(it)!=null && !it.endsWith(".mp4",true) }
+        val coverCount=names.count { StoryFiles.coverName(it)!=null }
+        text(panel,"เลือกครั้งนี้ • บท ${names.count { it.equals("story.json",true) }} • ภาพ $sceneCount • ปก $coverCount",cyan)
+        text(panel,"ตามบททั้งหมด • ${story.getJSONArray("episodes").length()} EP • ${rows(story).size} ฉาก • ${coverNames(story).size} ปก",muted)
+        val list=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL }
+        val scroll=ScrollView(this).apply { isVerticalScrollBarEnabled=true; isScrollbarFadingEnabled=false; addView(list) }
+        panel.addView(scroll,LinearLayout.LayoutParams(-1,0,1f))
+        val episodes=story.getJSONArray("episodes")
+        for(i in 0 until episodes.length()) {
+            val ep=episodes.getJSONObject(i); val number=ep.getInt("ep")
+            val selected=names.filter { StoryFiles.sceneNumber(it)?.first==number || StoryFiles.coverName(it)?.startsWith("EP%02d_".format(number))==true }
+            val card=LinearLayout(this).apply { orientation=1; setPadding(dp(12),dp(8),dp(12),dp(8)); background=backdrop(Color.rgb(21,42,65),Color.rgb(30,24,54),Color.rgb(65,94,126)); layoutParams=LinearLayout.LayoutParams(-1,-2).apply { bottomMargin=dp(8) } }
+            val heading=text(card,"EP %02d • %s  ▾".format(number,ep.optString("title")),gold,15f)
+            text(card,"เลือก ${selected.size} ไฟล์ • บท ${ep.getJSONArray("scenes").length()} ฉาก")
+            val detail=text(card,selected.joinToString("\n").ifBlank { "ยังไม่ได้เลือกไฟล์ของ EP นี้" })
+            detail.visibility=android.view.View.GONE
+            heading.isFocusable=true; heading.setOnClickListener { detail.visibility=if(detail.visibility==android.view.View.GONE) android.view.View.VISIBLE else android.view.View.GONE }
+            list.addView(card)
+        }
+        val other=names.filter { StoryFiles.sceneNumber(it)==null && StoryFiles.coverName(it)==null }
+        if(other.isNotEmpty()) text(list,other.joinToString("\n"),muted)
+        if(warnings.isNotEmpty()) text(list,"ข้อควรตรวจ\n"+warnings.joinToString("\n"),gold)
+        text(list,"ภาพฉากซ้ำจะถามก่อนแทน • ปกที่ซ้ำเก็บเวอร์ชันเดิม\nหลังบันทึกจะตรวจจำนวนที่ยังขาด",muted)
+        val dialog=AlertDialog.Builder(this).setView(panel).create()
+        val actions=LinearLayout(this).apply { orientation=0 }
+        listOf("ยกเลิก","ยืนยันนำเข้า").forEachIndexed { index,label ->
+            actions.addView(Button(this).apply {
+                text=label; isAllCaps=false; setTextColor(if(index==1) navy else ice); backgroundTintList=null
+                background=if(index==1) backdrop(gold,Color.rgb(214,154,54)) else backdrop(navy,navy,Color.rgb(95,110,137))
+                layoutParams=LinearLayout.LayoutParams(0,-2,1f).apply { setMargins(dp(3),dp(8),dp(3),0) }
+                setOnClickListener { isEnabled=false; dialog.dismiss(); if(index==1) confirm() }
+            })
+        }
+        panel.addView(actions)
+        dialog.show(); dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setLayout(resources.displayMetrics.widthPixels-dp(24),(resources.displayMetrics.heightPixels*0.82).toInt())
+    }
+    private fun showImportReceipt(batchSummary: String = "") {
         val story = plan ?: return
         val scenes = rows(story)
         val imageCount = scenes.count { image(it).isFile && image(it).length() > 0 }
@@ -861,7 +904,7 @@ class StudioActivity : AppCompatActivity() {
         val coverCount = covers.count { coverFile(it).isFile && coverFile(it).length() > 0 }
         val missing = scenes.size - imageCount
         val missingCovers = covers.size - coverCount
-        val message = "เรื่อง: ${story.optString("title")}\nภาพฉาก $imageCount/${scenes.size} • ปก $coverCount/${covers.size}" +
+        val message = batchSummary.takeIf { it.isNotBlank() }?.let { "$it\n\n" }.orEmpty() + "เรื่อง: ${story.optString("title")}\nภาพฉาก $imageCount/${scenes.size} • ปก $coverCount/${covers.size}" +
             if (missing == 0 && missingCovers == 0) "\nภาพและปกครบแล้ว พร้อมทำวิดีโอ" else "\nยังขาดภาพฉาก $missing ภาพ และปก $missingCovers ภาพ เพิ่มไฟล์ผ่านเมนู 2 หรือตรวจงานที่ขาด"
         AlertDialog.Builder(this).setTitle("บันทึกชุดงานแล้ว").setMessage(message)
             .setPositiveButton("ไปเมนู 3 — ทำวิดีโอ") { _, _ -> moviesMenu() }
@@ -1221,12 +1264,17 @@ class StudioActivity : AppCompatActivity() {
         val importFolder = project
         importing = true
         val remaining = uris.toMutableList()
+        var savedCount=0; var skippedCount=0
+        val failures=mutableListOf<String>()
+        val progressDialog=AlertDialog.Builder(this).setTitle("กำลังบันทึกภาพ").setMessage("0/${uris.size} ไฟล์").setCancelable(false).showDirector()
         fun next() {
             if (remaining.isEmpty()) {
                 importing = false; pendingRecovery.deleteRecursively(); render()
-                showImportReceipt()
+                progressDialog.dismiss()
+                showImportReceipt("ครั้งนี้ • บันทึกภาพ $savedCount • ข้าม $skippedCount • ล้มเหลว ${failures.size}" + if(failures.isEmpty()) "" else "\n"+failures.joinToString("\n"))
                 return
             }
+            progressDialog.setMessage("กำลังบันทึก ${uris.size-remaining.size+1}/${uris.size} ไฟล์")
             val uri = remaining.removeAt(0)
             val name = displayName(uri)
             val match = StoryFiles.sceneNumber(name)
@@ -1243,12 +1291,12 @@ class StudioActivity : AppCompatActivity() {
                         require(bounds.outWidth > 0) { "อ่านภาพไม่ได้" }
                         if (target.exists()) archiveVersion(target, importFolder, key(s), "image")
                         check(tmp.renameTo(target)) { "บันทึกภาพไม่ได้" }
-                        runOnUiThread { next() }
-                    } catch (e: Exception) { runOnUiThread { notice("$name: ${e.message}"); next() } }
+                        runOnUiThread { savedCount++; next() }
+                    } catch (e: Exception) { runOnUiThread { failures.add("$name: ${e.message}"); next() } }
                 }.start()
             }
             fun assign(s: JSONObject) {
-                if (image(s).exists()) AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setMessage("${key(s)} มีภาพแล้ว แทนด้วย $name หรือไม่?").setPositiveButton("แทนภาพ") { _,_ -> save(s) }.setNegativeButton("ข้าม") { _,_ -> next() }.setCancelable(false).showDirector()
+                if (image(s).exists()) AlertDialog.Builder(this).setIcon(R.drawable.studio_movie).setMessage("${key(s)} มีภาพแล้ว แทนด้วย $name หรือไม่?").setPositiveButton("แทนภาพ") { _,_ -> save(s) }.setNegativeButton("ข้าม") { _,_ -> skippedCount++; next() }.setCancelable(false).showDirector()
                 else save(s)
             }
             if (assignments[uri] != null) assign(assignments.getValue(uri))

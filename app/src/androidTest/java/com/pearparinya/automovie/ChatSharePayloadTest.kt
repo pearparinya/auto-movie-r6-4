@@ -14,7 +14,8 @@ class ChatSharePayloadTest {
         val guide = neutralIdentityGuide("ภาพ MASTER ที่แนบ","9:16")
         assertTrue(guide.contains("เอกลักษณ์"))
         assertTrue(guide.contains("เครื่องแต่งกายตามบท"))
-        assertTrue(!guide.contains("หน้าอก") && !guide.contains("สะโพก"))
+        assertTrue(guide.contains("สัดส่วนรูปร่าง") && guide.contains("MASTER รายคน"))
+        assertTrue(guide.contains("ตามธรรมชาติ"))
     }
 
     @Test fun textAndAllImagesArePresentInEverySupportedShareField() {

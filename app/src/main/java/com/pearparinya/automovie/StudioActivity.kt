@@ -49,7 +49,7 @@ internal fun buildChatShareIntent(text: String, uris: ArrayList<Uri>): Intent =
     }
 
 internal fun neutralIdentityGuide(source: String, aspect: String): String =
-    "ใช้ $source ตรงรายคนเป็นภาพอ้างอิง รักษาเอกลักษณ์ ใบหน้า ทรงผม ช่วงวัย บุคลิก และโครงร่างโดยรวมของตัวละคร " +
+    "ใช้ $source ตรงรายคนเป็นภาพอ้างอิง รักษาเอกลักษณ์ ใบหน้า ทรงผม ช่วงวัย บุคลิก และสัดส่วนรูปร่างของตัวละครตาม MASTER รายคน ได้แก่ ความกว้างไหล่ ช่วงลำตัว เอว สะโพก แขนขา และสัดส่วนหน้าอกตามธรรมชาติที่เห็นในต้นฉบับ ใช้ชุดตามบทที่พอดีกับรูปร่างต้นฉบับ " +
     "ใช้เครื่องแต่งกายตามบท ระบุสถานที่ สิ่งของ และการกระทำให้ชัดเจน ภาพละครไทยสมจริง สัดส่วน $aspect " +
     "เห็นใบหน้าและการกระทำครบ สีหน้าและสายตาตามเหตุการณ์ รักษาชุดและสถานที่เดิมเมื่อเป็นเหตุการณ์ต่อเนื่อง " +
     "ภาพไม่มีข้อความหรือตราสัญลักษณ์ สร้างด้วยเครื่องมือสร้างภาพและแสดงภาพจริงในแชต หากสร้างไม่ได้ให้แจ้งตามจริง"
@@ -502,10 +502,11 @@ class StudioActivity : AppCompatActivity() {
             summary.addView(TextView(this).apply { text = value; textSize = size; setTextColor(color); setPadding(0,dp(3),0,dp(3)); if (bold) setTypeface(null,Typeface.BOLD) })
         }
         if (p != null) {
-            val hero=coverNames(p).map { coverFile(it) }.firstOrNull { it.exists() } ?: rows(p).map { image(it) }.firstOrNull { it.exists() }
+            val hero=coverNames(p).sortedBy { if(it.endsWith("16x9")) 0 else 1 }.map { coverFile(it) }.firstOrNull { it.exists() } ?: rows(p).map { image(it) }.firstOrNull { it.exists() }
             if(hero != null) summary.addView(ImageView(this).apply {
-                setImageBitmap(previewBitmap(Uri.fromFile(hero))); scaleType=ImageView.ScaleType.CENTER_CROP
-                layoutParams=LinearLayout.LayoutParams(-1,dp(170)); contentDescription="ภาพหนังที่กำลังสร้าง"
+                setImageBitmap(previewBitmap(Uri.fromFile(hero))); scaleType=ImageView.ScaleType.FIT_CENTER
+                adjustViewBounds=true
+                layoutParams=LinearLayout.LayoutParams(-1,-2); contentDescription="ภาพหนังที่กำลังสร้าง"
                 setOnClickListener { fullImage(hero,p.optString("title")) }
             })
             val last=prefs.getString("last_scene_${project.name}",null) ?: File(project,"last_scene.txt").takeIf { it.exists() }?.readText()

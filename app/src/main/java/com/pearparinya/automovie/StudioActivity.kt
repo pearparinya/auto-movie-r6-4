@@ -49,8 +49,8 @@ internal fun buildChatShareIntent(text: String, uris: ArrayList<Uri>): Intent =
     }
 
 internal fun neutralIdentityGuide(source: String, aspect: String): String =
-    "ใช้ $source อ้างอิงตัวละครให้ตรง MASTER รายคน รักษาเอกลักษณ์ใบหน้า ทรงผม สีผิว และสัดส่วนรูปร่างตามภาพต้นฉบับอย่างเป็นธรรมชาติ " +
-    "ใช้เครื่องแต่งกายตามบทที่ระบุสำหรับฉากปัจจุบัน โดยใช้ MASTER อ้างอิงตัวบุคคล แยกจากข้อมูลชุด เปลี่ยนสถานที่และการกระทำตามฉาก " +
+    "ใช้ $source อ้างอิงตัวละครให้ตรง MASTER รายคน รักษาเอกลักษณ์ใบหน้า ทรงผม สีผิว และสัดส่วนรูปร่าง รวมถึงช่วงบนและเอวตามภาพต้นฉบับอย่างเป็นธรรมชาติ คงความแตกต่างของรูปร่างรายคน " +
+    "ใช้เครื่องแต่งกายตามบทที่ระบุสำหรับฉากปัจจุบัน ให้ทรงชุดพอดีกับรูปร่างรายคน โดยใช้ MASTER อ้างอิงตัวบุคคล แยกจากข้อมูลชุด เปลี่ยนสถานที่และการกระทำตามฉาก " +
     "ภาพละครไทยสมจริง $aspect เห็นใบหน้าและการกระทำครบ ไม่มีข้อความ สร้างภาพจริงด้วยเครื่องมือสร้างภาพ หากทำไม่ได้ให้แจ้งตามจริง"
 
 /** Whole-story workspace. Legacy preferences and character masters stay untouched. */
@@ -1024,14 +1024,14 @@ class StudioActivity : AppCompatActivity() {
             val person = cast.getJSONObject(i)
             val master=masterFor(person)
             val exported=masterExportName(master,person.optString("master").startsWith("CHARACTER",true)) ?: person.optString("master")
-            "${person.optString("name")} → $exported | ชุด: ${person.optString("outfit")}" }
+            "${person.optString("name")} → $exported | ชุด: ${SceneWardrobe.forScene(StoryIdentity.keyFor(person.optString("name")).orEmpty(), person.optString("outfit"))}" }
     }
     private fun storySceneCommand(p: JSONObject, scene: JSONObject): String {
         val guide=neutralIdentityGuide(if(p.optString("character_mode","original")=="new") "CHARACTER MASTER ที่แนบ" else "MASTER ที่แนบ",p.optString("aspect_ratio","9:16"))
         val details=sceneCastDescription(scene)
         val setting=listOf(scene.optString("location"),scene.optString("story_time"),scene.optString("props")).filter { it.isNotBlank() }.joinToString(" • ")
         val action=scene.optString("action").ifBlank { scene.optString("image_prompt") }
-        return "สร้างภาพจริงหนึ่งภาพ ${key(scene)}\n$guide\nตัวละครและชุด:\n$details\nสถานที่: $setting\nการกระทำ: $action\nอารมณ์ตามบท: ${scene.optString("dialogue")}\nภาพฉากก่อนหน้าที่แนบใช้อ้างอิงสถานที่และสิ่งของในเหตุการณ์เดียวกัน ชุดยึดรายการชุดของฉากปัจจุบันเป็นหลัก เมื่อเป็นชุดเดียวกันจึงรักษารายละเอียดจากฉากก่อนหน้า ใบหน้าและรูปร่างยึด MASTER รายคน ตั้งชื่อ ${key(scene)}.png"
+        return "สร้างภาพจริงหนึ่งภาพ ${key(scene)}\n$guide\nตัวละครและชุด:\n$details\nสถานที่: $setting\nการกระทำ: $action\nอารมณ์ตามบท: ${scene.optString("dialogue")}\nมุมกล้องและแสง: ระดับเอวขึ้นไป (waist-up medium shot) แสงธรรมชาติ จัดระยะให้เห็นใบหน้าและการกระทำครบตามบท\nภาพฉากก่อนหน้าที่แนบใช้อ้างอิงสถานที่และสิ่งของในเหตุการณ์เดียวกัน ชุดยึดรายการชุดของฉากปัจจุบันเป็นหลัก เมื่อเป็นชุดเดียวกันจึงรักษารายละเอียดจากฉากก่อนหน้า ใบหน้าและรูปร่างยึด MASTER รายคน ตั้งชื่อ ${key(scene)}.png"
     }
     private fun sendSceneImage(p: JSONObject, scene: JSONObject) {
         val cast = scene.optJSONArray("characters")

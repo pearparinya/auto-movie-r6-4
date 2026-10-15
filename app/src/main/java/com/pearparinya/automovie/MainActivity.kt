@@ -1011,12 +1011,7 @@ AUTO-MOVIE • START
     // Character/body identity and wardrobe memory remain unchanged.
     private fun wardrobeKey(key: String) = "wardrobe_current_" + key
 
-    private fun defaultWardrobe(key: String): String = when (key) {
-        "gawin" -> "เสื้อโปโลสีเทาเข้มกับกางเกงขายาวสีดำ"
-        "rinlada" -> "เสื้อแขนยาวสีชมพูอ่อนกับกางเกงขายาวสีครีม"
-        "mind" -> "เสื้อแขนยาวสีครีมกับกางเกงขายาวสีเบจ"
-        else -> "ชุดลำลองสุภาพที่เหมาะกับเหตุการณ์"
-    }
+    private fun defaultWardrobe(key: String): String = SceneWardrobe.defaultFor(key)
 
     private fun currentWardrobe(key: String): String =
         statePrefs.getString(wardrobeKey(key), null)?.takeIf { it.isNotBlank() }
@@ -1154,14 +1149,15 @@ AUTO-MOVIE • START
         val memory = storyMemoryText()
 
         return """
-สร้างรูปจากไฟล์ที่แนบ
-ตัวละคร: $cast
-ใช้รูปที่แนบเป็นต้นฉบับของแต่ละตัวละคร คงใบหน้า ทรงผม สีผม ความยาวผม รูปร่าง และความเซ็กซี่ตามรูปต้นฉบับ โดยจับคู่ตัวละครกับ ORIGINAL MASTER ของตนเอง
+สร้างภาพสมจริงแนวตั้ง 9:16 จากภาพ MASTER ที่แนบ:
+ตัวละคร: $cast (จับคู่ตัวละครกับไฟล์แนบ ORIGINAL MASTER ของแต่ละคน)
+- ตัวบุคคล: รักษาเอกลักษณ์ใบหน้า โครงหน้า แววตา ทรงผม สีผิว และรูปร่างรวมถึงสัดส่วนช่วงบนและเอวตาม MASTER ของแต่ละคนอย่างเป็นธรรมชาติ คงความแตกต่างของรูปร่างรายคน
+- เปลี่ยนชุดใหม่ตามฉาก โดยเนื้อผ้าและทรงชุดพอดีกับรูปร่างจาก MASTER รายคน:
 $wardrobe
-ความต่อเนื่องของเรื่อง:
+- ความต่อเนื่องของเรื่อง:
 $memory
-ฉาก: $action
-ภาพแนวตั้ง 9:16 ละครไทยสมจริง
+- ท่าทางและฉากปัจจุบัน: $action
+- มุมกล้องและแสง: ภาพสมจริงแนวตั้ง 9:16 ระดับเอวขึ้นไป (waist-up medium shot) เห็นใบหน้าและการกระทำครบ แสงธรรมชาติ ฉากหลังเป็นสถานที่ตามบท ไม่มีข้อความหรือลายน้ำ
         """.trimIndent()
     }
 

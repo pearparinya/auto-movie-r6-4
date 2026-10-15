@@ -16,6 +16,9 @@ class ChatSharePayloadTest {
         assertTrue(guide.contains("เครื่องแต่งกายตามบท"))
         assertTrue(guide.contains("สัดส่วนรูปร่าง") && guide.contains("MASTER รายคน"))
         assertTrue(guide.contains("เป็นธรรมชาติ"))
+        assertTrue(guide.contains("ฉากปัจจุบัน") && guide.contains("แยกจากข้อมูลชุด"))
+        assertTrue(guide.contains("สีผิว"))
+        assertTrue(neutralIdentityGuide("CHARACTER MASTER ที่แนบ", "16:9").contains("16:9"))
     }
 
     @Test fun textAndAllImagesArePresentInEverySupportedShareField() {

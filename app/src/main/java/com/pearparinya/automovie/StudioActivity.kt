@@ -49,9 +49,7 @@ internal fun buildChatShareIntent(text: String, uris: ArrayList<Uri>): Intent =
     }
 
 internal fun neutralIdentityGuide(source: String, aspect: String): String =
-    "ใช้ $source อ้างอิงตัวละครให้ตรง MASTER รายคน รักษาเอกลักษณ์ใบหน้า ทรงผม สีผิว และสัดส่วนรูปร่าง รวมถึงช่วงบนและเอวตามภาพต้นฉบับอย่างเป็นธรรมชาติ คงความแตกต่างของรูปร่างรายคน " +
-    "ใช้เครื่องแต่งกายตามบทที่ระบุสำหรับฉากปัจจุบัน ให้ทรงชุดพอดีกับรูปร่างรายคน โดยใช้ MASTER อ้างอิงตัวบุคคล แยกจากข้อมูลชุด เปลี่ยนสถานที่และการกระทำตามฉาก " +
-    "ภาพละครไทยสมจริง $aspect เห็นใบหน้าและการกระทำครบ ไม่มีข้อความ สร้างภาพจริงด้วยเครื่องมือสร้างภาพ หากทำไม่ได้ให้แจ้งตามจริง"
+    ImagePromptPolicy.identity(source) + "\n" + ImagePromptPolicy.style(aspect) + " ไม่มีข้อความหรือลายน้ำ หากสร้างไม่ได้ให้แจ้งตามจริง"
 
 /** Whole-story workspace. Legacy preferences and character masters stay untouched. */
 class StudioActivity : AppCompatActivity() {
@@ -603,8 +601,8 @@ class StudioActivity : AppCompatActivity() {
             if (choice == 0) choiceMenu("🎭 เลือกตัวละครในภาพ", listOf("👨 กวิน • คนเดียว", "👩 รินรดา • คนเดียว", "👩 เมย์ • คนเดียว", "👥 ทั้ง 3 คนในภาพเดียว")) { index ->
                 val keys = listOf("gawin", "rinlada", "mind")
                 val selected = if (index == 3) keys else listOf(keys[index])
-                choiceMenu("🖼️ เลือกวิธีทดสอบ", listOf("🎯 คงตัวละครและชุดเดิม • สถานที่อัตโนมัติ", "👗 เปลี่ยนชุดตามบท • ทดสอบความต่อเนื่อง")) { mode ->
-                    sendTestImage(selected, preserveMaster = mode == 0)
+                choiceMenu("🖼️ เลือกวิธีทดสอบ", listOf("🎯 คงตัวละครและชุดเดิม • สถานที่อัตโนมัติ", "👗 เปลี่ยนชุดและฉาก") + if (selected.size == 1) listOf("🧵 เปลี่ยนชุดอย่างเดียว • คงท่าและฉาก") else emptyList()) { mode ->
+                    sendTestImage(selected, preserveMaster = mode == 0, wardrobeOnly = mode == 2)
                 }
             }
             else choiceMenu("✨ ตัวละครสมมุติ", listOf("👨 ใช้รูปผม • เปลี่ยนชุดและฉากอัตโนมัติ", "✨ สร้างคนใหม่")) { mode ->
@@ -624,13 +622,7 @@ class StudioActivity : AppCompatActivity() {
         val (key,label) = available[index]
         val filename = masterExportName(File(filesDir,"character_masters/$key.master"),false) ?: return notice("อ่านภาพต้นแบบไม่ได้")
         val location = nextTestLocation()
-        val command = "สร้างภาพหนึ่งภาพตอนนี้ด้วยเครื่องมือสร้างภาพ และแสดงภาพจริงในแชต\n" +
-            "สร้างตัวละครสมมุติผู้ใหญ่คนใหม่ ตั้งชื่อภาษาไทย ออกแบบใบหน้าและทรงผมใหม่ให้มีเอกลักษณ์ของตนเอง\n" +
-            "ภาพอ้างอิงด้านการออกแบบ: $filename ($label) ใช้เป็นเกณฑ์ของโครงร่างโดยรวม ท่าทาง ความสมจริง และการจัดเฟรมของตัวละครใหม่\n" +
-            "เครื่องแต่งกาย: เลือกชุดสุภาพชุดใหม่ให้เหมาะกับกิจกรรมและสถานที่\n" +
-            "สถานที่: $location\n" +
-            "กิจกรรม: เลือกหนึ่งกิจกรรมที่เป็นธรรมชาติ เช่น เตรียมอาหาร อ่านหนังสือ หรือดูแลต้นไม้ พร้อมจัดสิ่งของประกอบให้สมจริง\n" +
-            "ภาพละครไทยสมจริง แนวตั้ง 9:16 เห็นใบหน้าและการกระทำครบ แสงชัด เหตุการณ์สมมุติ ไม่มีข้อความหรือตราสัญลักษณ์ หลังแสดงภาพจริงแล้วแจ้งชื่อตัวละคร ชุด สถานที่ กิจกรรม และ MASTER ที่ใช้เป็นเกณฑ์สั้น ๆ หากสร้างไม่ได้ให้แจ้งตามจริง"
+        val command = ImagePromptPolicy.newCharacter("$filename ($label)",location)
         shareText(command,useNewMasters=false,selectedMasterKeys=listOf(key))
     }
     private val personalTestPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -683,7 +675,10 @@ class StudioActivity : AppCompatActivity() {
             val index = outfits.indices.filter { it != last }.random()
             prefs.edit().putInt("personal_test_outfit_last", index).apply()
             val location = nextTestLocation()
-            val command = "สร้างภาพหนึ่งภาพตอนนี้ด้วยเครื่องมือสร้างภาพ และแสดงภาพจริงในแชต\nตัวละคร: ปริญญา ใช้ภาพ PARINYA_REFERENCE ที่แนบเป็นต้นฉบับ รักษาเอกลักษณ์ ใบหน้า ทรงผม ช่วงวัย และบุคลิก\nชุดใหม่: ${outfits[index]}\nสถานที่: $location\nการกระทำ: กำลังจัดผักสดลงในชามบนโต๊ะเตรียมอาหาร สีหน้าเป็นมิตร ท่ายืนเป็นธรรมชาติ\nภาพสมจริง แนวตั้ง 9:16 เห็นศีรษะถึงต้นขา แสงชัด เหตุการณ์สมมุติ ไม่มีข้อความหรือตราสัญลักษณ์ หลังแสดงภาพแจ้งชุด สถานที่ และกิจกรรมสั้น ๆ หากสร้างไม่ได้ให้แจ้งตามจริง"
+            val command = ImagePromptPolicy.scene(
+                "ปริญญา → PARINYA_REFERENCE | ชุด: ${outfits[index]}", location,
+                "กำลังจัดผักสดลงชามบนโต๊ะเตรียมอาหาร สีหน้าเป็นมิตร",
+                source="ภาพ PARINYA_REFERENCE ที่แนบ", framing="เห็นศีรษะถึงต้นขาและมือที่กำลังทำงาน")
             shareText(command, useNewMasters = false, includeMasters = false,
                 referenceImages = listOf("PARINYA_REFERENCE" to reference))
         } catch (e: Exception) {
@@ -712,7 +707,7 @@ class StudioActivity : AppCompatActivity() {
             .putStringSet("test_location_used", (round + index).map { it.toString() }.toSet()).apply()
         return places[index]
     }
-    private fun sendTestImage(selectedKeys: List<String>, preserveMaster: Boolean) {
+    private fun sendTestImage(selectedKeys: List<String>, preserveMaster: Boolean, wardrobeOnly: Boolean = false) {
         val cast = listOf("gawin" to "กวิน", "rinlada" to "รินรดา", "mind" to "เมย์")
         val selected = cast.filter { it.first in selectedKeys }
         require(selected.isNotEmpty())
@@ -732,11 +727,7 @@ class StudioActivity : AppCompatActivity() {
             if (masterName == null || !StoryIdentity.matchesMaster(name, masterName)) {
                 notice("อ่านภาพ MASTER ของ $name ไม่ได้ กรุณาเพิ่มภาพต้นฉบับใหม่"); return
             }
-            val outfit = if (preserveMaster) "คงเครื่องแต่งกายจาก MASTER ของคนนี้" else when (name) {
-                "รินรดา" -> "เสื้อผ้าถักเนื้อละเอียดสีครีมแขนสามส่วน กระดุมหน้า คอเสื้อโค้งระดับพอดี ผ้าทึบ ทรงพอดีลำตัวและเอว กระโปรงสีเบจยาวถึงเข่า และผ้ากันเปื้อนสั้นสีเบจ"
-                "เมย์" -> "เสื้อผ้าถักเนื้อละเอียดสีชมพูอ่อนแขนสามส่วน กระดุมหน้า คอเสื้อโค้งระดับพอดี ผ้าทึบ ทรงพอดีลำตัวและเอว กระโปรงสีครีมยาวถึงเข่า และผ้ากันเปื้อนสีครีม"
-                else -> "เสื้อโปโลสีกรมท่าพอดีตัว และกางเกงขายาวสีเบจ"
-            }
+            val outfit = if (preserveMaster) "คงเครื่องแต่งกายจาก MASTER ของคนนี้" else SceneWardrobe.defaultFor(key)
             val action = if (preserveMaster) "$name คงท่าทาง สีหน้า สายตา และกิจกรรมตาม MASTER ของตนเอง" else when (name) {
                 "รินรดา" -> "รินรดากำลังหั่นมะเขือเทศบนเขียงไม้"
                 "เมย์" -> "เมย์กำลังผัดผักในกระทะ"
@@ -747,7 +738,12 @@ class StudioActivity : AppCompatActivity() {
         }
         scene.put("characters", characters)
         val location = nextTestLocation()
-        val command = if (preserveMaster) "แก้ไขภาพ MASTER ที่แนบด้วยเครื่องมือแก้ไขภาพ และแสดงผลหนึ่งภาพจริงในแชต\nตัวละครผู้ใหญ่และไฟล์อ้างอิง:\n${sceneCastDescription(scene)}\nรักษาบุคคล เครื่องแต่งกาย ท่าทาง สีหน้า สายตา อุปกรณ์ และพื้นที่รอบมือจากภาพอ้างอิง เปลี่ยนเฉพาะฉากหลังเป็น $location\n${if (selected.size == 1) "รักษาระยะกล้องและมุมมองตามภาพต้นฉบับ" else "จัดแต่ละคนที่เคาน์เตอร์แยกกันในภาพเดียว เห็นใบหน้าและกิจกรรมครบ จับคู่ตัวละครกับ MASTER ของตนเอง"}\nภาพสมจริงแนวตั้ง 9:16 ไม่มีข้อความหรือตราสัญลักษณ์ หลังแสดงภาพแจ้งชื่อตัวละครและฉากหลังสั้น ๆ หากแก้ไขภาพไม่ได้ให้แจ้งตามจริง" else "สร้างภาพหนึ่งภาพตอนนี้ด้วยเครื่องมือสร้างภาพ และแสดงภาพจริงในแชต\n${storyVisualGuide("original")}\nตัวละครและชุดรายคน:\n${sceneCastDescription(scene)}\nสถานที่: $location จัดผักสด ชามและอุปกรณ์ทำอาหารให้เหมาะกับกิจกรรม\nการกระทำ: ${actions.joinToString("; ")}\nจัดท่ายืนเป็นธรรมชาติ สีหน้าเป็นมิตร แสงธรรมชาติ เหตุการณ์สมมุติหนึ่งเหตุการณ์ สร้างเฉพาะตัวละครในรายการนี้ ยึด MASTER ต้นฉบับรายคนเป็นหลัก ภาพทดสอบนี้เป็นฉากใหม่ ใช้ชุดและสถานที่ตามคำสั่งนี้\nหลังแสดงภาพจริงแล้วแจ้งชื่อ ชุด สถานที่ และเหตุการณ์สั้น ๆ หากสร้างภาพไม่ได้ให้แจ้งตามจริง"
+        val command = when {
+            wardrobeOnly -> ImagePromptPolicy.edit("ภาพ MASTER", "เครื่องแต่งกายเป็นชุดต่อไปนี้ โดยให้ทรงชุดพอดีกับรูปร่างเดิม\n${sceneCastDescription(scene)}", cast=selected.joinToString { it.second })
+            preserveMaster && selected.size == 1 -> ImagePromptPolicy.edit("ภาพ MASTER", "ฉากหลังเป็น $location", cast=sceneCastDescription(scene))
+            else -> ImagePromptPolicy.scene(sceneCastDescription(scene), location,
+                if (preserveMaster) "จัดแต่ละคนในภาพเดียว ให้ทำกิจกรรมตาม MASTER รายคน" else actions.joinToString("; "), lighting="แสงธรรมชาติ")
+        }
         shareText(command, useNewMasters = false, selectedMasterKeys = selected.map { it.first })
     }
     private fun stepCard(number: Int, icon: String, title: String, detail: String, enabled: Boolean = true, completed: Boolean = false, currentStep: Int, action: () -> Unit) {
@@ -1024,15 +1020,21 @@ class StudioActivity : AppCompatActivity() {
             val person = cast.getJSONObject(i)
             val master=masterFor(person)
             val exported=masterExportName(master,person.optString("master").startsWith("CHARACTER",true)) ?: person.optString("master")
-            "${person.optString("name")} → $exported | ชุด: ${SceneWardrobe.forScene(StoryIdentity.keyFor(person.optString("name")).orEmpty(), person.optString("outfit"))}" }
+            listOf("${person.optString("name")} → $exported",person.optString("visual_description"),
+                "ชุด: ${SceneWardrobe.forScene(StoryIdentity.keyFor(person.optString("name")).orEmpty(), person.optString("outfit"))}")
+                .filter { it.isNotBlank() }.joinToString(" | ") }
     }
     private fun storySceneCommand(p: JSONObject, scene: JSONObject): String {
-        val guide=neutralIdentityGuide(if(p.optString("character_mode","original")=="new") "CHARACTER MASTER ที่แนบ" else "MASTER ที่แนบ",p.optString("aspect_ratio","9:16"))
-        val details=sceneCastDescription(scene)
         val setting=listOf(scene.optString("location"),scene.optString("story_time"),scene.optString("props")).filter { it.isNotBlank() }.joinToString(" • ")
+        val details=sceneCastDescription(scene)
         val action=scene.optString("action").ifBlank { scene.optString("image_prompt") }
-        return "สร้างภาพจริงหนึ่งภาพ ${key(scene)}\n$guide\nตัวละครและชุด:\n$details\nสถานที่: $setting\nการกระทำ: $action\nอารมณ์ตามบท: ${scene.optString("dialogue")}\nมุมกล้องและแสง: ระดับเอวขึ้นไป (waist-up medium shot) แสงธรรมชาติ จัดระยะให้เห็นใบหน้าและการกระทำครบตามบท\nภาพฉากก่อนหน้าที่แนบใช้อ้างอิงสถานที่และสิ่งของในเหตุการณ์เดียวกัน ชุดยึดรายการชุดของฉากปัจจุบันเป็นหลัก เมื่อเป็นชุดเดียวกันจึงรักษารายละเอียดจากฉากก่อนหน้า ใบหน้าและรูปร่างยึด MASTER รายคน ตั้งชื่อ ${key(scene)}.png"
+        val continuity=listOf(scene.optString("start_state"),
+            "ภาพก่อนหน้าใช้ดูสถานที่และสิ่งของ ชุดยึดฉากปัจจุบัน ตัวบุคคลยึด MASTER รายคน").filter { it.isNotBlank() }.joinToString(" • ")
+        return ImagePromptPolicy.scene(details,setting,action,p.optString("aspect_ratio","9:16"),
+            if(p.optString("character_mode","original")=="new") "CHARACTER MASTER ที่แนบ" else "ภาพ MASTER ที่แนบ",
+            scene.optString("framing"),scene.optString("lighting"),continuity,"${key(scene)}.png")
     }
+
     private fun sendSceneImage(p: JSONObject, scene: JSONObject) {
         val cast = scene.optJSONArray("characters")
         val keys = if (cast != null) (0 until cast.length()).mapNotNull { StoryIdentity.keyFor(cast.getJSONObject(it).optString("name")) }
@@ -1071,7 +1073,7 @@ class StudioActivity : AppCompatActivity() {
     private fun coverCommand(p: JSONObject, ep: JSONObject): String {
         val number = ep.getInt("ep")
         val title = ep.optString("title").ifBlank { "ตั้งชื่อตอนภาษาไทยจากเหตุการณ์ของ EP นี้ ใช้ชื่อเดียวกันทั้งสองปก" }
-        return "สร้างปกของ EP $number แยก 2 ไฟล์ EP%02d_COVER_9x16.png (9:16) และ EP%02d_COVER_16x9.png (16:9) จัดองค์ประกอบใหม่ตามสัดส่วนแต่ละภาพ ใช้ MASTER รายคน รักษาเอกลักษณ์ ใบหน้า ทรงผม ช่วงวัย และบุคลิกของตัวละคร เปลี่ยนชุดและสถานที่ตามตอน สื่อเหตุการณ์เด่น: %s ข้อความ 3 บรรทัดจัดกึ่งกลางในพื้นที่กลางภาพ เว้นขอบซ้ายขวา 10%% ขอบบนล่าง 20%% อ่านชัดบนมือถือ ไม่ทับใบหน้า บรรทัด 1 (เล็กกว่า): %s | บรรทัด 2 (ใหญ่ที่สุด): %s | บรรทัด 3 (ขนาดรอง): EP %02d • %s ปรับขนาดอักษรให้ข้อความครบในแต่ละบรรทัด".format(number,number,ep.getJSONArray("scenes").getJSONObject(ep.getJSONArray("scenes").length()-1).optString("action"),p.optString("channel",originalChannel),p.getString("title"),number,title)
+        return "สร้างปกของ EP $number แยก 2 ไฟล์ EP%02d_COVER_9x16.png (9:16) และ EP%02d_COVER_16x9.png (16:9) จัดองค์ประกอบใหม่ตามสัดส่วนแต่ละภาพ ${ImagePromptPolicy.coverReference("MASTER รายคน")} สื่อเหตุการณ์เด่น: %s ข้อความ 3 บรรทัดจัดกึ่งกลางในพื้นที่กลางภาพ เว้นขอบซ้ายขวา 10%% ขอบบนล่าง 20%% อ่านชัดบนมือถือ ไม่ทับใบหน้า บรรทัด 1 (เล็กกว่า): %s | บรรทัด 2 (ใหญ่ที่สุด): %s | บรรทัด 3 (ขนาดรอง): EP %02d • %s ปรับขนาดอักษรให้ข้อความครบในแต่ละบรรทัด".format(number,number,ep.getJSONArray("scenes").getJSONObject(ep.getJSONArray("scenes").length()-1).optString("action"),p.optString("channel",originalChannel),p.getString("title"),number,title)
     }
     private fun sendCoverCommands() {
         val p = plan ?: return notice("นำเข้าบทและภาพฉากจาก ZIP ก่อนสร้างปก")
@@ -1104,7 +1106,7 @@ class StudioActivity : AppCompatActivity() {
                 val commands = references.joinToString("\n\n") { scene ->
                     val ep = (0 until eps.length()).map { eps.getJSONObject(it) }.first { it.getInt("ep") == scene.getInt("ep") }
                     val number = ep.getInt("ep")
-                    "สร้างปก EP $number จากภาพ ${key(scene)} ที่แนบ เป็น 2 ไฟล์ EP%02d_COVER_9x16.png และ EP%02d_COVER_16x9.png จัดองค์ประกอบใหม่ให้เหมาะกับแต่ละสัดส่วน ใช้ตัวละครเดิม ใบหน้า ผม รูปร่าง ชุด สถานที่ และสิ่งของจากภาพฉากนี้ รักษาเหตุการณ์: %s รายละเอียดบทอ้างอิง: %s ข้อความไทย 3 บรรทัดในพื้นที่กลางภาพ เว้นขอบซ้ายขวา 10%% บนล่าง 20%% ไม่ทับใบหน้า: บรรทัด 1 ขนาดเล็ก %s | บรรทัด 2 ใหญ่ที่สุด %s | บรรทัด 3 EP %02d • %s ปรับขนาดให้ครบ อ่านชัดบนมือถือ".format(number,number,scene.optString("action"),scene.optString("image_prompt"),p.optString("channel",originalChannel),p.getString("title"),number,ep.optString("title").ifBlank { "ตั้งชื่อตอนภาษาไทยตามเหตุการณ์" })
+                    "สร้างปก EP $number จากภาพ ${key(scene)} ที่แนบ เป็น 2 ไฟล์ EP%02d_COVER_9x16.png และ EP%02d_COVER_16x9.png จัดองค์ประกอบใหม่ให้เหมาะกับแต่ละสัดส่วน ${ImagePromptPolicy.coverReference("ภาพฉากที่แนบ")} รักษาเหตุการณ์: %s ข้อความไทย 3 บรรทัดในพื้นที่กลางภาพ เว้นขอบซ้ายขวา 10%% บนล่าง 20%% ไม่ทับใบหน้า: บรรทัด 1 ขนาดเล็ก %s | บรรทัด 2 ใหญ่ที่สุด %s | บรรทัด 3 EP %02d • %s ปรับขนาดให้ครบ อ่านชัดบนมือถือ".format(number,number,scene.optString("action"),p.optString("channel",originalChannel),p.getString("title"),number,ep.optString("title").ifBlank { "ตั้งชื่อตอนภาษาไทยตามเหตุการณ์" })
                 }
                 shareText("ใช้ภาพฉากที่แนบจากชุดงานที่นำเข้าเป็นต้นแบบปก แก้จากภาพเดิม โดยคงชุดและสถานที่ของภาพนั้น\nสิ่งที่ผู้ใช้ขอปรับ: ${edits.text.toString().ifBlank { "ออกแบบปกให้สวยงาม อ่านชัด" }}\n$commands\nแสดงปกจริงแยกไฟล์ และรวมเฉพาะปกที่สร้างใน ZIP สำหรับนำเข้ากลับ DIRECTOR X หากสร้างไม่ได้ให้แจ้งตามจริง", includeMasters = false, referenceImages = references.map { key(it) to image(it) })
             }.setNegativeButton("ยกเลิก",null).showDirector()
@@ -1193,13 +1195,13 @@ class StudioActivity : AppCompatActivity() {
 ตั้งชื่อเรื่องเป็นภาษาไทยเท่านั้น ใส่ชื่อภาษาไทยในค่า title ของ story.json และตั้งชื่อไฟล์ ZIP เป็นชื่อเรื่องภาษาไทย.zip ห้ามใช้ชื่อหมวดภาษาอังกฤษเป็นชื่อเรื่องหรือชื่อ ZIP
 สร้างชื่อเรื่องและพล็อตให้ตรงหมวดนี้ ใช้ค่า category ใน story.json เป็น "$category" ตรงทุกตัวอักษร
 เกณฑ์ Auto EP: ห้ามใช้ 3 EP เป็นค่าเริ่มต้นซ้ำโดยไม่มีเหตุผล เรื่องสั้นปมเดียวใช้ 1–2 EP เรื่องระดับกลางมีจุดพลิกใช้ 3–4 EP เรื่องซับซ้อนหลายความสัมพันธ์หรือหลายปมใช้ 5–6 EP เลือกเท่าที่จำเป็นเพื่อเล่าจบ ไม่ยืดเรื่อง และอธิบายเหตุผลหนึ่งประโยคก่อนตาราง หากค่าตั้งต้นผู้ใช้กำหนดตัวเลข EP ให้ใช้ตัวเลขนั้นแทนเกณฑ์ Auto บันทึกเหตุผลเดียวกันใน story.json ด้วยฟิลด์ episode_reason
-ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ${if (mode == "original") "ตัวละครหลัก กวิน รินรดา เมย์ อ้างอิง MASTER ของแต่ละคนเพื่อรักษาเอกลักษณ์ ใบหน้า ทรงผม ช่วงวัย และบุคลิกตรงรายคน" else "สร้างชื่อ ใบหน้า และทรงผมใหม่สำหรับตัวละครของเรื่องนี้ ก่อนสร้างแต่ละ CHARACTER MASTER ให้เลือก GAWIN_MASTER, RINLADA_MASTER หรือ MIND_MASTER หนึ่งภาพเป็น design_reference ด้านโครงร่างโดยรวม ท่าทาง ความสมจริง และการจัดเฟรม กระจายการเลือกให้เหมาะกับตัวละครใหม่ บันทึกชื่อ design_reference ไว้ใน bible แล้วสร้าง CHARACTER_01.png, CHARACTER_02.png ตามจำนวนที่ต้องใช้ ใช้ CHARACTER MASTER ใหม่เดิมอย่างต่อเนื่องทุกฉาก"}\n${storyVisualGuide(mode)}\nใช้วิธีเดียวกับการทดสอบสร้างภาพ: MASTER รายคนเป็นต้นฉบับของตัวละคร ชุด สถานที่และการกระทำเป็นข้อมูลใหม่ตามบท เขียน image_prompt พร้อมใช้ของแต่ละฉากอย่างกระชับ: ตัวละครและ MASTER รายคน → ชุดรายคน → สถานที่และสิ่งของ → การกระทำ → สีหน้าและสายตา ระบุชนิด สี และทรงชุดให้เหมาะกับบทบาท รวมทั้งสถานที่จริงในแต่ละฉากเพื่อสร้างซ้ำได้ ชุดเปลี่ยนตามวันหรือเหตุการณ์ และคงเดิมในเหตุการณ์ต่อเนื่อง ใช้คำอธิบายเชิงบวกสั้น ๆ โดยไม่เพิ่มรายการข้อห้ามยาวซ้ำทุกฉาก เหตุการณ์ทุกฉากมาจากบทของเรื่องนี้ จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน แยก speaker และ narration ผู้บรรยายชายเป็นเสียงนอกภาพ ตัวละครไม่ขยับปากตามเสียงบรรยาย
+ประเมินจำนวน EP และฉากตามเนื้อหาเอง สำหรับ Flow / Veo 3.1 Lite ทุกฉาก 8 วินาที แนวตั้ง 9:16 Locked-off static camera ${if (mode == "original") "ตัวละครหลัก กวิน รินรดา เมย์ อ้างอิง MASTER ของแต่ละคนเพื่อรักษาเอกลักษณ์ ใบหน้า ทรงผม ช่วงวัย และบุคลิกตรงรายคน" else "สร้างชื่อ ใบหน้า และทรงผมใหม่สำหรับตัวละครของเรื่องนี้ ก่อนสร้างแต่ละ CHARACTER MASTER ให้เลือก GAWIN_MASTER, RINLADA_MASTER หรือ MIND_MASTER หนึ่งภาพเป็น design_reference ด้านสไตล์ภาพ ความสมจริง และการจัดเฟรม กระจายการเลือกให้เหมาะกับตัวละครใหม่ บันทึกชื่อ design_reference ไว้ใน bible แล้วสร้าง CHARACTER_01.png, CHARACTER_02.png ตามจำนวนที่ต้องใช้ ใช้ CHARACTER MASTER ใหม่เดิมอย่างต่อเนื่องทุกฉาก"}\n${storyVisualGuide(mode)}\nใช้วิธีเดียวกับการทดสอบสร้างภาพ: MASTER รายคนเป็นต้นฉบับของตัวละคร ชุด สถานที่และการกระทำเป็นข้อมูลใหม่ตามบท เขียน image_prompt พร้อมใช้ของแต่ละฉากอย่างกระชับ: ตัวละครและ MASTER รายคน → ชุดรายคน → สถานที่และสิ่งของ → การกระทำ → สีหน้าและสายตา ระบุชนิด สี และทรงชุดให้เหมาะกับบทบาท รวมทั้งสถานที่จริงในแต่ละฉากเพื่อสร้างซ้ำได้ ชุดเปลี่ยนตามวันหรือเหตุการณ์ และคงเดิมในเหตุการณ์ต่อเนื่อง ใช้คำสั่งสั้นแบบ ตัวละครอ้างอิง → ชุด → สถานที่ → การกระทำ → รูปแบบภาพ ระบุลักษณะใบหน้า ผมและเครื่องประดับเฉพาะที่เห็นจาก MASTER ไม่แต่งรายละเอียดที่ไม่ทราบ ไม่อ้างว่าล็อกความเหมือนเป็นเปอร์เซ็นต์ เลือกระยะภาพและแสงตามกิจกรรม ไม่กำหนดเอวขึ้นไปทุกฉาก ใช้คำอธิบายเชิงบวกสั้น ๆ เหตุการณ์ทุกฉากมาจากบทของเรื่องนี้ จบปมครบทุกเรื่อง ผู้พูดแต่ละฉากชัดเจน แยก speaker และ narration ผู้บรรยายชายเป็นเสียงนอกภาพ ตัวละครไม่ขยับปากตามเสียงบรรยาย
 แผนความต่อเนื่องของตัวละคร: เก็บชื่อ → ไฟล์ MASTER ตายตัวใน bible: กวิน → GAWIN_MASTER, รินรดา → RINLADA_MASTER, เมย์ → MIND_MASTER ใช้นามสกุล .png/.jpg/.webp ตามไฟล์ภาพที่แนบ โดยชื่อฐานจับคู่ตรงคน สำหรับช่องตัวละครใหม่ใช้ชื่อใหม่ → CHARACTER_01.png ตามที่สร้าง แต่ละฉากมี characters เฉพาะคนที่ปรากฏ พร้อม name, master, outfit ระบุ location และ continuity_group เหตุการณ์เดียวกันใช้รหัสกลุ่มเดียวกัน ชุดและรายละเอียดสถานที่เหมือนเดิม เมื่อเปลี่ยนวันหรือเหตุการณ์จึงเปลี่ยนกลุ่ม
 การต่อฉาก: ระบุ start_state และ end_state ทุกฉาก ให้สถานะต้นฉากต่อจากท้ายฉากก่อน รวมผู้ถือและตำแหน่งอุปกรณ์ การเข้าออกของตัวละคร วันเวลาและสถานที่ ห้ามย้ายซอง เอกสาร หรือคนโดยไม่มีจังหวะส่งต่อ ข้าม EP ต่อเหตุการณ์เดิมให้ใช้สถานะเดิม ปิดคำถามที่เปิดไว้ เช่น เหตุผลการโอนเงิน ก่อนจบเรื่อง
 การกำหนดคนพูด: characters ทุกคนต้องมี visual_description (ทรงผมและลักษณะเด่น) และ screen_position ตามองค์ประกอบภาพที่วางแผน ชื่ออย่างเดียวไม่พอ หลังเห็นภาพจริงต้องตรวจตำแหน่งอีกครั้ง ไม่เดาซ้ายขวา เขียน flow_prompt เป็น CHARACTER MAP ชื่อ + ลักษณะ + ชุด + ตำแหน่ง แล้วระบุผู้พูดเพียงหนึ่งคนกับบทพูดหนึ่งครั้ง ผู้ฟังทุกคนปิดปากและแสดงปฏิกิริยาเงียบ แยกฉากบทพูดจากเสียงบรรยาย ผู้บรรยายเป็นเสียงนอกภาพและไม่มีใครขยับปากตาม ระยะเวลาต้องพอกับบท หากยาวให้ย่อหรือแยกฉาก ไม่ให้แย่งกันพูด
 ก่อนใช้เครื่องมือสร้างภาพแต่ละฉาก อ้างอิง MASTER ต้นฉบับตรงรายคนอีกครั้ง ใช้ภาพฉากก่อนหน้าในกลุ่มเดียวกันเป็นตัวช่วยเรื่องสถานที่และสิ่งของ ชุดยึดข้อมูลฉากปัจจุบันเป็นหลักและใช้ภาพก่อนหน้ารักษารายละเอียดเมื่อเป็นชุดเดียวกัน โดยใบหน้าและรูปร่างยึด MASTER เป็นหลัก ตรวจชื่อและชุดของแต่ละคนก่อนส่งสร้าง ไม่ใช้ภาพที่คลาดเคลื่อนแทน MASTER หากขาดต้นฉบับให้แจ้งก่อนสร้าง
 ส่งไฟล์ story.json เป็น JSON ไม่มี markdown โครงสร้าง:
-{"schema_version":3,"channel":${JSONObject.quote(channel)},"character_mode":"$mode","title":"ชื่อเรื่อง","category":${JSONObject.quote(category)},"tagline":"คำโปรยเรื่อง","episode_count":1,"scene_count":1,"bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"title":"ชื่อตอนภาษาไทย","tagline":"คำโปรยตอน","scene_count":1,"scenes":[{"scene":1,"characters":[{"name":"ชื่อตัวละครที่อยู่ในฉาก","master":"ชื่อไฟล์ MASTER ตรงรายคน","outfit":"ชนิด สี และรายละเอียดชุด","visual_description":"ทรงผมและลักษณะเด่นจาก MASTER รายคน","screen_position":"ตำแหน่งที่วางแผนในภาพ ต้องยืนยันกับภาพจริงก่อนใช้ Flow"}],"location":"สถานที่และสิ่งของหลัก","continuity_group":"DAY01_LOCATION01_EVENT01","start_state":"สถานะต่อจากท้ายฉากก่อน รวมตำแหน่งคนและสิ่งของ","end_state":"สถานะที่ส่งต่อฉากถัดไป","flow_action":"One visible action in English","action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","speaker":"ชื่อผู้พูดหรือว่างเมื่อไม่มีบทพูด","narration":"เสียงบรรยายชายหรือว่าง","image_prompt":"ตัวละครและ MASTER ตรงรายคน รักษาเอกลักษณ์ใบหน้า ผม สีผิว และสัดส่วนรูปร่างตามต้นฉบับอย่างเป็นธรรมชาติ; ชุดตามฉากปัจจุบันรายคนระบุชนิดสีและทรง; สถานที่และสิ่งของ; การกระทำ สีหน้าและสายตาตามบท; ภาพละครไทยสมจริง 9:16 เห็นการกระทำครบ ไม่มีข้อความ","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}
+{"schema_version":3,"channel":${JSONObject.quote(channel)},"character_mode":"$mode","title":"ชื่อเรื่อง","category":${JSONObject.quote(category)},"tagline":"คำโปรยเรื่อง","episode_count":1,"scene_count":1,"bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"title":"ชื่อตอนภาษาไทย","tagline":"คำโปรยตอน","scene_count":1,"scenes":[{"scene":1,"characters":[{"name":"ชื่อตัวละครที่อยู่ในฉาก","master":"ชื่อไฟล์ MASTER ตรงรายคน","outfit":"ชนิด สี และรายละเอียดชุด","visual_description":"ทรงผมและลักษณะเด่นจาก MASTER รายคน","screen_position":"ตำแหน่งที่วางแผนในภาพ ต้องยืนยันกับภาพจริงก่อนใช้ Flow"}],"location":"สถานที่และสิ่งของหลัก","framing":"ระยะภาพที่เห็นกิจกรรมครบ เช่น ศีรษะถึงเข่าหรือเต็มตัวตามบท","lighting":"แสงตามเวลาและสถานที่","continuity_group":"DAY01_LOCATION01_EVENT01","start_state":"สถานะต่อจากท้ายฉากก่อน รวมตำแหน่งคนและสิ่งของ","end_state":"สถานะที่ส่งต่อฉากถัดไป","flow_action":"One visible action in English","action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","speaker":"ชื่อผู้พูดหรือว่างเมื่อไม่มีบทพูด","narration":"เสียงบรรยายชายหรือว่าง","image_prompt":"ตัวละครและ MASTER ตรงรายคน คงใบหน้า ผม สีผิวและรูปร่างตามภาพอ้างอิง; ชุดตามฉากปัจจุบันระบุชนิดและสี; สถานที่และสิ่งของ; การกระทำ สีหน้าและสายตาตามบท; ภาพละครไทยสมจริง 9:16 เห็นการกระทำครบ ไม่มีข้อความ","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}
 การส่งชุดงานสุดท้าย: ส่ง story.json เป็นไฟล์แยก และส่งภาพฉากกับปกเป็น ZIP แยกราย EP ใช้ MASTER เป็นภาพอ้างอิงระหว่างสร้าง แต่ไม่ใส่ไฟล์ภาพ MASTER หรือโฟลเดอร์ MASTER/characters ลงใน ZIP คำสั่ง Flow รวมหนึ่งไฟล์ต่อ EP: EP01_FLOW.txt, EP02_FLOW.txt ตามจำนวนตอนจริง แต่ละไฟล์มีชื่อตอนและทุกซีนเรียงเลข แต่ละซีนแสดงเลขฉาก เหตุการณ์ บทพูด และคำสั่ง Flow แยกเป็นบล็อกสำหรับคัดลอกทีละซีน ไม่แยกเป็นไฟล์ Flow รายซีน คำสั่ง flow_prompt ใน story.json ยังต้องครบทุกซีนตามเดิม
 ตัวเลข 1 ในตัวอย่างเป็นเพียงรูปแบบ ต้องแทนด้วยจำนวนจริงของบทเต็ม เพิ่ม EP และฉากเท่าที่เรื่องต้องใช้ เรียงเลขจาก 1 ไม่กำหนดจำนวนตายตัว หลังวางบททั้งเรื่อง ต้องส่ง story.json เป็นไฟล์ดาวน์โหลดแยกทันที ก่อนเริ่มสร้างภาพ ห้ามรอใส่ story.json ไว้ท้าย ZIP เท่านั้น จากนั้นใช้เครื่องมือสร้างภาพและแสดงภาพจริงในแชตแยกหนึ่งฉากหนึ่งไฟล์ตามลำดับครบทุก EP จนจบ ตั้งชื่อ EP01_SC001.png ตามเลข EP และฉาก ไม่ทำภาพรวมหลายฉาก ${if (mode == "original") "ใช้ MASTER ที่แนบให้ตรงรายคน" else "ใช้ CHARACTER MASTER ใหม่ที่สร้างสำหรับเรื่องนี้ตรงรายคน"} พร้อมคำสั่งสำหรับ Flow / Veo 3.1 Lite ทุกฉาก ผู้ใช้ต้องการบทและภาพพร้อมนำไปทำวิดีโอ
 เพื่อป้องกันไฟล์ขนาดใหญ่ถูกตัด ให้ส่ง ZIP แยกหนึ่งไฟล์ต่อ EP ชื่อ EP01_IMAGES.zip, EP02_IMAGES.zip ตามจริง แต่ละ ZIP ใส่เฉพาะภาพฉากและปกของ EP นั้น หลังสร้าง ZIP แต่ละ EP ให้เปิดตรวจว่าอ่านได้ ตรวจจำนวนภาพฉากและปก แล้วรายงานจำนวนที่ตรวจจริง ห้ามแจ้งว่าครบจากแผนโดยไม่ตรวจไฟล์ ห้ามรวมภาพทุก EP เป็น ZIP ก้อนใหญ่ไฟล์เดียว
@@ -1451,7 +1453,7 @@ class StudioActivity : AppCompatActivity() {
             val person = cast.getJSONObject(i); picture("MASTER • ${person.optString("name")}",masterFor(person))
         }
         picture("ผลลัพธ์ • ${key(s)} • ${s.optString("user_review","รอตรวจ")}",image(s))
-        panel.addView(TextView(this).apply { text = "เป้าหมายความเหมือน 95% • ยังไม่มีการวัดเปอร์เซ็นต์อัตโนมัติ\n${sceneCastDescription(s)}\n${s.optString("action")}\n${s.optString("dialogue")}" })
+        panel.addView(TextView(this).apply { text = "ตรวจใบหน้า ผม รูปร่าง ชุด และมือเทียบ MASTER • ให้ผู้ใช้ประเมินจากภาพจริง\n${sceneCastDescription(s)}\n${s.optString("action")}\n${s.optString("dialogue")}" })
         AlertDialog.Builder(this).setTitle("เปรียบเทียบต้นฉบับ").setView(ScrollView(this).apply { addView(panel) }).setPositiveButton("ปิด",null).showDirector()
     }
     private fun fullImage(file: File, title: String) {
@@ -1463,7 +1465,7 @@ class StudioActivity : AppCompatActivity() {
         val draftFile=File(project,"drafts/${key(s)}.json")
         val draft=runCatching { if(draftFile.exists()) JSONObject(draftFile.readText()) else s }.getOrDefault(s)
         val previousGroup=s.optString("continuity_group")
-        val fields = listOf("action" to "เหตุการณ์", "dialogue" to "บทพูด", "speaker" to "ผู้พูด", "narration" to "เสียงบรรยาย", "location" to "สถานที่", "continuity_group" to "กลุ่มความต่อเนื่อง", "props" to "อุปกรณ์", "story_time" to "เวลาในเรื่อง", "image_prompt" to "คำสั่งภาพ", "flow_prompt" to "คำสั่ง Flow เดิม (สร้างใหม่จากข้อมูลฉาก)", "flow_action" to "การกระทำสำหรับวิดีโอ (English)", "start_state" to "สถานะต้นฉาก", "end_state" to "สถานะท้ายฉาก")
+        val fields = listOf("action" to "เหตุการณ์", "dialogue" to "บทพูด", "speaker" to "ผู้พูด", "narration" to "เสียงบรรยาย", "location" to "สถานที่", "continuity_group" to "กลุ่มความต่อเนื่อง", "props" to "อุปกรณ์", "story_time" to "เวลาในเรื่อง", "image_prompt" to "คำสั่งภาพ", "framing" to "ระยะภาพ (ว่าง = ตามการกระทำ)", "lighting" to "แสงตามฉาก", "flow_prompt" to "คำสั่ง Flow เดิม (สร้างใหม่จากข้อมูลฉาก)", "flow_action" to "การกระทำสำหรับวิดีโอ (English)", "start_state" to "สถานะต้นฉาก", "end_state" to "สถานะท้ายฉาก")
         val panel = LinearLayout(this).apply { orientation = 1; setPadding(dp(12),dp(12),dp(12),dp(12)) }
         val inputs = fields.map { (key,label) -> key to EditText(this).apply { hint = label; setText(draft.optString(key,s.optString(key))); panel.addView(this) } }
         val cast = s.optJSONArray("characters") ?: JSONArray()
@@ -1511,7 +1513,8 @@ class StudioActivity : AppCompatActivity() {
             if (change.isBlank()) { notice("ระบุส่วนที่ต้องแก้ก่อน"); return@setPositiveButton }
             val cast = s.optJSONArray("characters") ?: JSONArray()
             val refs = (0 until cast.length()).map { cast.getJSONObject(it) }.map { (masterExportName(masterFor(it),it.optString("master").startsWith("CHARACTER",true)) ?: it.optString("master")).substringBeforeLast('.') to masterFor(it) } + (key(s) to image(s))
-            shareText("แก้ภาพ ${key(s)} ที่แนบด้วยเครื่องมือแก้ไขภาพ แสดงภาพจริงหนึ่งภาพ\nสิ่งที่แก้: $change\nรักษาเอกลักษณ์ ใบหน้า ทรงผม บุคลิก เครื่องแต่งกาย และองค์ประกอบอื่นของภาพฉากที่ไม่ได้ขอให้แก้\n${sceneCastDescription(s)}\nตั้งชื่อ ${key(s)}.png",includeMasters=false,referenceImages=refs)
+            shareText(ImagePromptPolicy.edit("ภาพฉาก ${key(s)}",change,plan?.optString("aspect_ratio","9:16") ?: "9:16",
+                sceneCastDescription(s),"${key(s)}.png"),includeMasters=false,referenceImages=refs)
         }.setNegativeButton("ยกเลิก",null).showDirector()
     }
     private var mediaSlot: String?

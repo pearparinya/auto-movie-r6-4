@@ -12,7 +12,10 @@ class ImagePromptPolicyTest {
 
     @Test fun sceneUsesUserBriefWithoutRepeatedAnatomyInstructions() {
         val prompt=ImagePromptPolicy.scene("เมย์ → MIND_MASTER.png | ชุด: เสื้อประชุมสีเขียว", "ห้องประชุม", "ถือแฟ้ม")
-        assertTrue(prompt.contains("สร้างตัวละครจากไฟล์ที่แนบ ให้คงความเซ็กซี่จากไฟล์ที่แนบ"))
+        assertTrue(prompt.contains("สร้างภาพฉากละครจากไฟล์อ้างอิงที่แนบ"))
+        assertTrue(prompt.contains("เหตุการณ์ต่อเนื่องให้ใช้ชุดเดิม"))
+        assertFalse(prompt.contains("ความเซ็กซี่"))
+        assertFalse(prompt.contains("100%"))
         assertTrue(prompt.contains("เสื้อประชุมสีเขียว"))
         assertTrue(prompt.contains("MIND_MASTER.png"))
         assertFalse(prompt.contains("ความสัมพันธ์ของไหล่ ทรวงอก"))

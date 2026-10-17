@@ -984,6 +984,7 @@ class StudioActivity : AppCompatActivity() {
     private fun shareText(inputText: String, lockCreation: Boolean = false, useNewMasters: Boolean = plan?.optString("character_mode") == "new", includeMasters: Boolean = true, selectedMasterKeys: List<String>? = null, referenceImages: List<Pair<String, File>> = emptyList()) {
         val text = if (lockCreation && !inputText.contains("ค่าตั้งต้นผู้ใช้ (ใช้แทนค่าตัวอย่าง)")) inputText + "\nค่าตั้งต้นผู้ใช้ (ใช้แทนค่าตัวอย่าง): EP=${prefs.getString("plan_episodes", "").orEmpty().ifBlank { "AI ประเมิน" }} ฉาก/EP=${prefs.getString("plan_scenes", "").orEmpty().ifBlank { "AI ประเมิน" }} เวลา=${prefs.getString("plan_duration", "8")} วินาที สัดส่วน=${prefs.getString("plan_ratio", "9:16")} กำหนด duration_seconds และ aspect_ratio ใน story.json และคำสั่งทุกฉากตามนี้" else inputText
         val uris = arrayListOf<Uri>()
+        val attachments = JSONArray()
         val transferId = UUID.randomUUID().toString()
         val sources = if (!includeMasters) emptyList<File>() else if (useNewMasters) File(project, "masters").listFiles()?.filter { it.isFile && !it.name.endsWith(".tmp") && !it.name.endsWith(".pending") } ?: emptyList()
             else (selectedMasterKeys ?: listOf("gawin", "rinlada", "mind")).map { File(project, "original_masters/$it.master").takeIf { f -> f.exists() } ?: File(filesDir, "character_masters/$it.master") }
@@ -997,6 +998,7 @@ class StudioActivity : AppCompatActivity() {
                 if (name == null) { notice("อ่านภาพ MASTER ไม่ได้ กรุณาเลือกภาพตัวละครใหม่"); return }
                 val out = File(cacheDir,"character_master_exports/$transferId/$name")
                 out.parentFile!!.mkdirs(); source.copyTo(out, overwrite = true)
+                attachments.put(JSONObject().put("name",out.name).put("sha256",java.security.MessageDigest.getInstance("SHA-256").digest(out.readBytes()).joinToString("") { "%02x".format(it) }).put("bytes",out.length()))
                 uris.add(FileProvider.getUriForFile(this,"$packageName.fileprovider",out))
             }
         }
@@ -1008,7 +1010,8 @@ class StudioActivity : AppCompatActivity() {
             val extension = when (options.outMimeType) { "image/jpeg" -> "jpg"; "image/webp" -> "webp"; else -> "png" }
             val out = File(cacheDir, "scene_reference_exports/$transferId/$name.$extension")
             out.parentFile!!.mkdirs(); source.copyTo(out, overwrite = true)
-            uris.add(FileProvider.getUriForFile(this,"$packageName.fileprovider",out))
+            attachments.put(JSONObject().put("name",out.name).put("sha256",java.security.MessageDigest.getInstance("SHA-256").digest(out.readBytes()).joinToString("") { "%02x".format(it) }).put("bytes",out.length()))
+                uris.add(FileProvider.getUriForFile(this,"$packageName.fileprovider",out))
         }
         // ChatGPT Android builds do not all read the same share field. Keep
         // the command in both EXTRA_TEXT and the first ClipData item, then
@@ -1021,10 +1024,13 @@ class StudioActivity : AppCompatActivity() {
         val commandFile = File(destination, if (lockCreation) "last_story_command.txt" else "last_command.txt")
         commandFile.writeText(text)
         File(destination,"last_payload.json").writeText(JSONObject().put("text",text).put("creation",lockCreation)
-            .put("images",JSONArray(uris.map { it.toString() })).toString())
-        val imageList = uris.joinToString("\n") { it.lastPathSegment.orEmpty() }
+            .put("images",JSONArray(uris.map { it.toString() })).put("attachments",attachments).toString())
+        val imageList = (0 until attachments.length()).joinToString("\n") { i -> attachments.getJSONObject(i).let { "${it.optString("name")} • ${it.optLong("bytes")} bytes • SHA ${it.optString("sha256").take(12)}" } }
         pendingStorySummary = "คำสั่ง ${text.length} ตัวอักษร • ภาพ ${uris.size} ภาพ"
         fun launchShare() {
+            val request = JSONObject().put("id",transferId).put("scene",sceneId).put("created_at",System.currentTimeMillis())
+                .put("text",text).put("attachments",attachments).put("status","opened_external_app")
+            File(destination,"image_requests/$transferId.json").apply { parentFile!!.mkdirs(); writeText(request.toString(2)) }
             pendingReceipt = {
                 if (lockCreation) File(destination,"command_sent").writeText("confirmed")
                 else File(destination,"receipts/${UUID.randomUUID()}.txt").apply { parentFile!!.mkdirs() }
@@ -1096,7 +1102,7 @@ class StudioActivity : AppCompatActivity() {
             val person = cast.getJSONObject(i)
             val master=masterFor(person)
             val exported=masterExportName(master,person.optString("master").startsWith("CHARACTER",true)) ?: person.optString("master")
-            listOf("${person.optString("name")} → $exported",(if(detailedImageProfiles) memoryBrief(person) else person.optString("visual_description")),
+            listOf("${person.optString("name")} → $exported",(if(detailedImageProfiles) memoryBrief(person) else ""),
                 "ชุด: ${sceneWardrobe(scene,person)}")
                 .filter { it.isNotBlank() }.joinToString(" | ") }
     }
@@ -1286,7 +1292,7 @@ ${if(mode=="original") listOf("gawin" to "กวิน","rinlada" to "ริน�
 ระบบตัวละครกับชุด: MASTER ใช้ใบหน้า ผม สีผิวและรูปร่างรายคน เสื้อผ้าใน MASTER เป็นเพียงชุดในภาพอ้างอิง ทุกฉากต้องมี story_day, story_time, activity และ wardrobe_event เมื่อประชุมให้ใช้ชุดประชุม กลับบ้านเปลี่ยนชุดอยู่บ้าน เข้านอนเปลี่ยนชุดนอน เปลี่ยนวันให้เลือกชุดใหม่ตามบท (ยกเว้นชุดทำงานที่ต้องเหมือนเดิม) เหตุการณ์ต่อเนื่องในวันเดียวกันและกิจกรรมเดียวกันให้คงชุดเดิม เปลี่ยนวันหรือเปลี่ยนกิจกรรมให้ขึ้น wardrobe_event ใหม่ กำหนด outfit รายคนและ wardrobe_change=true เมื่อเปลี่ยนชุดจริง ชุดที่ผู้ใช้ระบุมีลำดับสูงสุด แยกเสียงผู้พูดออกจากรูปร่างและเสื้อผ้า
 การต่อฉาก: ระบุ start_state และ end_state ทุกฉาก ให้สถานะต้นฉากต่อจากท้ายฉากก่อน รวมผู้ถือและตำแหน่งอุปกรณ์ การเข้าออกของตัวละคร วันเวลาและสถานที่ ห้ามย้ายซอง เอกสาร หรือคนโดยไม่มีจังหวะส่งต่อ ข้าม EP ต่อเหตุการณ์เดิมให้ใช้สถานะเดิม ปิดคำถามที่เปิดไว้ เช่น เหตุผลการโอนเงิน ก่อนจบเรื่อง
 การกำหนดคนพูด: characters ทุกคนต้องมี visual_description (ทรงผมและลักษณะเด่น) และ screen_position ตามองค์ประกอบภาพที่วางแผน ชื่ออย่างเดียวไม่พอ หลังเห็นภาพจริงต้องตรวจตำแหน่งอีกครั้ง ไม่เดาซ้ายขวา เขียน flow_prompt เป็น CHARACTER MAP ชื่อ + ลักษณะ + ชุด + ตำแหน่ง แล้วระบุผู้พูดเพียงหนึ่งคนกับบทพูดหนึ่งครั้ง ผู้ฟังทุกคนปิดปากและแสดงปฏิกิริยาเงียบ แยกฉากบทพูดจากเสียงบรรยาย ผู้บรรยายเป็นเสียงนอกภาพและไม่มีใครขยับปากตาม ระยะเวลาต้องพอกับบท หากยาวให้ย่อหรือแยกฉาก ไม่ให้แย่งกันพูด
-คำสั่งภาพแต่ละฉากใช้ต้นแบบสั้น: สร้างตัวละครจากไฟล์ที่แนบ ให้คงความเซ็กซี่จากไฟล์ที่แนบ ให้เปลี่ยนเสื้อผ้าที่สวยงามเหมาะสม แนวตั้งตาม aspect_ratio แล้วเติมชื่อและ MASTER ตรงรายคน ชุด สถานที่ การกระทำ และความต่อเนื่องของฉาก ไม่เพิ่มรายการกำกับสรีระยาวซ้ำทุกฉาก ไม่สร้างภาพทดสอบเพิ่มเป็นขั้นบังคับ ผู้ใช้เลือกทดสอบรายคนได้เมื่อจำเป็น\nก่อนใช้เครื่องมือสร้างภาพแต่ละฉาก อ้างอิง MASTER ต้นฉบับตรงรายคนอีกครั้ง ใช้ภาพฉากก่อนหน้าในกลุ่มเดียวกันเป็นตัวช่วยเรื่องสถานที่และสิ่งของ ชุดยึดข้อมูลฉากปัจจุบันเป็นหลักและใช้ภาพก่อนหน้ารักษารายละเอียดเมื่อเป็นชุดเดียวกัน โดยใบหน้าและรูปร่างยึด MASTER เป็นหลัก ตรวจชื่อและชุดของแต่ละคนก่อนส่งสร้าง ไม่ใช้ภาพที่คลาดเคลื่อนแทน MASTER หากขาดต้นฉบับให้แจ้งก่อนสร้าง
+คำสั่งภาพแต่ละฉากใช้ต้นแบบสั้น: สร้างภาพฉากละครจากไฟล์อ้างอิงที่แนบ คงใบหน้า ทรงผม สีผิว และสัดส่วนรูปร่างโดยรวมตาม MASTER ไม่เพิ่มหรือลดเอง ใช้ชุดที่ระบุในฉาก วันและเหตุการณ์ต่อเนื่องใช้ชุดเดิม เปลี่ยนเมื่อวันเวลา กิจกรรม หรือบทกำหนด แนวตั้งตาม aspect_ratio แล้วเติมชื่อและ MASTER ตรงรายคน ชุด สถานที่ การกระทำ และความต่อเนื่องของฉาก ไม่เพิ่มรายการกำกับสรีระยาวซ้ำทุกฉาก ไม่สร้างภาพทดสอบเพิ่มเป็นขั้นบังคับ ผู้ใช้เลือกทดสอบรายคนได้เมื่อจำเป็น\nก่อนใช้เครื่องมือสร้างภาพแต่ละฉาก อ้างอิง MASTER ต้นฉบับตรงรายคนอีกครั้ง ใช้ภาพฉากก่อนหน้าในกลุ่มเดียวกันเป็นตัวช่วยเรื่องสถานที่และสิ่งของ ชุดยึดข้อมูลฉากปัจจุบันเป็นหลักและใช้ภาพก่อนหน้ารักษารายละเอียดเมื่อเป็นชุดเดียวกัน โดยใบหน้าและรูปร่างยึด MASTER เป็นหลัก ตรวจชื่อและชุดของแต่ละคนก่อนส่งสร้าง ไม่ใช้ภาพที่คลาดเคลื่อนแทน MASTER หากขาดต้นฉบับให้แจ้งก่อนสร้าง
 ส่งไฟล์ story.json เป็น JSON ไม่มี markdown โครงสร้าง:
 {"schema_version":3,"channel":${JSONObject.quote(channel)},"character_mode":"$mode","title":"ชื่อเรื่อง","category":${JSONObject.quote(category)},"tagline":"คำโปรยเรื่อง","episode_count":1,"scene_count":1,"bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"title":"ชื่อตอนภาษาไทย","tagline":"คำโปรยตอน","scene_count":1,"scenes":[{"scene":1,"characters":[{"name":"ชื่อตัวละครที่อยู่ในฉาก","master":"ชื่อไฟล์ MASTER ตรงรายคน","outfit":"ชุดตามวันเวลาและกิจกรรม ระบุชนิดและสี","wardrobe_change":false,"accessories":"เครื่องประดับตามบท หรือว่างเมื่อไม่ใส่","visual_description":"ทรงผมและลักษณะเด่นจาก MASTER รายคน","screen_position":"ตำแหน่งที่วางแผนในภาพ ต้องยืนยันกับภาพจริงก่อนใช้ Flow"}],"story_day":"DAY01","activity":"meeting / work / home / sleep / exercise / casual / formal","wardrobe_event":"DAY01_MEETING","story_time":"เวลาในเรื่อง","location":"สถานที่และสิ่งของหลัก","framing":"ระยะภาพที่เห็นกิจกรรมครบ เช่น ศีรษะถึงเข่าหรือเต็มตัวตามบท","lighting":"แสงตามเวลาและสถานที่","continuity_group":"DAY01_LOCATION01_EVENT01","start_state":"สถานะต่อจากท้ายฉากก่อน รวมตำแหน่งคนและสิ่งของ","end_state":"สถานะที่ส่งต่อฉากถัดไป","flow_action":"One visible action in English","action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","speaker":"ชื่อผู้พูดหรือว่างเมื่อไม่มีบทพูด","narration":"เสียงบรรยายชายหรือว่าง","image_prompt":"ตัวละครและ MASTER ตรงรายคน คงใบหน้า ผม สีผิวและรูปร่างตามภาพอ้างอิง; ชุดตามฉากปัจจุบันระบุชนิดและสี; สถานที่และสิ่งของ; การกระทำ สีหน้าและสายตาตามบท; ภาพละครไทยสมจริง 9:16 เห็นการกระทำครบ ไม่มีข้อความ","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}
 การส่งชุดงานสุดท้าย: ส่ง story.json เป็นไฟล์แยก และส่งภาพฉากกับปกเป็น ZIP แยกราย EP ใช้ MASTER เป็นภาพอ้างอิงระหว่างสร้าง แต่ไม่ใส่ไฟล์ภาพ MASTER หรือโฟลเดอร์ MASTER/characters ลงใน ZIP คำสั่ง Flow รวมหนึ่งไฟล์ต่อ EP: EP01_FLOW.txt, EP02_FLOW.txt ตามจำนวนตอนจริง แต่ละไฟล์มีชื่อตอนและทุกซีนเรียงเลข แต่ละซีนแสดงเลขฉาก เหตุการณ์ บทพูด และคำสั่ง Flow แยกเป็นบล็อกสำหรับคัดลอกทีละซีน ไม่แยกเป็นไฟล์ Flow รายซีน คำสั่ง flow_prompt ใน story.json ยังต้องครบทุกซีนตามเดิม
@@ -1504,7 +1510,7 @@ ${if(mode=="original") listOf("gawin" to "กวิน","rinlada" to "ริน�
     }
     private fun sceneMenu(s: JSONObject) {
         rememberScene(s)
-        val choices = listOf("🖼️ ดูภาพ / เทียบ MASTER", "🎬 สร้างภาพผ่าน ChatGPT", "✏️ แก้บท ชุด และสถานที่", "🛠️ แก้ภาพเฉพาะส่วนผ่าน ChatGPT", "📋 คัดลอกคำสั่ง Flow", "📥 นำเข้าภาพฉากนี้", "🎥 นำเข้าวิดีโอฉากนี้", "▶ ดูวิดีโอ", "🗂️ เวอร์ชันภาพ / วิดีโอ", "✅ ตรวจรับภาพ / ต้องแก้", "➡ ฉากถัดไป", "🗣️ กำหนดคนพูดจากภาพ", "👤 ทดสอบรูปร่างรายคนในชุดฉากนี้", "📐 ตรวจรูปร่างรายคน / บันทึกจุดผิด")
+        val choices = listOf("🖼️ ดูภาพ / เทียบ MASTER", "🎬 สร้างภาพผ่าน ChatGPT", "✏️ แก้บท ชุด และสถานที่", "🛠️ แก้ภาพเฉพาะส่วนผ่าน ChatGPT", "📋 คัดลอกคำสั่ง Flow", "📥 นำเข้าภาพฉากนี้", "🎥 นำเข้าวิดีโอฉากนี้", "▶ ดูวิดีโอ", "🗂️ เวอร์ชันภาพ / วิดีโอ", "✅ ตรวจรับภาพ / ต้องแก้", "➡ ฉากถัดไป", "🗣️ กำหนดคนพูดจากภาพ", "👤 ทดสอบรูปร่างรายคนในชุดฉากนี้", "📐 ตรวจรูปร่างรายคน / บันทึกจุดผิด", "🧾 คำสั่งล่าสุด / บันทึกผลจาก ChatGPT")
         choiceMenu("${key(s)} • ${s.optString("location")}",choices) { i -> when(i) {
             0 -> compareScene(s)
             1 -> sendSceneImage(plan!!,s)
@@ -1525,7 +1531,29 @@ ${if(mode=="original") listOf("gawin" to "กวิน","rinlada" to "ริน�
             11 -> mapFlowCharacters(s)
             12 -> sceneBodyCheck(s,false)
             13 -> sceneBodyCheck(s,true)
+            14 -> imageRequestResult(s)
         } }
+    }
+    private fun imageRequestResult(scene: JSONObject) {
+        val requests=File(project,"image_requests").listFiles()?.filter { it.extension=="json" }?.mapNotNull { file ->
+            runCatching { file to JSONObject(file.readText()) }.getOrNull()
+        }?.filter { it.second.optString("scene")==key(scene) } ?: emptyList()
+        val latest=requests.maxByOrNull { it.second.optLong("created_at") } ?: return notice("ยังไม่มีคำสั่งที่ส่งจากรุ่นนี้สำหรับฉากนี้")
+        val (file,request)=latest
+        val panel=LinearLayout(this).apply { orientation=1; setPadding(dp(16),dp(12),dp(16),dp(12)) }
+        panel.addView(TextView(this).apply { text="คำสั่งที่เปิดส่งล่าสุด\n${request.optJSONArray("attachments")}\n${request.optString("text")}\nผลที่ผู้ใช้บันทึก: ${request.optString("result","ยังไม่ได้บันทึก")}\n${request.optString("provider_message")}"; setTextIsSelectable(true) })
+        val message=EditText(this).apply { hint="วางข้อความตอบกลับหรือข้อผิดพลาดจริงจาก ChatGPT"; setText(request.optString("provider_message")); minLines=3 }
+        panel.addView(message)
+        fun record(result: String) {
+            request.put("result",result).put("provider_message",message.text.toString()).put("reported_by","user").put("reported_at",System.currentTimeMillis())
+            file.writeText(request.toString(2)); notice("บันทึกผลแล้ว • บท ชุด และ MASTER ยังคงเดิม")
+        }
+        AlertDialog.Builder(this).setTitle("ผลจาก ChatGPT • ${key(scene)}")
+            .setMessage("แอปไม่สามารถอ่านผลจากหน้าแชร์อัตโนมัติ กรุณาบันทึกตามที่เห็น ไม่ระบุสาเหตุแทนระบบ")
+            .setView(ScrollView(this).apply { addView(panel) })
+            .setPositiveButton("สร้างได้") { _,_ -> record("created_reported") }
+            .setNeutralButton("สร้างไม่ได้") { _,_ -> record("failed_reported") }
+            .setNegativeButton("ปิด",null).showDirector()
     }
     private fun bodyReviewStatus(s: JSONObject, person: JSONObject): String {
         val file=image(s); val master=masterFor(person)
@@ -1543,7 +1571,7 @@ ${if(mode=="original") listOf("gawin" to "กวิน","rinlada" to "ริน�
             if(!master.exists()) { notice("ขาด MASTER ของ $name"); return@choiceMenu }
             if(!review) {
                 val exported=masterExportName(master,person.optString("master").startsWith("CHARACTER",true)) ?: return@choiceMenu
-                val command=BodyReferencePolicy.singleCheck(name,exported,if(detailedImageProfiles) memoryBrief(person) else person.optString("visual_description"),sceneWardrobe(s,person),plan?.optString("aspect_ratio","9:16") ?: "9:16")
+                val command=BodyReferencePolicy.singleCheck(name,exported,if(detailedImageProfiles) memoryBrief(person) else "",sceneWardrobe(s,person),plan?.optString("aspect_ratio","9:16") ?: "9:16")
                 shareText(command,includeMasters=false,referenceImages=listOf(exported.substringBeforeLast('.') to master))
             } else {
                 if(!image(s).exists()) { notice("นำเข้าภาพฉากก่อนตรวจ"); return@choiceMenu }

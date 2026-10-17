@@ -6,6 +6,11 @@ import org.junit.Test
 class WardrobeTimelineTest {
     private val meeting=WardrobeBeat("rinlada","DAY01","MEETING","meeting","GROUP01","เสื้อเชิ้ตขาวกับกางเกงดำ")
     private val history=listOf(WardrobeEntry(meeting,meeting.outfit))
+    @Test fun casualFallbackNamesAnActualOutfit() {
+        val outfit=WardrobeTimeline.resolve(meeting.copy(character="gawin",activity="casual",outfit=""),emptyList())
+        assertTrue(outfit.contains("กางเกงขายาว"))
+        assertFalse(outfit.contains("หรือ"))
+    }
     @Test fun explicitWardrobeAlwaysWins() {
         assertEquals("ชุดที่ผู้ใช้เลือก",WardrobeTimeline.resolve(meeting.copy(day="DAY02",outfit="ชุดที่ผู้ใช้เลือก"),history))
     }

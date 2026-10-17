@@ -163,15 +163,16 @@ class StudioActivity : AppCompatActivity() {
                 val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
                 android.graphics.BitmapFactory.decodeFile(temporary.path, bounds)
                 require(bounds.outWidth > 0 && bounds.outHeight > 0) { "ไฟล์นี้ไม่ใช่ภาพที่อ่านได้" }
-                require(temporary.renameTo(File(folder, "$slot.master"))) { "บันทึกภาพไม่ได้" }
-                notice("บันทึกภาพตัวละครแล้ว ใช้เป็นต้นฉบับสำหรับเรื่องใหม่ได้เลยครับ")
+                val previous=File(folder,"$slot.master"); if(previous.exists()) previous.copyTo(File(folder,"$slot.previous"),overwrite=true)
+                require(temporary.renameTo(previous)) { "บันทึกภาพไม่ได้" }
+                notice("บันทึกภาพแล้ว เปิดเมนูตรวจภาพ MASTER เพื่อเทียบกับต้นฉบับก่อนใช้งาน")
             } catch (e: Exception) { notice("รับภาพไม่สำเร็จ: ${e.message}") }
         }
         masterSlot = null
     }
     private fun characterMasters() {
         val names=listOf("gawin" to "กวิน", "rinlada" to "รินรดา", "mind" to "เมย์")
-        choiceMenu("🎭 MASTER และความจำตัวละคร",names.map { it.second } + "📦 ใช้ MASTER ชุดล่าสุดสำหรับเรื่องใหม่") { i ->
+        choiceMenu("🎭 MASTER และความจำตัวละคร",names.map { (id,name) -> val file=File(filesDir,"character_masters/$id.master"); "$name • ${if(characterMemory.read(id,file).optLong("reference_reviewed_at")>0) "ตรวจภาพแล้ว" else "ยังไม่ได้ตรวจภาพ"}" } + "📦 ใช้ MASTER ชุดล่าสุดสำหรับเรื่องใหม่") { i ->
             if (i == names.size) {
                 names.forEach { (id,_) ->
                     val target=File(filesDir,"character_masters/$id.master"); target.parentFile!!.mkdirs()
@@ -181,13 +182,32 @@ class StudioActivity : AppCompatActivity() {
                 notice("ใช้ MASTER ล่าสุดสำหรับเรื่องใหม่แล้ว • เรื่องที่นำเข้าไว้ยังใช้ MASTER ของเรื่องนั้น")
             } else {
                 val (id,name)=names[i]; val file=File(filesDir,"character_masters/$id.master")
-                choiceMenu(name,listOf("ดู MASTER","เปลี่ยนภาพ MASTER","ข้อมูลใบหน้า ผม และรูปร่าง")) { action -> when(action) {
+                choiceMenu(name,listOf("ดู MASTER","เปลี่ยนภาพ MASTER","ข้อมูลใบหน้า ผม และรูปร่าง","เตรียม MASTER มาตรฐาน","ตรวจภาพ MASTER")) { action -> when(action) {
                     0 -> if(file.exists()) fullImage(file,name) else notice("ยังไม่มี MASTER")
                     1 -> { masterSlot=id; masterPicker.launch(arrayOf("image/*")) }
                     2 -> editCharacterMemory(id,name,file)
+                    3 -> sendProductionMaster(id,name,file)
+                    4 -> reviewMaster(id,name,file)
                 } }
             }
         }
+    }
+    private fun sendProductionMaster(id: String, name: String, file: File) {
+        if(!file.exists()) { notice("เพิ่ม MASTER ก่อน"); return }
+        val source=masterExportName(file,false) ?: run { notice("อ่านภาพ MASTER ไม่ได้"); return }
+        val command=ImagePromptPolicy.productionMaster(name,source,characterMemory.brief(id,file))
+        shareText(command,includeMasters=false,referenceImages=listOf(source.substringBeforeLast('.') to file))
+    }
+    private fun reviewMaster(id: String, name: String, file: File) {
+        if(!file.exists()) { notice("ยังไม่มี MASTER"); return }
+        val profile=characterMemory.read(id,file)
+        val panel=LinearLayout(this).apply { orientation=1; setPadding(dp(12),dp(12),dp(12),dp(12)) }
+        panel.addView(ImageView(this).apply { setImageBitmap(previewBitmap(Uri.fromFile(file))); adjustViewBounds=true; layoutParams=LinearLayout.LayoutParams(-1,dp(320)) })
+        panel.addView(TextView(this).apply { text="ตรวจเทียบต้นฉบับ: ใบหน้าและผมตรงรายคน • รูปร่างไม่เปลี่ยนโดยไม่ตั้งใจ • มือปกติ • ชุดพื้นฐานชัดเจน • แสงและภาพคมชัด\nการยืนยันนี้เป็นผลตรวจของผู้ใช้ ไม่ใช่ผลรับรองจากระบบสร้างภาพ" })
+        AlertDialog.Builder(this).setTitle("ตรวจ MASTER • $name").setView(ScrollView(this).apply { addView(panel) })
+            .setPositiveButton("ตรวจแล้ว ใช้ภาพนี้") { _,_ -> profile.put("reference_reviewed_at",System.currentTimeMillis()); characterMemory.save(id,file,profile); notice("บันทึกผลตรวจของภาพนี้แล้ว") }
+            .setNeutralButton("เลือกภาพใหม่") { _,_ -> if(file.parentFile?.name=="character_masters") { masterSlot=id; masterPicker.launch(arrayOf("image/*")) } else { castTarget=name to file; castPicker.launch(arrayOf("image/*")) } }
+            .setNegativeButton("ปิด",null).showDirector()
     }
     private fun editCharacterMemory(id: String, name: String, file: File) {
         if (!file.exists()) { notice("เพิ่มภาพ MASTER ก่อนบันทึกโปรไฟล์"); return }
@@ -635,7 +655,9 @@ class StudioActivity : AppCompatActivity() {
                 val keys = listOf("gawin", "rinlada", "mind")
                 val selected = if (index == 3) keys else listOf(keys[index])
                 choiceMenu("🖼️ เลือกวิธีทดสอบ", listOf("🎯 คงตัวละครและชุดเดิม • สถานที่อัตโนมัติ", "👗 เปลี่ยนชุดและฉาก") + if (selected.size == 1) listOf("🧵 เปลี่ยนชุดอย่างเดียว • คงท่าและฉาก") else emptyList()) { mode ->
-                    sendTestImage(selected, preserveMaster = mode == 0, wardrobeOnly = mode == 2)
+                    if(mode==0) sendTestImage(selected,preserveMaster=true) else choiceMenu("กิจกรรมสำหรับทดสอบ",listOf("ประชุม","อยู่บ้าน","เข้านอน","ท่องเที่ยว")) { activity ->
+                        sendTestImage(selected,preserveMaster=false,wardrobeOnly=mode==2,testActivity=listOf("meeting","home","sleep","casual")[activity])
+                    }
                 }
             }
             else choiceMenu("✨ ตัวละครสมมุติ", listOf("👨 ใช้รูปผม • เปลี่ยนชุดและฉากอัตโนมัติ", "✨ สร้างคนใหม่")) { mode ->
@@ -740,7 +762,7 @@ class StudioActivity : AppCompatActivity() {
             .putStringSet("test_location_used", (round + index).map { it.toString() }.toSet()).apply()
         return places[index]
     }
-    private fun sendTestImage(selectedKeys: List<String>, preserveMaster: Boolean, wardrobeOnly: Boolean = false) {
+    private fun sendTestImage(selectedKeys: List<String>, preserveMaster: Boolean, wardrobeOnly: Boolean = false, testActivity: String = "home") {
         val cast = listOf("gawin" to "กวิน", "rinlada" to "รินรดา", "mind" to "เมย์")
         val selected = cast.filter { it.first in selectedKeys }
         require(selected.isNotEmpty())
@@ -750,9 +772,11 @@ class StudioActivity : AppCompatActivity() {
                 .setPositiveButton("เพิ่มภาพตัวละคร") { _,_ -> characterMasters() }.setNegativeButton("ยกเลิก",null).showDirector()
             return
         }
-        val scene = JSONObject()
+        val scene = JSONObject().put("activity",testActivity).put("story_day","TEST_DAY01").put("wardrobe_event","TEST_$testActivity")
         val characters = JSONArray()
         val actions = mutableListOf<String>()
+        val details = mutableListOf<String>()
+        val references = mutableListOf<Pair<String,File>>()
         for ((key, name) in selected) {
             if (StoryIdentity.keyFor(name) != key) { notice("จับคู่ตัวละครกับ MASTER ไม่ได้"); return }
             val source = File(filesDir,"character_masters/$key.master")
@@ -760,24 +784,32 @@ class StudioActivity : AppCompatActivity() {
             if (masterName == null || !StoryIdentity.matchesMaster(name, masterName)) {
                 notice("อ่านภาพ MASTER ของ $name ไม่ได้ กรุณาเพิ่มภาพต้นฉบับใหม่"); return
             }
-            val outfit = if (preserveMaster) "คงเครื่องแต่งกายจาก MASTER ของคนนี้" else SceneWardrobe.defaultFor(key)
-            val action = if (preserveMaster) "$name คงท่าทาง สีหน้า สายตา และกิจกรรมตาม MASTER ของตนเอง" else when (name) {
-                "รินรดา" -> "รินรดากำลังหั่นมะเขือเทศบนเขียงไม้"
-                "เมย์" -> "เมย์กำลังผัดผักในกระทะ"
-                else -> "กวินกำลังจัดผักลงในชาม"
+            val outfit = if (preserveMaster) "คงเครื่องแต่งกายจาก MASTER ของคนนี้" else WardrobeTimeline.resolve(WardrobeBeat(key,"TEST_DAY01","TEST_$testActivity",testActivity,"",""),emptyList())
+            val action = if (preserveMaster) "$name คงท่าทาง สีหน้า สายตา และกิจกรรมตาม MASTER ของตนเอง" else when(testActivity) {
+                "meeting" -> "$name ยืนถือแฟ้มเอกสารข้างโต๊ะประชุม สีหน้าตั้งใจ"
+                "sleep" -> "$name นั่งบนขอบเตียงเตรียมเข้านอน สีหน้าผ่อนคลาย"
+                "home" -> "$name นั่งพักบนโซฟา ถือแก้วน้ำ"
+                else -> "$name นั่งพักที่โต๊ะร้านอาหารริมทะเล"
             }
             characters.put(JSONObject().put("name", name).put("master", masterName).put("outfit", outfit))
             actions.add(action)
+            details.add("$name → $masterName | ${characterMemory.brief(key,source)} | ชุด: $outfit")
+            references.add(masterName.substringBeforeLast('.') to source)
         }
         scene.put("characters", characters)
-        val location = nextTestLocation()
-        val command = when {
-            wardrobeOnly -> ImagePromptPolicy.edit("ภาพ MASTER", "เครื่องแต่งกายเป็นชุดต่อไปนี้ โดยให้ทรงชุดพอดีกับรูปร่างเดิม\n${sceneCastDescription(scene)}", cast=selected.joinToString { it.second })
-            preserveMaster && selected.size == 1 -> ImagePromptPolicy.edit("ภาพ MASTER", "ฉากหลังเป็น $location", cast=sceneCastDescription(scene))
-            else -> ImagePromptPolicy.scene(sceneCastDescription(scene), location,
-                if (preserveMaster) "จัดแต่ละคนในภาพเดียว ให้ทำกิจกรรมตาม MASTER รายคน" else actions.joinToString("; "), lighting="แสงธรรมชาติ")
+        val location = if(preserveMaster) nextTestLocation() else when(testActivity) {
+            "meeting" -> "ห้องประชุมสำนักงานทันสมัยตอนเช้า"
+            "sleep" -> "ห้องนอนตอนกลางคืน แสงโคมไฟหัวเตียง"
+            "home" -> "ห้องนั่งเล่นตอนบ่าย"
+            else -> "ร้านอาหารริมทะเลตอนบ่าย"
         }
-        shareText(command, useNewMasters = false, selectedMasterKeys = selected.map { it.first })
+        val command = when {
+            wardrobeOnly -> ImagePromptPolicy.edit("ภาพ MASTER", "เครื่องแต่งกายเป็นชุดต่อไปนี้ โดยให้ทรงชุดพอดีกับรูปร่างเดิม\n${details.joinToString("\n")}", cast=selected.joinToString { it.second })
+            preserveMaster && selected.size == 1 -> ImagePromptPolicy.edit("ภาพ MASTER", "ฉากหลังเป็น $location", cast=details.joinToString("\n"))
+            else -> ImagePromptPolicy.scene(details.joinToString("\n"), location,
+                if (preserveMaster) "จัดแต่ละคนในภาพเดียว ให้ทำกิจกรรมตาม MASTER รายคน" else actions.joinToString("; "), lighting=if(testActivity=="sleep") "แสงนุ่มจากโคมไฟในเวลากลางคืน" else "แสงธรรมชาติตามเวลาในฉาก")
+        }
+        shareText(command,includeMasters=false,referenceImages=references)
     }
     private fun stepCard(number: Int, icon: String, title: String, detail: String, enabled: Boolean = true, completed: Boolean = false, currentStep: Int, action: () -> Unit) {
         val active = number == currentStep
@@ -1737,7 +1769,7 @@ ${if(mode=="original") listOf("gawin" to "กวิน","rinlada" to "ริน�
                 if(file.exists()) archiveVersion(file,project,target.first,"master")
                 check(temp.renameTo(file))
                 val affected=rows(plan!!).filter { scene -> scene.optJSONArray("characters")?.let { a -> (0 until a.length()).any { a.getJSONObject(it).optString("name")==target.first } } == true }
-                affected.forEach { it.put("user_review","needs_revision") }; saveStory()
+                affected.forEach { it.put("user_review","needs_revision"); it.remove("flow_image_revision") }; saveStory()
             } finally { temp.delete() }
         }
     }
@@ -1746,7 +1778,7 @@ ${if(mode=="original") listOf("gawin" to "กวิน","rinlada" to "ริน�
         val people=rows(p).flatMap { scene -> scene.optJSONArray("characters")?.let { a -> (0 until a.length()).map { a.getJSONObject(it) } }.orEmpty() }.distinctBy { it.optString("name") }
         choiceMenu("🎭 ตัวละครเรื่องนี้",people.map { "${it.optString("name")} • ${if(masterFor(it).exists()) "มี MASTER" else "ขาด MASTER"}" }) { i ->
             val person=people[i]; val name=person.optString("name")
-            choiceMenu(name,listOf("🖼️ ดู MASTER", "📷 เปลี่ยน MASTER รายเรื่อง", "✏️ บทบาทตัวละคร", "🧠 ข้อมูลใบหน้า ผม และรูปร่าง", "📦 ใช้ MASTER ล่าสุดเฉพาะเรื่องนี้")) { action -> when(action) {
+            choiceMenu(name,listOf("🖼️ ดู MASTER", "📷 เปลี่ยน MASTER รายเรื่อง", "✏️ บทบาทตัวละคร", "🧠 ข้อมูลใบหน้า ผม และรูปร่าง", "📦 ใช้ MASTER ล่าสุดเฉพาะเรื่องนี้", "เตรียม MASTER มาตรฐาน", "ตรวจภาพ MASTER")) { action -> when(action) {
                 0 -> { val file=masterFor(person); if(file.exists()) fullImage(file,name) else notice("ยังไม่มี MASTER") }
                 1 -> { val id=StoryIdentity.keyFor(name)
                     val file=if(p.optString("character_mode","original")=="new") masterFor(person) else if(id!=null) File(project,"original_masters/$id.master") else return@choiceMenu
@@ -1755,6 +1787,8 @@ ${if(mode=="original") listOf("gawin" to "กวิน","rinlada" to "ริน�
                 2 -> { val input=EditText(this).apply { hint="บทบาทและลักษณะตัวละคร"; setText(p.optJSONObject("cast_roles")?.optString(name)) }
                     AlertDialog.Builder(this).setTitle(name).setView(input).setPositiveButton("บันทึก") { _,_ -> val roles=p.optJSONObject("cast_roles") ?: JSONObject(); roles.put(name,input.text.toString()); p.put("cast_roles",roles); saveStory() }.setNegativeButton("ยกเลิก",null).showDirector() }
                 3 -> editCharacterMemory(memoryId(person),name,masterFor(person))
+                5 -> sendProductionMaster(memoryId(person),name,masterFor(person))
+                6 -> reviewMaster(memoryId(person),name,masterFor(person))
                 4 -> {
                     val id=StoryIdentity.keyFor(name)
                     if(id==null) notice("ตัวละครใหม่นี้ยังไม่มี MASTER ในชุดมาตรฐาน") else {

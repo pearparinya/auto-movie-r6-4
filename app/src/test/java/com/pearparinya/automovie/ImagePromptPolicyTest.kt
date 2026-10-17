@@ -4,12 +4,26 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ImagePromptPolicyTest {
+    @Test fun preservingWardrobeDoesNotAlsoRequestANewOutfit() {
+        val prompt=ImagePromptPolicy.scene("กวิน → GAWIN_MASTER.png", "ห้องนั่งเล่น", "ยืนผ่อนคลาย",changeWardrobe=false)
+        assertTrue(prompt.contains("คงเครื่องแต่งกายตามภาพอ้างอิง"))
+        assertFalse(prompt.contains("ให้เปลี่ยนเสื้อผ้า"))
+    }
+
+    @Test fun sceneUsesUserBriefWithoutRepeatedAnatomyInstructions() {
+        val prompt=ImagePromptPolicy.scene("เมย์ → MIND_MASTER.png | ชุด: เสื้อประชุมสีเขียว", "ห้องประชุม", "ถือแฟ้ม")
+        assertTrue(prompt.contains("สร้างตัวละครจากไฟล์ที่แนบ ให้คงความเซ็กซี่จากไฟล์ที่แนบ"))
+        assertTrue(prompt.contains("เสื้อประชุมสีเขียว"))
+        assertTrue(prompt.contains("MIND_MASTER.png"))
+        assertFalse(prompt.contains("ความสัมพันธ์ของไหล่ ทรวงอก"))
+    }
+
     @Test fun productionReferenceSeparatesIdentityFromStandardClothesAndRequiresActualReview() {
         val prompt=ImagePromptPolicy.productionMaster("รินรดา","RINLADA_MASTER.png","ผมยาวลอนสีเข้ม")
         assertTrue(prompt.contains("RINLADA_MASTER.png"))
         assertTrue(prompt.contains("ผมยาวลอนสีเข้ม"))
-        assertTrue(prompt.contains("เสื้อยืดแขนสั้นผ้าทึบสีเทา"))
-        assertTrue(prompt.contains("ศีรษะจรดเท้า"))
+        assertTrue(prompt.contains("เลือกเสื้อผ้าที่สวยงามเหมาะสม"))
+        assertTrue(prompt.contains("ศีรษะถึงเข่า"))
         assertTrue(prompt.contains("ก่อนเลือกเป็น MASTER ใหม่"))
         assertTrue(prompt.contains("ไม่ขยายหรือลดสัดส่วนเอง"))
         assertFalse(prompt.contains("100%"))

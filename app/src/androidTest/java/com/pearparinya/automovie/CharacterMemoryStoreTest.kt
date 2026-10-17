@@ -1,0 +1,38 @@
+package com.pearparinya.automovie
+
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.json.JSONObject
+import org.junit.Assert.*
+import org.junit.Test
+import org.junit.runner.RunWith
+import java.io.File
+import java.util.UUID
+
+@RunWith(AndroidJUnit4::class)
+class CharacterMemoryStoreTest {
+    @Test fun savedProfilesAreBoundToReferenceAndCharacterAcrossRestarts() {
+        val root=File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir,UUID.randomUUID().toString()).apply { mkdirs() }
+        try {
+            val master=File(root,"reference").apply { writeText("source A") }
+            val folder=File(root,"memory")
+            CharacterMemoryStore(folder,JSONObject()).save("rinlada",master,JSONObject().put("face","ใบหน้าอ้างอิง A"))
+            val reopened=CharacterMemoryStore(folder,JSONObject())
+            assertEquals("ใบหน้าอ้างอิง A",reopened.read("rinlada",master).optString("face"))
+            assertEquals("",reopened.read("mind",master).optString("face"))
+            master.writeText("source B")
+            assertEquals("",reopened.read("rinlada",master).optString("face"))
+        } finally { root.deleteRecursively() }
+    }
+    @Test fun bundledMasterFilesMatchTheirProfiles() {
+        val assets=InstrumentationRegistry.getInstrumentation().targetContext.assets
+        val bundle=JSONObject(assets.open("character_profiles.json").bufferedReader().use { it.readText() }).getJSONArray("profiles")
+        assertEquals(3,bundle.length())
+        for(i in 0 until bundle.length()) {
+            val profile=bundle.getJSONObject(i); val id=profile.getString("character_id")
+            val bytes=assets.open("character_masters/${id.uppercase()}_MASTER.png").use { it.readBytes() }
+            val hash=java.security.MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+            assertEquals(profile.getString("sha256"),hash)
+        }
+    }
+}

@@ -10,14 +10,15 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class ChatSharePayloadTest {
-    @Test fun identityGuideUsesNeutralProductionLanguage() {
+    @Test fun identityGuideKeepsUserStyleAndSceneWardrobeInAConciseBrief() {
         val guide = neutralIdentityGuide("ภาพ MASTER ที่แนบ","9:16")
         assertTrue(guide.contains("ใบหน้า") && guide.contains("ทรงผม"))
-        assertTrue(guide.contains("เครื่องแต่งกายตามบท"))
-        assertTrue(guide.contains("สัดส่วนรูปร่าง") && guide.contains("MASTER รายคน"))
-        assertTrue(guide.contains("เป็นธรรมชาติ"))
-        assertTrue(guide.contains("ฉากปัจจุบัน") && guide.contains("แยกจากข้อมูลชุด"))
-        assertTrue(guide.contains("สีผิว"))
+        assertTrue(guide.contains("ความเซ็กซี่"))
+        assertTrue(guide.contains("ตัวละครผู้ใหญ่"))
+        assertTrue(guide.contains("ชุดยึดบทของฉากปัจจุบัน"))
+        assertTrue(guide.contains("สีผิว") && guide.contains("รูปร่าง"))
+        assertTrue(guide.contains("ภาพ MASTER ที่แนบ"))
+        assertFalse(guide.contains("ความสัมพันธ์ของไหล่ ทรวงอก"))
         assertTrue(neutralIdentityGuide("CHARACTER MASTER ที่แนบ", "16:9").contains("16:9"))
     }
 

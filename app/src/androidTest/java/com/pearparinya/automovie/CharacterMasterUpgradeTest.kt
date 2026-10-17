@@ -11,6 +11,35 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class CharacterMasterUpgradeTest {
+    @Test fun mayOnlyRevisionPreservesRinladaAfter189AndRunsOnlyOnce() {
+        val root=File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir,UUID.randomUUID().toString()).apply { mkdirs() }
+        try {
+            val globals=File(root,"character_masters").apply { mkdirs() }
+            val project=File(root,"studio/original").apply { mkdirs() }
+            listOf(CharacterMasterUpgrade.REVISION,CharacterMasterUpgrade.FEMALE_REVISION,CharacterMasterUpgrade.LATEST_FEMALE_REVISION).forEach {
+                File(globals,"$it.installed").writeText("installed"); File(project,"$it.installed").writeText("installed")
+            }
+            CharacterMasterUpgrade.ids.forEach { id ->
+                File(globals,"$id.master").writeText("previous $id")
+                File(project,"original_masters/$id.master").apply { parentFile!!.mkdirs(); writeText("snapshot $id") }
+            }
+            val story=File(project,"story.json").apply { writeText("""{"character_mode":"original","episodes":[{"scenes":[{"characters":[{"name":"รินรดา"}],"flow_image_revision":5,"user_review":"approved"},{"characters":[{"name":"เมย์"}],"flow_image_revision":5,"user_review":"approved"}]}]}""") }
+            CharacterMasterUpgrade.install(root) { it.toByteArray() }
+            assertEquals("previous rinlada",File(globals,"rinlada.master").readText())
+            assertEquals("snapshot rinlada",File(project,"original_masters/rinlada.master").readText())
+            val may=File(project,"original_masters/mind.master")
+            assertEquals("character_masters/MIND_MASTER.png",may.readText())
+            assertTrue(File(project,"versions/${CharacterMasterUpgrade.MAY_REVISION}").listFiles()!!.any { it.readText()=="snapshot mind" })
+            val scenes=JSONObject(story.readText()).getJSONArray("episodes").getJSONObject(0).getJSONArray("scenes")
+            assertEquals("approved",scenes.getJSONObject(0).getString("user_review"))
+            assertTrue(scenes.getJSONObject(0).has("flow_image_revision"))
+            assertEquals("needs_revision",scenes.getJSONObject(1).getString("user_review"))
+            assertFalse(scenes.getJSONObject(1).has("flow_image_revision"))
+            may.writeText("later custom May")
+            CharacterMasterUpgrade.install(root) { it.toByteArray() }
+            assertEquals("later custom May",may.readText())
+        } finally { root.deleteRecursively() }
+    }
     @Test fun latestFemaleRevisionUpdates188WithoutReplacingGawinOrReviewingHisSoloScene() {
         val root=File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir,UUID.randomUUID().toString()).apply { mkdirs() }
         try {

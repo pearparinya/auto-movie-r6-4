@@ -1572,7 +1572,7 @@ MASTER 03 = มายด์ — ผมบ๊อบสั้นสีน้ำต
 CHARACTER IDENTITY ANCHOR:
 - ทรงผม สีผม และความยาวผมเป็นส่วนหนึ่งของ Identity ของแต่ละตัวละคร
 - ทุกฉากให้ยึด Face + Hair + Body Identity + Overall Appearance จาก ORIGINAL MASTER ของคนนั้น
-- รักษาสัดส่วนรูปร่างโดยรวมตาม ORIGINAL MASTER โดยไม่ออกแบบสรีระขึ้นใหม่
+- รักษาสัดส่วนรูปร่างโดยรวมตาม ORIGINAL MASTER โดยไม่ออกแบบสรีระขึ้นใหม่ ${ImagePromptPolicy.referenceAppeal}
 - เสื้อผ้า สถานที่ ท่าทาง และอารมณ์เปลี่ยนตามเรื่องได้ โดยไม่เปลี่ยน Identity
 - เมื่อมีหลายตัวละคร ให้จับคู่ MASTER กับชื่อของแต่ละคนแยกกันก่อนสร้างภาพ
 

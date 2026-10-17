@@ -14,7 +14,7 @@ class ChatSharePayloadTest {
     @Test fun identityGuideKeepsUserStyleAndSceneWardrobeInAConciseBrief() {
         val guide = neutralIdentityGuide("ภาพ MASTER ที่แนบ","9:16")
         assertTrue(guide.contains("ใบหน้า") && guide.contains("ทรงผม"))
-        assertFalse(guide.contains("ความเซ็กซี่"))
+        assertTrue(guide.contains(ImagePromptPolicy.referenceAppeal))
         assertTrue(guide.contains("สัดส่วนรูปร่างโดยรวม"))
         assertFalse(guide.contains("100%"))
         assertTrue(guide.contains("ตัวละครผู้ใหญ่"))

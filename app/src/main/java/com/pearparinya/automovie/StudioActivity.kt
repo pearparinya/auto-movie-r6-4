@@ -385,19 +385,7 @@ class StudioActivity : AppCompatActivity() {
         if (masterError != null) notice("ติดตั้ง MASTER ตัวละครไม่สำเร็จ กรุณาเปิดแอปอีกครั้ง")
     }
     private fun installCharacterMasters() {
-        for ((key, asset) in listOf("gawin" to "GAWIN_MASTER.png", "rinlada" to "RINLADA_MASTER.png", "mind" to "MIND_MASTER.png")) {
-            val revision = if (key == "gawin") "gawin_master_20261012_1841" else "${key}_master_20261012_1826"
-            val target = File(filesDir, "character_masters/$key.master")
-            if (target.exists()) continue
-            target.parentFile!!.mkdirs()
-            val temp = File(target.parentFile, "$key.master.pending")
-            assets.open("character_masters/$asset").use { input -> temp.outputStream().use { input.copyTo(it) } }
-            require(masterExportName(temp, false) != null) { "อ่าน MASTER ไม่ได้" }
-            if (target.exists()) target.copyTo(File(target.parentFile, "$key.previous"), overwrite = true)
-            temp.copyTo(target, overwrite = true)
-            temp.delete()
-            prefs.edit().putBoolean(revision, true).apply()
-        }
+        CharacterMasterUpgrade.install(filesDir) { path -> assets.open(path).use { it.readBytes() } }
     }
     override fun onResume() {
         super.onResume()

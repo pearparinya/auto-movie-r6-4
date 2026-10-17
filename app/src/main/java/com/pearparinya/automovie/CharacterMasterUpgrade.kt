@@ -8,10 +8,12 @@ import org.json.JSONObject
 internal object CharacterMasterUpgrade {
     const val REVISION = "cast_20261017_1740"
     const val FEMALE_REVISION = "female_cast_20261017_1854"
+    const val LATEST_FEMALE_REVISION = "female_cast_20261017_1953"
     val ids = listOf("gawin", "rinlada", "mind")
     fun install(files: File, load: (String) -> ByteArray) {
         applyRevision(files,load,REVISION,ids)
         applyRevision(files,load,FEMALE_REVISION,listOf("rinlada","mind"))
+        applyRevision(files,load,LATEST_FEMALE_REVISION,listOf("rinlada","mind"))
     }
     private fun applyRevision(files: File, load: (String) -> ByteArray, revision: String, changedIds: List<String>) {
         val sources=changedIds.associateWith { load("character_masters/${it.uppercase()}_MASTER.png") }

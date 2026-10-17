@@ -11,17 +11,21 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class CharacterMasterUpgradeTest {
-    @Test fun femaleRevisionUpdatesOldInstallWithoutReplacingGawinOrReviewingHisSoloScene() {
+    @Test fun latestFemaleRevisionUpdates188WithoutReplacingGawinOrReviewingHisSoloScene() {
         val root=File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir,UUID.randomUUID().toString()).apply { mkdirs() }
         try {
             val globals=File(root,"character_masters").apply { mkdirs() }
             File(globals,"${CharacterMasterUpgrade.REVISION}.installed").writeText("installed")
+            File(globals,"${CharacterMasterUpgrade.FEMALE_REVISION}.installed").writeText("installed")
             CharacterMasterUpgrade.ids.forEach { File(globals,"$it.master").writeText("previous $it") }
             val project=File(root,"studio/original").apply { mkdirs() }
             File(project,"${CharacterMasterUpgrade.REVISION}.installed").writeText("installed")
+            File(project,"${CharacterMasterUpgrade.FEMALE_REVISION}.installed").writeText("installed")
             val story=File(project,"story.json").apply { writeText("""{"character_mode":"original","episodes":[{"scenes":[{"characters":[{"name":"กวิน"}],"flow_image_revision":5,"user_review":"approved"},{"characters":[{"name":"เมย์"}],"flow_image_revision":5,"user_review":"approved"}]}]}""") }
             CharacterMasterUpgrade.ids.forEach { File(project,"original_masters/$it.master").apply { parentFile!!.mkdirs(); writeText("snapshot $it") } }
             CharacterMasterUpgrade.install(root) { it.toByteArray() }
+            assertTrue(File(globals,"${CharacterMasterUpgrade.LATEST_FEMALE_REVISION}.installed").exists())
+            assertTrue(File(globals,"versions/${CharacterMasterUpgrade.LATEST_FEMALE_REVISION}").listFiles()!!.any { it.readText()=="previous mind" })
             assertEquals("previous gawin",File(globals,"gawin.master").readText())
             assertEquals("snapshot gawin",File(project,"original_masters/gawin.master").readText())
             assertEquals("character_masters/MIND_MASTER.png",File(globals,"mind.master").readText())

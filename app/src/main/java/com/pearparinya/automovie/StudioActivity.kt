@@ -59,7 +59,7 @@ class StudioActivity : AppCompatActivity() {
     private fun memoryId(person: JSONObject): String = StoryIdentity.keyFor(person.optString("name")) ?: person.optString("master").ifBlank { person.optString("name") }
     private fun memoryBrief(person: JSONObject): String {
         val profile=characterMemory.read(memoryId(person),masterFor(person))
-        return (listOf("face","hair","body").map { profile.optString(it) } +
+        return ((listOf("face","hair") + BodyReferencePolicy.fields.map { it.first }).map { profile.optString(it) } +
             if(person.has("accessories")) person.optString("accessories") else profile.optString("accessories"))
             .filter { it.isNotBlank() }.joinToString("; ")
     }
@@ -215,7 +215,7 @@ class StudioActivity : AppCompatActivity() {
         val panel=LinearLayout(this).apply { orientation=1; setPadding(dp(12),dp(12),dp(12),dp(12)) }
         panel.addView(TextView(this).apply { text="ข้อมูลนี้ผูกกับภาพ MASTER นี้เท่านั้น • บันทึกเฉพาะสิ่งที่เห็น ชุดและฉากกำหนดในบท" })
         panel.addView(ImageView(this).apply { setImageBitmap(previewBitmap(Uri.fromFile(file))); adjustViewBounds=true; layoutParams=LinearLayout.LayoutParams(-1,dp(240)) })
-        val fields=listOf("face" to "ใบหน้าและดวงตา", "hair" to "ผมและหนวดเครา", "body" to "รูปร่างตามภาพ ไม่ระบุขนาดที่ไม่ทราบ", "accessories" to "เครื่องประดับอ้างอิง (เปลี่ยนตามบทได้)")
+        val fields=listOf("face" to "ใบหน้าและดวงตา", "hair" to "ผมและหนวดเครา") + BodyReferencePolicy.fields + ("accessories" to "เครื่องประดับอ้างอิง (เปลี่ยนตามบทได้)")
         val inputs=fields.map { (key,label) -> key to EditText(this).apply { hint=label; setText(profile.optString(key)); panel.addView(this) } }
         AlertDialog.Builder(this).setTitle("ความจำตัวละคร • $name").setView(ScrollView(this).apply { addView(panel) })
             .setPositiveButton("บันทึก") { _,_ -> inputs.forEach { (key,input) -> profile.put(key,input.text.toString().trim()) }; characterMemory.save(id,file,profile); notice("บันทึกข้อมูลอ้างอิงของ $name แล้ว") }
@@ -1111,9 +1111,17 @@ class StudioActivity : AppCompatActivity() {
     private fun storySceneCommand(p: JSONObject, scene: JSONObject): String {
         val setting=listOf(scene.optString("location"),scene.optString("story_day"),scene.optString("story_time"),scene.optString("activity"),scene.optString("props")).filter { it.isNotBlank() }.joinToString(" • ")
         val details=sceneCastDescription(scene)
+        val people=scene.optJSONArray("characters") ?: JSONArray()
+        val corrections=(0 until people.length()).mapNotNull { i ->
+            val person=people.getJSONObject(i)
+            val review=scene.optJSONObject("body_reviews")?.optJSONObject(memoryId(person))
+            val status=bodyReviewStatus(scene,person)
+            if(review!=null && status.startsWith("ต้องแก้") && review.optString("note").isNotBlank())
+                "${person.optString("name")}: ${review.optString("note")} • แก้ให้กลับมาตรง MASTER โดยไม่เพิ่มสัดส่วนเอง" else null
+        }.joinToString("; ")
         val action=scene.optString("action").ifBlank { scene.optString("image_prompt") }
         val continuity=listOf(scene.optString("start_state"),
-            "ภาพก่อนหน้าใช้ดูสถานที่และสิ่งของ ชุดยึดฉากปัจจุบัน ตัวบุคคลยึด MASTER รายคน").filter { it.isNotBlank() }.joinToString(" • ")
+            "ภาพก่อนหน้าใช้ดูสถานที่และสิ่งของ ชุดยึดฉากปัจจุบัน ตัวบุคคลยึด MASTER รายคน",corrections).filter { it.isNotBlank() }.joinToString(" • ")
         return ImagePromptPolicy.scene(details,setting,action,p.optString("aspect_ratio","9:16"),
             if(p.optString("character_mode","original")=="new") "CHARACTER MASTER ที่แนบ" else "ภาพ MASTER ที่แนบ",
             scene.optString("framing"),scene.optString("lighting"),continuity,"${key(scene)}.png")
@@ -1286,7 +1294,7 @@ ${if(mode=="original") listOf("gawin" to "กวิน","rinlada" to "ริน�
 ระบบตัวละครกับชุด: MASTER ใช้ใบหน้า ผม สีผิวและรูปร่างรายคน เสื้อผ้าใน MASTER เป็นเพียงชุดในภาพอ้างอิง ทุกฉากต้องมี story_day, story_time, activity และ wardrobe_event เมื่อประชุมให้ใช้ชุดประชุม กลับบ้านเปลี่ยนชุดอยู่บ้าน เข้านอนเปลี่ยนชุดนอน เปลี่ยนวันให้เลือกชุดใหม่ตามบท (ยกเว้นชุดทำงานที่ต้องเหมือนเดิม) เหตุการณ์ต่อเนื่องในวันเดียวกันและกิจกรรมเดียวกันให้คงชุดเดิม เปลี่ยนวันหรือเปลี่ยนกิจกรรมให้ขึ้น wardrobe_event ใหม่ กำหนด outfit รายคนและ wardrobe_change=true เมื่อเปลี่ยนชุดจริง ชุดที่ผู้ใช้ระบุมีลำดับสูงสุด แยกเสียงผู้พูดออกจากรูปร่างและเสื้อผ้า
 การต่อฉาก: ระบุ start_state และ end_state ทุกฉาก ให้สถานะต้นฉากต่อจากท้ายฉากก่อน รวมผู้ถือและตำแหน่งอุปกรณ์ การเข้าออกของตัวละคร วันเวลาและสถานที่ ห้ามย้ายซอง เอกสาร หรือคนโดยไม่มีจังหวะส่งต่อ ข้าม EP ต่อเหตุการณ์เดิมให้ใช้สถานะเดิม ปิดคำถามที่เปิดไว้ เช่น เหตุผลการโอนเงิน ก่อนจบเรื่อง
 การกำหนดคนพูด: characters ทุกคนต้องมี visual_description (ทรงผมและลักษณะเด่น) และ screen_position ตามองค์ประกอบภาพที่วางแผน ชื่ออย่างเดียวไม่พอ หลังเห็นภาพจริงต้องตรวจตำแหน่งอีกครั้ง ไม่เดาซ้ายขวา เขียน flow_prompt เป็น CHARACTER MAP ชื่อ + ลักษณะ + ชุด + ตำแหน่ง แล้วระบุผู้พูดเพียงหนึ่งคนกับบทพูดหนึ่งครั้ง ผู้ฟังทุกคนปิดปากและแสดงปฏิกิริยาเงียบ แยกฉากบทพูดจากเสียงบรรยาย ผู้บรรยายเป็นเสียงนอกภาพและไม่มีใครขยับปากตาม ระยะเวลาต้องพอกับบท หากยาวให้ย่อหรือแยกฉาก ไม่ให้แย่งกันพูด
-ก่อนใช้เครื่องมือสร้างภาพแต่ละฉาก อ้างอิง MASTER ต้นฉบับตรงรายคนอีกครั้ง ใช้ภาพฉากก่อนหน้าในกลุ่มเดียวกันเป็นตัวช่วยเรื่องสถานที่และสิ่งของ ชุดยึดข้อมูลฉากปัจจุบันเป็นหลักและใช้ภาพก่อนหน้ารักษารายละเอียดเมื่อเป็นชุดเดียวกัน โดยใบหน้าและรูปร่างยึด MASTER เป็นหลัก ตรวจชื่อและชุดของแต่ละคนก่อนส่งสร้าง ไม่ใช้ภาพที่คลาดเคลื่อนแทน MASTER หากขาดต้นฉบับให้แจ้งก่อนสร้าง
+ก่อนสร้างฉากหลายคน ให้ทดสอบแต่ละคนแยกหนึ่งภาพในชุดของฉากนั้น ใช้มุมกล้องและแสงที่เทียบรูปร่างได้ ตรวจเทียบ MASTER รายคนทั้งใบหน้า ไหล่ ทรวงอก–เอว สะโพกและลำตัว ภาพทดสอบไม่ใช่ภาพฉาก ไม่ใส่ลง ZIP ภาพฉาก ไม่ใช้ภาพทดสอบแทนต้นฉบับ ไม่รายงานว่าผ่านหากยังไม่ได้ตรวจภาพจริง หากคลาดเคลื่อนให้แจ้งและแก้เฉพาะจุดก่อนทำฉากรวม\nก่อนใช้เครื่องมือสร้างภาพแต่ละฉาก อ้างอิง MASTER ต้นฉบับตรงรายคนอีกครั้ง ใช้ภาพฉากก่อนหน้าในกลุ่มเดียวกันเป็นตัวช่วยเรื่องสถานที่และสิ่งของ ชุดยึดข้อมูลฉากปัจจุบันเป็นหลักและใช้ภาพก่อนหน้ารักษารายละเอียดเมื่อเป็นชุดเดียวกัน โดยใบหน้าและรูปร่างยึด MASTER เป็นหลัก ตรวจชื่อและชุดของแต่ละคนก่อนส่งสร้าง ไม่ใช้ภาพที่คลาดเคลื่อนแทน MASTER หากขาดต้นฉบับให้แจ้งก่อนสร้าง
 ส่งไฟล์ story.json เป็น JSON ไม่มี markdown โครงสร้าง:
 {"schema_version":3,"channel":${JSONObject.quote(channel)},"character_mode":"$mode","title":"ชื่อเรื่อง","category":${JSONObject.quote(category)},"tagline":"คำโปรยเรื่อง","episode_count":1,"scene_count":1,"bible":"ความสัมพันธ์และพล็อต","episodes":[{"ep":1,"title":"ชื่อตอนภาษาไทย","tagline":"คำโปรยตอน","scene_count":1,"scenes":[{"scene":1,"characters":[{"name":"ชื่อตัวละครที่อยู่ในฉาก","master":"ชื่อไฟล์ MASTER ตรงรายคน","outfit":"ชุดตามวันเวลาและกิจกรรม ระบุชนิดและสี","wardrobe_change":false,"accessories":"เครื่องประดับตามบท หรือว่างเมื่อไม่ใส่","visual_description":"ทรงผมและลักษณะเด่นจาก MASTER รายคน","screen_position":"ตำแหน่งที่วางแผนในภาพ ต้องยืนยันกับภาพจริงก่อนใช้ Flow"}],"story_day":"DAY01","activity":"meeting / work / home / sleep / exercise / casual / formal","wardrobe_event":"DAY01_MEETING","story_time":"เวลาในเรื่อง","location":"สถานที่และสิ่งของหลัก","framing":"ระยะภาพที่เห็นกิจกรรมครบ เช่น ศีรษะถึงเข่าหรือเต็มตัวตามบท","lighting":"แสงตามเวลาและสถานที่","continuity_group":"DAY01_LOCATION01_EVENT01","start_state":"สถานะต่อจากท้ายฉากก่อน รวมตำแหน่งคนและสิ่งของ","end_state":"สถานะที่ส่งต่อฉากถัดไป","flow_action":"One visible action in English","action":"เหตุการณ์","dialogue":"บทพูดภาษาไทย","speaker":"ชื่อผู้พูดหรือว่างเมื่อไม่มีบทพูด","narration":"เสียงบรรยายชายหรือว่าง","image_prompt":"ตัวละครและ MASTER ตรงรายคน คงใบหน้า ผม สีผิวและรูปร่างตามภาพอ้างอิง; ชุดตามฉากปัจจุบันระบุชนิดและสี; สถานที่และสิ่งของ; การกระทำ สีหน้าและสายตาตามบท; ภาพละครไทยสมจริง 9:16 เห็นการกระทำครบ ไม่มีข้อความ","flow_prompt":"Flow / Veo 3.1 Lite: English prompt + Thai speech, 8 seconds, 9:16, locked-off static camera"}]}]}
 การส่งชุดงานสุดท้าย: ส่ง story.json เป็นไฟล์แยก และส่งภาพฉากกับปกเป็น ZIP แยกราย EP ใช้ MASTER เป็นภาพอ้างอิงระหว่างสร้าง แต่ไม่ใส่ไฟล์ภาพ MASTER หรือโฟลเดอร์ MASTER/characters ลงใน ZIP คำสั่ง Flow รวมหนึ่งไฟล์ต่อ EP: EP01_FLOW.txt, EP02_FLOW.txt ตามจำนวนตอนจริง แต่ละไฟล์มีชื่อตอนและทุกซีนเรียงเลข แต่ละซีนแสดงเลขฉาก เหตุการณ์ บทพูด และคำสั่ง Flow แยกเป็นบล็อกสำหรับคัดลอกทีละซีน ไม่แยกเป็นไฟล์ Flow รายซีน คำสั่ง flow_prompt ใน story.json ยังต้องครบทุกซีนตามเดิม
@@ -1504,7 +1512,7 @@ ${if(mode=="original") listOf("gawin" to "กวิน","rinlada" to "ริน�
     }
     private fun sceneMenu(s: JSONObject) {
         rememberScene(s)
-        val choices = listOf("🖼️ ดูภาพ / เทียบ MASTER", "🎬 สร้างภาพผ่าน ChatGPT", "✏️ แก้บท ชุด และสถานที่", "🛠️ แก้ภาพเฉพาะส่วนผ่าน ChatGPT", "📋 คัดลอกคำสั่ง Flow", "📥 นำเข้าภาพฉากนี้", "🎥 นำเข้าวิดีโอฉากนี้", "▶ ดูวิดีโอ", "🗂️ เวอร์ชันภาพ / วิดีโอ", "✅ ตรวจรับภาพ / ต้องแก้", "➡ ฉากถัดไป", "🗣️ กำหนดคนพูดจากภาพ")
+        val choices = listOf("🖼️ ดูภาพ / เทียบ MASTER", "🎬 สร้างภาพผ่าน ChatGPT", "✏️ แก้บท ชุด และสถานที่", "🛠️ แก้ภาพเฉพาะส่วนผ่าน ChatGPT", "📋 คัดลอกคำสั่ง Flow", "📥 นำเข้าภาพฉากนี้", "🎥 นำเข้าวิดีโอฉากนี้", "▶ ดูวิดีโอ", "🗂️ เวอร์ชันภาพ / วิดีโอ", "✅ ตรวจรับภาพ / ต้องแก้", "➡ ฉากถัดไป", "🗣️ กำหนดคนพูดจากภาพ", "👤 ทดสอบรูปร่างรายคนในชุดฉากนี้", "📐 ตรวจรูปร่างรายคน / บันทึกจุดผิด")
         choiceMenu("${key(s)} • ${s.optString("location")}",choices) { i -> when(i) {
             0 -> compareScene(s)
             1 -> sendSceneImage(plan!!,s)
@@ -1523,7 +1531,52 @@ ${if(mode=="original") listOf("gawin" to "กวิน","rinlada" to "ริน�
             10 -> { val scenes = rows(plan!!); val next = scenes.indexOfFirst { key(it) == key(s) }+1
                 if (next in scenes.indices) sceneMenu(scenes[next]) else notice("ถึงฉากสุดท้ายแล้ว") }
             11 -> mapFlowCharacters(s)
+            12 -> sceneBodyCheck(s,false)
+            13 -> sceneBodyCheck(s,true)
         } }
+    }
+    private fun bodyReviewStatus(s: JSONObject, person: JSONObject): String {
+        val file=image(s); val master=masterFor(person)
+        if(!file.exists() || !master.exists()) return "ยังไม่มีภาพครบสำหรับตรวจ"
+        val record=s.optJSONObject("body_reviews")?.optJSONObject(memoryId(person)) ?: return "ยังไม่ตรวจรูปร่าง"
+        val stamp=BodyReviewStamp(record.optString("scene_hash"),record.optString("master_hash"),record.optString("outfit"))
+        return if(stamp.matches(EpisodeMedia.digest(file),EpisodeMedia.digest(master),sceneWardrobe(s,person)))
+            "${record.optString("result")} • ${record.optString("note")}" else "ผลตรวจเก่า • ภาพ MASTER หรือชุดเปลี่ยน ต้องตรวจใหม่"
+    }
+    private fun sceneBodyCheck(s: JSONObject, review: Boolean) {
+        val cast=s.optJSONArray("characters") ?: return notice("ฉากนี้ยังไม่มีข้อมูลตัวละคร")
+        if(cast.length()==0) return notice("ฉากนี้ยังไม่มีข้อมูลตัวละคร")
+        choiceMenu(if(review) "ตรวจรูปร่างเทียบ MASTER" else "ทดสอบรายคนก่อนสร้างฉาก",(0 until cast.length()).map { cast.getJSONObject(it).optString("name") }) { i ->
+            val person=cast.getJSONObject(i); val master=masterFor(person); val name=person.optString("name")
+            if(!master.exists()) { notice("ขาด MASTER ของ $name"); return@choiceMenu }
+            if(!review) {
+                val exported=masterExportName(master,person.optString("master").startsWith("CHARACTER",true)) ?: return@choiceMenu
+                val command=BodyReferencePolicy.singleCheck(name,exported,memoryBrief(person).ifBlank { person.optString("visual_description") },sceneWardrobe(s,person),plan?.optString("aspect_ratio","9:16") ?: "9:16")
+                shareText(command,includeMasters=false,referenceImages=listOf(exported.substringBeforeLast('.') to master))
+            } else {
+                if(!image(s).exists()) { notice("นำเข้าภาพฉากก่อนตรวจ"); return@choiceMenu }
+                val sceneHash=EpisodeMedia.digest(image(s)); val masterHash=EpisodeMedia.digest(master); val outfit=sceneWardrobe(s,person)
+                val panel=LinearLayout(this).apply { orientation=1; setPadding(dp(12),dp(12),dp(12),dp(12)) }
+                listOf("MASTER • $name" to master, "ภาพฉาก • ${key(s)}" to image(s)).forEach { (label,file) ->
+                    panel.addView(TextView(this).apply { text=label })
+                    panel.addView(ImageView(this).apply { setImageBitmap(previewBitmap(Uri.fromFile(file))); adjustViewBounds=true; layoutParams=LinearLayout.LayoutParams(-1,dp(320)); setOnClickListener { fullImage(file,label) } })
+                }
+                panel.addView(TextView(this).apply { text="เทียบไหล่ ทรวงอก–เอว สะโพก ความยาวลำตัวและแขนขาที่เห็น โดยคำนึงถึงชุด ท่าทางและมุมกล้อง ไม่ประเมินจากขนาดในเฟรมอย่างเดียว\n${bodyReviewStatus(s,person)}" })
+                val note=EditText(this).apply { hint="จุดที่คลาดเคลื่อนหรือมองไม่เห็น เช่น เอวเปลี่ยน / แขนบังลำตัว"; panel.addView(this) }
+                fun save(result: String) {
+                    if(EpisodeMedia.digest(image(s))!=sceneHash || EpisodeMedia.digest(master)!=masterHash || sceneWardrobe(s,person)!=outfit) { notice("ข้อมูลเปลี่ยน กรุณาเปิดตรวจใหม่"); return }
+                    val records=s.optJSONObject("body_reviews") ?: JSONObject()
+                    records.put(memoryId(person),JSONObject().put("scene_hash",sceneHash).put("master_hash",masterHash).put("outfit",outfit).put("result",result).put("note",note.text.toString().trim()).put("reviewed_at",System.currentTimeMillis()))
+                    s.put("body_reviews",records)
+                    if(result!="ผู้ใช้ตรวจว่าตรง") { s.put("user_review","needs_revision"); s.remove("flow_image_revision") }
+                    saveStory(); notice("บันทึกผลตรวจของ $name แล้ว")
+                }
+                AlertDialog.Builder(this).setTitle("รูปร่าง • $name").setView(ScrollView(this).apply { addView(panel) })
+                    .setPositiveButton("ตรงตามอ้างอิง") { _,_ -> save("ผู้ใช้ตรวจว่าตรง") }
+                    .setNegativeButton("ต้องแก้") { _,_ -> save("ต้องแก้") }
+                    .setNeutralButton("มองไม่ชัด") { _,_ -> save("ยังประเมินไม่ได้") }.showDirector()
+            }
+        }
     }
     private fun compareScene(s: JSONObject) {
         val panel = LinearLayout(this).apply { orientation = 1; setPadding(dp(12),dp(12),dp(12),dp(12)) }
@@ -1537,7 +1590,7 @@ ${if(mode=="original") listOf("gawin" to "กวิน","rinlada" to "ริน�
         }
         val cast = s.optJSONArray("characters") ?: JSONArray()
         for (i in 0 until cast.length()) {
-            val person = cast.getJSONObject(i); picture("MASTER • ${person.optString("name")}",masterFor(person))
+            val person = cast.getJSONObject(i); picture("MASTER • ${person.optString("name")} • ${bodyReviewStatus(s,person)}",masterFor(person))
         }
         picture("ผลลัพธ์ • ${key(s)} • ${s.optString("user_review","รอตรวจ")}",image(s))
         panel.addView(TextView(this).apply { text = "ตรวจใบหน้า ผม รูปร่าง ชุด และมือเทียบ MASTER • ให้ผู้ใช้ประเมินจากภาพจริง\n${sceneCastDescription(s)}\n${s.optString("action")}\n${s.optString("dialogue")}" })

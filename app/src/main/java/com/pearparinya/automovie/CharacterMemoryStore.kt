@@ -25,6 +25,6 @@ internal class CharacterMemoryStore(private val folder: File, private val bundle
     }
     fun brief(id: String, source: File): String {
         val p=read(id,source)
-        return listOf("face","hair","body","accessories").map { p.optString(it) }.filter { it.isNotBlank() }.joinToString("; ")
+        return (listOf("face","hair") + BodyReferencePolicy.fields.map { it.first } + "accessories").map { p.optString(it) }.filter { it.isNotBlank() }.joinToString("; ")
     }
 }

@@ -11,6 +11,19 @@ import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 class CharacterMemoryStoreTest {
+    @Test fun upgradedBundleAddsMissingFieldsWithoutOverwritingEditedValues() {
+        val root=File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir,UUID.randomUUID().toString()).apply { mkdirs() }
+        try {
+            val master=File(root,"reference").apply { writeText("unchanged master") }
+            val folder=File(root,"memory")
+            CharacterMemoryStore(folder,JSONObject()).save("mind",master,JSONObject().put("face","user face").put("body",""))
+            val profile=JSONObject().put("character_id","mind").put("sha256",EpisodeMedia.digest(master)).put("face","bundled face").put("body","bundled body").put("reference_limits","hidden legs")
+            val store=CharacterMemoryStore(folder,JSONObject().put("profiles",org.json.JSONArray().put(profile)))
+            assertEquals("user face",store.read("mind",master).getString("face"))
+            assertEquals("",store.read("mind",master).getString("body"))
+            assertEquals("hidden legs",store.read("mind",master).getString("reference_limits"))
+        } finally { root.deleteRecursively() }
+    }
     @Test fun savedProfilesAreBoundToReferenceAndCharacterAcrossRestarts() {
         val root=File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir,UUID.randomUUID().toString()).apply { mkdirs() }
         try {
